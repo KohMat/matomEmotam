@@ -9,7 +9,7 @@ Nicholas Rhinehart, Rowan McAllister, Sergey Levine
 
 ## どんなもの？
 
-自動行動のためのPath Planningを提案する。模倣学習(Imitation Learning)によってエキスパートの軌跡を模倣する確率モデル（Imitative Model）を使い、観測*Φ*からゴールに到達するエキスパートのような経路計画`s*`をエキスパート軌跡との尤度とゴールとの尤度を最大化することで計画(Imitative Planning)する。有効な範囲内を指定したり、potholesのようなものを避けるように計画する(Costed planning)ことも可能である。
+自動行動のためのPath Planningを提案する。模倣学習(Imitation Learning)によってエキスパートの軌跡を模倣する確率モデル（Imitative Model）を使い、観測*Φ*からゴールに到達するエキスパートのような経路計画$$s^*$$をエキスパート軌跡との尤度とゴールとの尤度を最大化することで計画(Imitative Planning)する。有効な範囲内を指定したり、potholesのようなものを避けるように計画する(Costed planning)ことも可能である。
 
 ![PathPlanning](./PathPlanning.png)
 
@@ -26,9 +26,11 @@ Nicholas Rhinehart, Rowan McAllister, Sergey Levine
 
 ## 技術や手法の大事なことはどこ？
 
-Gradient ascentによって式(1)を最適化することでゴールに到達するエキスパートのような計画を計算する。実際には潜在空間で計算を行う。ここで関数$$f$$は、観測Φおよび基準分布$$ Z \sim q_0 = \mathcal{N}(0, I)$$から計画Sにワープする可逆かつ微分可能な関数 $$ S = f_{\theta}(Z; \phi) $$ であり、事前に$$q(S\mid\phi)$$を最大化することで訓練されている。論文ではR2P2を使っている。
+Gradient ascentによって式(1)を最適化することでゴールに到達するエキスパートのような計画を計算する。実際には以下のAlgorithm 2で示すように潜在空間を通して最適化計算を行う。
 
 ![imitative_plan](./imitative_plan.png)
+
+ここで関数$$f$$は、観測Φおよび基準分布$$ Z \sim q_0 = \mathcal{N}(0, I)$$から計画Sにワープする可逆かつ微分可能な関数 $$ S = f_{\theta}(Z; \phi) $$ である。関数$$f$$は、事前に$$q(S\mid\phi)$$を最大化し、訓練したものを使う。論文では関数$$f$$にR2P2を使う。
 
 > Nicholas Rhinehart, Kris M. Kitani, and Paul Vernaza. R2P2: A reparameterized pushforward policy for diverse, precise generative path forecasting. In European Conference on Computer Vision (ECCV), September 2018.
 >
@@ -36,7 +38,7 @@ Gradient ascentによって式(1)を最適化することでゴールに到達�
 >
 > ![deep_imitative_model](./deep_imitative_model.png)
 
-ゴールの尤度関数がいくつか提案されている。ゴール内ならば１，ゴール外ならば０を返す簡単な関数を尤度関数とすることができる。ゴール内にいる判定として、例えば、ゴールとして与えられた各waypointの半径以内やゴールをポリゴンとして与えることができる。またゴール内のより良い場所を目指してガウシアン関数を用いたりできる。
+ゴールの尤度関数設計は自由度が高く、ゴール内ならば１，ゴール外ならば０を返す簡単な関数を尤度関数とすることができる。ゴール内にいる判定として、例えば、ゴールとして与えられた各waypointの半径以内やゴールをポリゴンとして与えることができる。またゴール内のより良い場所を目指してガウシアン関数を用いたりできる。論文中にいくつかのゴール尤度関数が提案されている。
 
 ![goal_likelihood](./goal_likelihood.png)
 
@@ -64,7 +66,7 @@ CARLAを使い以下を検証している。[結果](https://sites.google.com/vi
 
 ### 検証3  potholeの回避
 
-potholeに対する回避実験をおこなった。Gaussian Final-State Mixtureおよび) Energy-based likelihoodを組み合わせたゴール尤度を使用することで、ランダムに設置されたpotholeをセンターラインに近づいたり、時には反対レーンに行くなどして避けることができた。
+potholeに対する回避実験を行った。Gaussian Final-State Mixtureおよび) Energy-based likelihoodを組み合わせたゴール尤度を使用することで、ランダムに設置されたpotholeをセンターラインに近づいたり、時には反対レーンに行くなどして避けることができた。
 
 ### 検証4  経路計画の信頼度推定
 

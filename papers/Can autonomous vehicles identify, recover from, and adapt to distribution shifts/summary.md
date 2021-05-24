@@ -33,7 +33,7 @@
 
 ![rip_algorithm](./rip_algorithm.png)
 
-また複数のモデル尤度の分散を計算することで、分布シフトを検出する。訓練分布内であれば低く、分布外であれば大きくなる。
+また複数のモデル尤度の分散を計算することで、分布シフトを検出する。事実として分散は訓練分布内であれば低く、分布外であれば大きくなる。
 
 ![detecting_distribution_shift](./detecting_distribution_shift.png)
 
@@ -43,13 +43,9 @@
 
 ## どうやって有効だと検証した？
 
-[nuScenes](https://www.nuscenes.org/)およびOODの検出やリカバリに対する性能を示すため、OODシナリオを含むデータセットCARNOVEL（この論文内でCALRAを用いて作成）で、現在のstate-of-artの手法の性能を上回っていることから、分布シフトから回復するための明示的なRIPのメカニズムが自動運転の性能を改善することを示している。
+[nuScenes](https://www.nuscenes.org/)およびOODの検出やリカバリに対する性能を示すため、OODシナリオを含むデータセットCARNOVEL（この論文内でCALRAを用いて作成）で、現在のstate-of-artの手法の性能を上回っていることから、分布シフトから回復するための明示的なRIPのメカニズムが自動運転の性能を改善することを示している。またCARNOVELを用いて、成功率、OODシナリオに対する検出率、OODシナリオからの回復率を評価した。
 
 ![nuScenes](./nuScenes.png)
-
-またCARNOVELを用いて、成功率、OODシナリオに対する検出率、OODシナリオからの回復率を評価している。
-
-> nuScenesにもおそらくOODシーンは含まれているが、CARNOVELにはOODシーンがラベルづけされている。
 
 ## 課題は？議論はある？
 
