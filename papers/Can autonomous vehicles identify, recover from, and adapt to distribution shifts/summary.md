@@ -23,7 +23,7 @@
 
 ## 技術や手法の核はどこ？
 
-認識論的不確実性について対処するために、不確実性の下での計画として模倣学習(Imitation Learning)によってエキスパートの軌跡を模倣する確率モデル$$q(y | x; \theta)$$を複数使い(Deep Ensembles)、集約された複数の尤度を最大化するような経路計画$$y_{RIP}^{\mathcal{G}}$$を求める。集約する方法として、最小の尤度をとるWorst Case Aggregationと重み付き平均をおこなうModel Averaging Aggregationを提案する。DIMと同様にこの問題はGradient Ascentで解く。
+認識論的不確実性について対処するために、不確実性の下での計画として模倣学習(Imitation Learning)によってエキスパートの軌跡を模倣する確率モデル$$q(y \mid x; \theta)$$を複数使い(Deep Ensembles)、集約された複数の尤度を最大化するような経路計画$$y_{RIP}^{\mathcal{G}}$$を求める。集約する方法として、最小の尤度をとるWorst Case Aggregationと重み付き平均をおこなうModel Averaging Aggregationを提案する。DIMと同様にこの問題はGradient Ascentで解く。
 
 <img src="./rip.png" alt="rip" style="zoom: 67%;" />
 

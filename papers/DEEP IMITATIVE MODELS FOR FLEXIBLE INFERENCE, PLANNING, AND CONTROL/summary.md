@@ -26,7 +26,7 @@ Nicholas Rhinehart, Rowan McAllister, Sergey Levine
 
 ## 技術や手法の大事なことはどこ？
 
-Gradient ascentによって式(1)を最適化することでゴールに到達するエキスパートのような計画を計算する。実際には潜在空間で計算を行う。ここで関数$$f$$は、観測Φおよび基準分布$$ Z \sim q_0 = \mathcal{N}(0, I)$$から計画Sにワープする可逆かつ微分可能な関数 $$ S = f_{\theta}(Z; \phi) $$ であり、事前に$$q(S|\phi)$$を最大化することで訓練されている。論文ではR2P2を使っている。
+Gradient ascentによって式(1)を最適化することでゴールに到達するエキスパートのような計画を計算する。実際には潜在空間で計算を行う。ここで関数$$f$$は、観測Φおよび基準分布$$ Z \sim q_0 = \mathcal{N}(0, I)$$から計画Sにワープする可逆かつ微分可能な関数 $$ S = f_{\theta}(Z; \phi) $$ であり、事前に$$q(S\mid\phi)$$を最大化することで訓練されている。論文ではR2P2を使っている。
 
 ![imitative_plan](./imitative_plan.png)
 
