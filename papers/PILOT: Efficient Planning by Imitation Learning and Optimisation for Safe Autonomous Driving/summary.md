@@ -1,6 +1,6 @@
 # PILOT: Efficient Planning by Imitation Learning and Optimisation for Safe Autonomous Driving
 
-Henry Pulver∗ , Francisco Eiras∗†, Ludovico Carozza∗ , Majd Hawasly∗ , Stefano V. Albrecht∗‡ and Subramanian Ramamoorthy∗
+Henry Pulver , Francisco Eiras†, Ludovico Carozza, Majd Hawasly , Stefano V. Albrecht and Subramanian Ramamoorthy
 
 * [arxiv 8 Mar 2021](https://arxiv.org/pdf/2011.00509.pdf)
 
@@ -54,11 +54,11 @@ CALRAを用いて20604個のプランニング問題を生成し、PILOTと2s-OP
 
 ![ablation](./ablation.png)
 
-None: 軌道の各位置を(0, 0)にする、ConstVel: 事故車両のヘディングを保ったまま一定速度で走ったときの軌道、ConstAccel/ConstDecell: ConstVelと似ているが、速度を変化させた軌道。
+None: 軌道の各位置を(0, 0)にする、ConstVel: 車両のヘディングを保ったまま一定速度で走ったときの軌道、ConstAccel/ConstDecell: ConstVelと似ているが、所定の加速度速度を保ったときの軌道。
 
 > Convergedの値が下がっていることは、影響がないのだろうか？
 
-### PILOTは、目的関数を直接近似するネットワーク手法CPNとくらべてどうか？
+### PILOTは、目的関数を直接近似するネットワーク手法CPNと比べてどうか？
 
 最適化問題の拘束条件を満たすかどうかを確認した。PILOTの性能が上回っている。
 
@@ -66,9 +66,7 @@ None: 軌道の各位置を(0, 0)にする、ConstVel: 事故車両のヘディ�
 
 ## 課題は？議論はある？
 
-エキスパートを模倣するネットワークに改良の余地がある。例えば初期化時にネットワークアンサンブルを使用し、それらのコストが最も引くものを出力として用いることや、よりよい初期化を行うためにConditional imitation learningを使うことが考えられる。
-
->著者がConditional imitation Learningの参考文献としてあげているのは、[Deep imitation learning for autonomous driving in generic urban scenarios with enhanced safety](https://arxiv.org/pdf/1903.00640.pdf)である。
+エキスパートを模倣するネットワークに改良の余地がある。例えば初期化時にネットワークアンサンブルを使用し、それらのコストが最も引くものを出力として用いることや、よりよい初期化を行うためにConditional imitation learning([Deep imitation learning for autonomous driving in generic urban scenarios with enhanced safety](https://arxiv.org/pdf/1903.00640.pdf))を使うことが考えられる。
 
 個人的にはOODシーン対する明示的な評価（例えば実行時間）がないので、OODシーンに対して実行できるか不明である。[Can autonomous vehicles identify, recover from, and adapt to distribution shifts](../Can autonomous vehicles identify, recover from, and adapt to distribution shifts/summary.md)で提案されたような、OODシーンに明確に含まれているデータを使って評価したほうがいいのではないだろうか？
 
@@ -84,7 +82,7 @@ None: 軌道の各位置を(0, 0)にする、ConstVel: 事故車両のヘディ�
 
 ![2sopt_problem](./2sopt_problem.png)
 
-$$f$$: discrete kinematic bicycle model、 $$x$$: 位置、ヘディングと速度、$$u=(a, \delta)$$: 制御入力、加速度とステアリング角、$$\mathcal{E}(x_k)$$: 時刻kに自車両が有しているエリア（そのコーナー点で近似）、$$\mathcal{B} \subset \mathcal{R}^2$$: 走行可能領域、$$S_k^{1:w}$$: 他のユーザーwが有している楕円体の領域。
+$$f$$: discrete kinematic bicycle model、 $$x$$: 位置、ヘディングと速度、$$u=(a, \delta)$$: 制御入力、加速度とステアリング角、$$\mathcal{E}(x_k)$$: 時刻kに自車両が有しているエリア（そのコーナー点で近似）、$$\mathcal{B} \subset \mathcal{R}^2$$: 走行可能領域、$$S_k^{1:w}$$: 他のユーザー$$w$$が有している楕円体の領域。
 
 2s-OPTは、この問題を線形化した後、Mixed-Integer Linear Programming(MILIP)ソルバーで解いた後、その解を初期解として改めてNonlinear Programing(NLP)オプティマイザで解く。
 
