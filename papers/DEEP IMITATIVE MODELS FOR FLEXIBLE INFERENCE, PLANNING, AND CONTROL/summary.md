@@ -9,7 +9,7 @@ Nicholas Rhinehart, Rowan McAllister, Sergey Levine
 
 ## どんなもの？
 
-自動行動のためのPath Planningを提案する。模倣学習(Imitation Learning)によってエキスパートの軌跡を模倣する確率モデル（Imitative Model）を使い、観測*Φ*からゴールに到達するエキスパートのような経路計画$$s^*$$をエキスパート軌跡との尤度とゴールとの尤度を最大化することで計画(Imitative Planning)する。有効な範囲内を指定したり、potholesのようなものを避けるように計画する(Costed planning)ことも可能である。
+自動運転のためのPath Planningを提案する。模倣学習(Imitation Learning)によってエキスパートの軌跡を模倣する確率モデル（Imitative Model）$$q(S \mid \phi)$$ を使い、観測$$\phi$$からゴールに到達するエキスパートのような経路計画$$s^*$$を、エキスパート軌跡との尤度とゴールとの尤度を最大化することで求める(Imitative Planning)。ゴールの尤度に有効な移動間領域を指定することで、potholesのようなものを避けるように計画する(Costed planning)ことも可能である。
 
 ![PathPlanning](./PathPlanning.png)
 
@@ -19,32 +19,45 @@ Nicholas Rhinehart, Rowan McAllister, Sergey Levine
 
 ## 先行研究と比べてどこがすごい？何を解決したか？
 
-* Imitation Planningという推論フレームワークを行うことで、柔軟にゴールへ到達することができる。訓練時にゴールの設定を必要せず、テスト時に複雑なゴールの設定を行うことができる。今までのImitation Learning（IL)の方法は訓練時にゴールの設定を必要とする。またゴールの設定は簡単なものに限られる（右左折など）。
-* モデルベース強化学習(MBRL)のような複雑な報酬関数の設計を必要としない。ゴールの尤度を設定する報酬関数の設計が必要である。
+* Imitation Planningという推論フレームワークを行うことで、柔軟にゴールへ到達することができる。
+* 訓練時にゴールの設定を必要せず、エキスパートの軌跡との尤度を最大化することでネットワークを訓練する。
+* 実行時に複雑なゴールの設定を行うことができる。今までのImitation Learning（IL)の方法は訓練時にゴールの設定を必要とする。またゴールの設定は簡単なものに限られる（右左折など）。
+* モデルベース強化学習(MBRL)のような複雑な報酬関数の設計を必要としない。ゴールの尤度を設定する報酬関数の設計は必要。
 * CARLA上で６つのILとMBRLの性能を上回った。
 * ゴール設定にノイズが入った場合でもロバストである。
 
 ## 技術や手法の大事なことはどこ？
 
-Gradient ascentによって式(1)を最適化することでゴールに到達するエキスパートのような計画を計算する。実際には以下のAlgorithm 2で示すように潜在空間を通して最適化計算を行う。
+実行時にGradient ascentによって式(1)を最適化することでゴールに到達するエキスパートのような計画を計算する。実際には以下のAlgorithm 2で示すように潜在空間$$z$$を通して最適化計算を行う。
 
 ![imitative_plan](./imitative_plan.png)
 
-ここで関数$$f$$は、観測Φおよび基準分布$$ Z \sim q_0 = \mathcal{N}(0, I)$$から計画Sにワープする可逆かつ微分可能な関数 $$ S = f_{\theta}(Z; \phi) $$ である。関数$$f$$は、事前に$$q(S\mid\phi)$$を最大化し、訓練したものを使う。論文では関数$$f$$にR2P2を使う。
+ここで
+
+* $$q$$ : エキスパートの軌跡を模倣する確率モデル$$q_{\theta}(S \mid \phi)$$ 
+* $$f$$: 観測$$\phi$$および基準分布$$ Z \sim q_0 = \mathcal{N}(0, I)$$から計画$$S$$にワープする可逆かつ微分可能な関数 $$ S = f_{\theta}(Z; \phi) $$ 。論文では関数$$f$$にR2P2を使う。
+* パラメータ$$\theta$$は、エキスパートの軌跡を使い$$q(S\mid\phi)$$を最大化することで求める。
 
 > Nicholas Rhinehart, Kris M. Kitani, and Paul Vernaza. R2P2: A reparameterized pushforward policy for diverse, precise generative path forecasting. In European Conference on Computer Vision (ECCV), September 2018.
 >
-> 車両の経路を予測する論文である。計画Sは２次元座標x,yからなるwaypointで構成される。ネットワークのアーキテクチャは以下の図のように自己回帰的に動作する。 位置の平均ではなく、１,２サンプル前の位置との平均速度を出力する。
+> 車両の経路を予測する論文である。計画Sは２次元座標x,yからなるwaypointで構成される。ネットワークのアーキテクチャは以下の図のように自己回帰的に動作する。 ネットワークは位置の平均ではなく、１,２サンプル前の位置との平均速度、位置の分散を出力する。
 >
 > ![deep_imitative_model](./deep_imitative_model.png)
 
-ゴールの尤度関数設計は自由度が高く、ゴール内ならば１，ゴール外ならば０を返す簡単な関数を尤度関数とすることができる。ゴール内にいる判定として、例えば、ゴールとして与えられた各waypointの半径以内やゴールをポリゴンとして与えることができる。またゴール内のより良い場所を目指してガウシアン関数を用いたりできる。論文中にいくつかのゴール尤度関数が提案されている。
+ゴールの尤度関数設計は自由度が高く、ゴール内ならば１，ゴール外ならば０を返すという簡単な関数を尤度関数とすることができる。
 
 ![goal_likelihood](./goal_likelihood.png)
 
+例えば以下のような尤度関数である。
+
+* ゴールへ向かうルートとして与えられた各waypointの半径以内にいる場合は１，そうでない場合は０
+* 移動可能領域をポリゴンで表現し、ポリゴン内ならば１、そうでない場合は０
+
+その他にも、１，０のバイナリの代わりにゴール内のより良い場所を目指すようにガウシアン関数を用いたりできる。論文中にいくつかのゴール尤度関数が提案されている。
+
 ## どうやって有効だと検証した？
 
-CARLAを使い以下を検証している。[結果](https://sites.google.com/view/imitative-models)を動画で見ることができる。
+CARLAを使い以下を検証した。[結果](https://sites.google.com/view/imitative-models)を動画で見ることができる。
 
 1. 最低限の報酬関数の設計とオフライン学習によって解釈可能なエキスパートのような計画を生成できるか？この手法が有効であるか？
 2. 実際の車両の設定のもとでstate-of-the-artの性能を達成できるか？
@@ -82,7 +95,7 @@ potholeに対する回避実験を行った。Gaussian Final-State Mixtureおよ
 
 ### 検証5(課題) 信号のノイズに対するロバスト性
 
-20％の確率で緑を赤に、赤を緑に変更するノイズを加えた状態で自動運転実験を行った。概ね成功しているものの、赤信号に対してより違反を行うという傾向が見られた。また交差点付近で停止と発進を繰り返し行う挙動が見られた。ノイズを加えた状態で訓練することによりよりロバストになる可能性がある。
+20％の確率で緑を赤に、赤を緑に変更するノイズを加えた状態で実験を行った。概ね成功しているものの、赤信号に対してより違反を行うという傾向が見られた。また交差点付近で停止と発進を繰り返し行う挙動が見られた。ノイズを加えた状態で訓練することによりよりロバストになる可能性がある。
 
 ![traffic_light_noise](./traffic_light_noise.png)
 
@@ -92,11 +105,10 @@ potholeに対する回避実験を行った。Gaussian Final-State Mixtureおよ
 
 観測のノイズおよび分布外の観測に対するロバスト性に対していくつかの課題がある。観測ノイズに関しては、例えば提案モデルは現在の観測しか使っていないが、ベイジアンフィルタリングを使うことで観測ノイズを軽減できるかもしれない。しかしながら高次元のフィルタリングは多くの場合手に負えないので、ディープラーニングをつかった近似ベイジアンフィルタリングを行う必要がある。分布外の観測に対しては、Deep Ensemble Networkを使う方法が考えられる。
 
->  Balaji Lakshminarayanan, Alexander Pritzel, and Charles Blundell. Simple and scalable predictive uncertainty estimation using deep ensembles. In Neural Information Processing Systems (NeurIPS), pp. 6402–6413, 2017.
+> Balaji Lakshminarayanan, Alexander Pritzel, and Charles Blundell. Simple and scalable predictive uncertainty estimation using deep ensembles. In Neural Information Processing Systems (NeurIPS), pp. 6402–6413, 2017.
 
 ゴール内の尤度とエキスパートの尤度のバランスはどうしたらいいだろうか？
 
 ## 次に読むべき論文は？
 
 [A. Filos, P. Tigas, R. McAllister, N. Rhinehart, S. Levine, and Y. Gal, “Can autonomous vehicles identify, recover from, and adapt to distribution shifts?” arXiv preprint arXiv:2006.14911, 2020.](../Can autonomous vehicles identify, recover from, and adapt to distribution shifts/summary.md)
-

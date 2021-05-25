@@ -6,15 +6,13 @@ Henry Pulver , Francisco Eiras†, Ludovico Carozza, Majd Hawasly , Stefano V. A
 
 ## どんなもの？
 
-安全な自動運転のための、模倣ネットワークとネットワークの計画を積極的に修正する効率的なオプティマイザで構成されるプランニングフレームワーク(PILOT, Planning by Imitation Learning and Optimisation at Training time)を提案する。使われるオプティマイザは、最適化ベースのモーションプランニングで使われる物と同様のものであり、安全と快適性の要件を満たすことを保証する。そして安全性や快適性を損なう可能性のあるOut-of-Distributionでの失敗や学習不足からのオンライン保護の役割をもつ。PILOTは、プランニングの質を損なうことなく、これまでの模倣手法とくらべて、実行時間の大幅な削減を達成する。
+安全な自動運転のための、模倣ネットワークとネットワークの計画を積極的に修正するオプティマイザで構成されるプランニングフレームワーク(PILOT, Planning by Imitation Learning and Optimisation at Training time)を提案する。最適化ベースのモーションプランニングは安全でスムーズかつ快適な計画を計算できる一方で、その計算コストの効率が問題になる。深層模倣学習により得られた素朴な軌跡は効率的な計算である一方で、その安全性を無視する可能性がある。PILOTはこれらのハイブリッドなアプローチである。最適な計画を模倣するネットワークにより効率的に初期の計画を計算する。そしてその計画を下に最適化を行うことにより、安全性や快適性を損なう可能性のあるOut-of-Distributionでの失敗や学習不足からのオンライン保護を行い、安全と快適性の要件を満たすことを保証する。PILOTは、プランニングの質を損なうことなく、これまでの手法と比べて、実行時間の大幅な削減を達成する。
 
 ![pilot_framework](./pilot_framework.png)
 
 ## 先行研究と比べてどこがすごい？何を解決したか？
 
-最適化ベースのモーションプランニングは安全でスムーズかつ快適な計画を計算できる一方で、その計算コストの効率が問題になる。深層模倣学習により得られた素朴な軌跡は効率的な計算である一方で、その安全性を無視する可能性がある。PILOTはこれらのハイブリッドなアプローチであり、ロバストかつスケーラブルである。
-
-2s-OPT([Twostage optimization-based motion planner for safe urban driving](https://arxiv.org/abs/2002.02215))と同様に、2段階の最適化を行うが、エキスパート模倣モデルを組み合わせることで7倍の実行時間の改善ができる。
+模倣モデルを組み合わせることで2s-OPT([Twostage optimization-based motion planner for safe urban driving](https://arxiv.org/abs/2002.02215))の7倍の実行時間の改善ができる。
 
 ![pilot_runtime_result](./pilot_runtime_result.png)
 
@@ -33,6 +31,8 @@ PILOTで使われるネットワークのアーキテクチャは以下のとお
 ![architechture](./architechture.png)
 
 ![coordinate-transform](./coordinate-transform.png)
+
+最適化部分では[2s-OPT(Twostage optimization-based motion planner for safe urban driving)](https://arxiv.org/abs/2002.02215)を用いる。
 
 ## どうやって有効だと検証した？
 
@@ -77,8 +77,6 @@ None: 軌道の各位置を(0, 0)にする、ConstVel: 車両のヘディング�
 ## 補足
 
 ### 最適化問題および2s-OPTの２段階解法
-
-[Twostage optimization-based motion planner for safe urban driving](https://arxiv.org/abs/2002.02215)で提案されているものと同じ最適化問題を扱う。
 
 ![2sopt_problem](./2sopt_problem.png)
 

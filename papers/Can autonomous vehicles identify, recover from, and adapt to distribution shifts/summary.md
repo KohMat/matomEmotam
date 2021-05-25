@@ -11,19 +11,19 @@
 
 ## どんなもの？
 
-訓練データ分布外(Out-of-training-distribution, OOD)シナリオに対して、現在のアプローチの限界に焦点を当て、認識論的不確実性(epistemic uncertainty)を意識した経路計画方法（RIP＝Robust Imitative Planning)を提案する。安全な運転を目指してRIPはOODシナリオに対して、[Deep Ensembles](https://arxiv.org/abs/1612.01474)により訓練分布との分布シフトを検出し、自信過剰で壊滅的な十分な情報に基づいていない決定を軽減することができる。また不確実性が大きく、安全な行動を提示できない場合には、エキスパートドライバーにフィードバックを問い合わせ、ドライバーが取った行動からオンライン適応を可能にするAdaptive RIP(AdaRIP)を提案する。
+認識論的不確実性(epistemic uncertainty)を考慮した自動運転のための安全な経路計画（RIP＝Robust Imitative Planning)を提案する。RIPはテスト時に起きる分布シフトに対応するため、複数のエキスパート軌跡を模倣する確率モデルを使い([Deep Ensembles](https://arxiv.org/abs/1612.01474))、それらの出力を集約し経路を計画する。これにより、いくつかの訓練データ分布外(Out-of-training-distribution, OOD)シナリオに対して、分布シフトを検出し、単一モデルが引き起こす十分な情報に基づいていない自信過剰で壊滅的な決定を防ぐこともしくは軽減することができる。
+
+またAdaptive RIP(AdaRIP)を提案する。AdaRIPは、分布シフトを検出することで、複数のモデルを使った場合でも不確実性が大きく安全な行動を提示できない場合に、エキスパートドライバーにフィードバックを問い合わせ、ドライバーが取った行動から自身のパラメータを更新するアルゴリズムである。AdaRIPはOODシナリオに対してエキスパートに操作を促すことによって安全性を損なうことなく現実世界にデプロイできる。
 
 ![didactic_example](./didactic_example.png)
 
 ## 先行研究と比べてどこがすごい？何を解決したか？
 
-[Deep Imitative Models](../DEEP IMITATIVE MODELS FOR FLEXIBLE INFERENCE, PLANNING, AND CONTROL/summary.md)(以下、DIM)で結論に課題として述べられている認識論的不確実性について取り組んだ手法であり、OODシナリオを検出およびいくつかのOODシナリオに対して対応することができる。例えばトレーニングデータに含まれなかったRoundaboutのシーンに対して走行することができる。これはDIMや[Learning by Cheating](https://arxiv.org/abs/1912.12294)の方法ではできなかったことである。またAdaRIPはOODシナリオに対してエキスパートに操作を促すことによって安全性を損なうことなく現実世界にデプロイできる。
-
-> この論文を読む前にDIMを読むとよく理解ができる。[Rhinehart, N., McAllister, R., and Levine, S. Deep imitative models for flexible inference, planning, and control. In International Conference on Learning Representations (ICLR), April 2020.](../DEEP IMITATIVE MODELS FOR FLEXIBLE INFERENCE, PLANNING, AND CONTROL/summary.md)
+[Deep Imitative Models](../DEEP IMITATIVE MODELS FOR FLEXIBLE INFERENCE, PLANNING, AND CONTROL/summary.md)(以下、DIM)で結論に課題として述べられている認識論的不確実性について取り組んだ手法であり、OODシナリオを検出およびいくつかのOODシナリオに対して対応することができる。例えば訓練データに含まれないRoundaboutのシーンに対して走行することができる。これはDIMや[Learning by Cheating](https://arxiv.org/abs/1912.12294)の方法ではできなかったことである。
 
 ## 技術や手法の核はどこ？
 
-認識論的不確実性について対処するために、不確実性の下での計画として模倣学習(Imitation Learning)によってエキスパートの軌跡を模倣する確率モデル$$q(y \mid x; \theta)$$を複数使い(Deep Ensembles)、集約された複数の尤度を最大化するような経路計画$$y_{RIP}^{\mathcal{G}}$$を求める。集約する方法として、最小の尤度をとるWorst Case Aggregationと重み付き平均をおこなうModel Averaging Aggregationを提案する。DIMと同様にこの問題はGradient Ascentで解く。
+RIPは不確実性の下での計画としてエキスパートの軌跡を模倣する確率モデル$$q(y \mid x; \theta)$$を複数使い(Deep Ensembles)、集約された複数の尤度を最大化するような経路計画$$y_{RIP}^{\mathcal{G}}$$を求める。集約する方法として、最小の尤度をとるWorst Case Aggregationと重み付き平均をおこなうModel Averaging Aggregationを提案する。DIMと同様にこの問題はGradient Ascentで解く。
 
 <img src="./rip.png" alt="rip" style="zoom: 67%;" />
 
@@ -33,7 +33,7 @@
 
 ![rip_algorithm](./rip_algorithm.png)
 
-また複数のモデル尤度の分散を計算することで、分布シフトを検出する。事実として分散は訓練分布内であれば低く、分布外であれば大きくなる。
+また複数のモデル尤度の分散は訓練分布内であれば低く、分布外であれば大きくなることから、閾値を設けることで分布シフトを検出する。
 
 ![detecting_distribution_shift](./detecting_distribution_shift.png)
 
