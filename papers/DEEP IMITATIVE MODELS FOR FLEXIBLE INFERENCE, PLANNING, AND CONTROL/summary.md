@@ -35,12 +35,12 @@ Nicholas Rhinehart, Rowan McAllister, Sergey Levine
 ここで
 
 * $$q$$ : エキスパートの軌跡を模倣する確率モデル$$q_{\theta}(S \mid \phi)$$ 
-* $$f$$: 観測$$\phi$$および基準分布$$ Z \sim q_0 = \mathcal{N}(0, I)$$から計画$$S$$にワープする可逆かつ微分可能な関数 $$ S = f_{\theta}(Z; \phi) $$ 。論文では関数$$f$$にR2P2を使う。
+* $$f$$: 観測$$\phi$$および正規分布に従う潜在変数$$ Z \sim q_0 = \mathcal{N}(0, I)$$から計画$$S$$にワープする可逆かつ微分可能な関数 $$ S = f_{\theta}(Z; \phi) $$ （論文では関数$$f$$にR2P2を使う。）
 * パラメータ$$\theta$$は、エキスパートの軌跡を使い$$q(S\mid\phi)$$を最大化することで求める。
 
 > Nicholas Rhinehart, Kris M. Kitani, and Paul Vernaza. R2P2: A reparameterized pushforward policy for diverse, precise generative path forecasting. In European Conference on Computer Vision (ECCV), September 2018.
 >
-> 車両の経路を予測する論文である。計画Sは２次元座標x,yからなるwaypointで構成される。ネットワークのアーキテクチャは以下の図のように自己回帰的に動作する。 ネットワークは位置の平均ではなく、１,２サンプル前の位置との平均速度、位置の分散を出力する。
+> 車両の経路を予測する論文である。計画Sは２次元座標x,yからなるwaypointで構成される。論文内で使われたネットワークのアーキテクチャは以下の図のように自己回帰的に動作する。 ネットワークは位置の平均ではなく、１,２サンプル前の位置との平均速度、位置の分散を出力する。
 >
 > ![deep_imitative_model](./deep_imitative_model.png)
 
@@ -112,3 +112,5 @@ potholeに対する回避実験を行った。Gaussian Final-State Mixtureおよ
 ## 次に読むべき論文は？
 
 [A. Filos, P. Tigas, R. McAllister, N. Rhinehart, S. Levine, and Y. Gal, “Can autonomous vehicles identify, recover from, and adapt to distribution shifts?” arXiv preprint arXiv:2006.14911, 2020.](../Can autonomous vehicles identify, recover from, and adapt to distribution shifts/summary.md)
+
+[N. Rhinehart, R. McAllister, K. Kitani, and S. Levine, “PRECOG: prediction conditioned on goals in visual multi-agent settings,” in Proceedings of the IEEE International Conference on Computer Vision, 2019, pp. 2821–2830.](../PRECOG: PREdiction Conditioned On Goals in Visual Multi-Agent Settings/summary.md)
