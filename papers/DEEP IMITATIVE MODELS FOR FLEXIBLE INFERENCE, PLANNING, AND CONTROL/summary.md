@@ -9,7 +9,7 @@ Nicholas Rhinehart, Rowan McAllister, Sergey Levine
 
 ## どんなもの？
 
-自動運転のためのPath Planningを提案する。模倣学習(Imitation Learning)によってエキスパートの軌跡を模倣する確率モデル（Imitative Model）$$q(S \mid \phi)$$ を使い、観測$$\phi$$からゴールに到達するエキスパートのような経路計画$$s^*$$を、エキスパート軌跡との尤度とゴールとの尤度を最大化することで求める(Imitative Planning)。ゴールの尤度に有効な移動間領域を指定することで、potholesのようなものを避けるように計画する(Costed planning)ことも可能である。
+自動運転のための模倣学習(Imitation Learning)を用いたPath Planningを提案する。訓練済みのエキスパートの軌跡を模倣する確率モデル（Imitative Model）$$q(\mathbf{S} \mid \phi)$$ を使い、観測$$\phi$$からゴールに到達するエキスパートらしい経路計画$$s^*$$を実行時にエキスパート軌跡との尤度とゴールとの尤度を最大化することで求める(Imitative Planning)。ゴールの尤度に有効な移動間領域を指定することで、potholesのようなものを避けるように計画する(Costed planning)ことも可能である。
 
 ![PathPlanning](./PathPlanning.png)
 
@@ -21,30 +21,51 @@ Nicholas Rhinehart, Rowan McAllister, Sergey Levine
 
 * Imitation Planningという推論フレームワークを行うことで、柔軟にゴールへ到達することができる。
 * 訓練時にゴールの設定を必要せず、エキスパートの軌跡との尤度を最大化することでネットワークを訓練する。
-* 実行時に複雑なゴールの設定を行うことができる。今までのImitation Learning（IL)の方法は訓練時にゴールの設定を必要とする。またゴールの設定は簡単なものに限られる（右左折など）。
-* モデルベース強化学習(MBRL)のような複雑な報酬関数の設計を必要としない。ゴールの尤度を設定する報酬関数の設計は必要。
+* 実行時に複雑なゴールの設定を行うことができる。今までのImitation Learning（IL)の方法は訓練時にゴールの設定を必要とする。またこれらはゴールの設定は簡単なものに限られる（右左折など）。
+* モデルベース強化学習(MBRL)のような複雑な報酬関数の設計を必要としない。
 * CARLA上で６つのILとMBRLの性能を上回った。
 * ゴール設定にノイズが入った場合でもロバストである。
 
 ## 技術や手法の大事なことはどこ？
 
-実行時にGradient ascentによって式(1)を最適化することでゴールに到達するエキスパートのような計画を計算する。実際には以下のAlgorithm 2で示すように潜在空間$$z$$を通して最適化計算を行う。
+Imitative Planningとゴール尤度関数の設計である。単一エージェントを予測するR2P2([link](https://people.eecs.berkeley.edu/~nrhinehart/papers/r2p2_cvf.pdf), [summary](../R2P2: A reparameterized pushforward policy for diverse, precise generative path forecasting/summary.md))と確率モデルおよびネットワークアーキテクチャは同じである。
+
+### エキスパートの軌跡を模倣する確率モデル$$q(\mathbf{S} \mid \phi)$$ のモデリング
+
+連続空間、離散時間、POMDPの仮定の下モデル化を行う。時刻$$t$$におけるすべてのエージェントの状態（位置）を$$\mathbf{s}_t \in \mathbb{R}^{D}$$とする。また観測を$$\phi$$とする。変数をボールド、確率変数を大文字とする。添え付き文字の省略はすべての未来の時刻を含む。$$\mathbf{S}=\mathbf{S}_{1:T}$$とする。エキスパートの軌跡$$\mathbf{S}$$を模倣する確率モデル$$q(\mathbf{S} \mid \phi)$$ は遷移確率の積として表すことができる。
+$$
+q(\mathbf{S}_{1:T} \mid \phi) = \prod_{t=1}^T q(\mathbf{S}_t \mid \mathbf{S}_{1:t-1}, \phi)
+$$
+遷移確率$$q(\mathbf{S}_t \mid \mathbf{S}_{1:t-1}, \phi)$$は正規分布を仮定し、状態の遷移が次式で表せるとする。
+$$
+\mathbf{S}_{t} = f(\mathbf{Z}_t) = \mu_{\theta}(\mathbf{S}_{1:t-1}, \phi) + \sigma_{\theta}(\mathbf{S}_{1:t-1}, \phi) \cdot \mathbf{Z}_t
+$$
+$$f(\cdot)$$は観測$$\phi$$および正規分布に従う潜在変数$$\mathbf{Z}_t$$から計画$$\mathbf{S}$$にワープする可逆かつ微分可能な関数、$$\mathbf{Z}_t$$ : 正規分布に従う潜在変数$$\mathbf{Z} \sim q_0 = \mathcal{N}(0, I)$$、$$\mu_{\theta}(\cdot)$$および$$\sigma_{\theta}(\cdot)$$は状態$$\mathbf{S}_{t}$$の平均および分散を出力するネットワーク関数である。パラメータ$$\theta$$はエキスパートの軌道からなるデータセットを用いてエキスパートの軌跡を模倣する確率モデル$$q(S \mid \phi)$$ を尤度を最大化して求められる。
+
+### ネットワークアーキテクチャ
+
+状態$$\mathbf{S}_{t}$$の平均および分散を逐次的に出力するネットワークを示す。
+
+![deep_imitative_model](./deep_imitative_model.png)
+
+<img src="./arch_detail.png" alt="arch_detail"  />
+
+観測$\phi \doteq \{\mathbf{s}_{-\tau:0}, \chi , \lambda\}$は過去から現在までの位置およびLiDARの情報を俯瞰図で表現した$$\chi = \mathbb{R}^{200 \times 200 \times 2}$$である。各グリッドの面積は$$0.5 m^2$$であり、地面の上と下にあるポイントの2ビンのヒストグラムである。$$\lambda$$は低次元の信号機の情報である。RNN(GRU)とCNNはそれぞれ$$\mathbf{s}_{-\tau:0}$$と$$\chi$$を処理して$$\alpha$$と$$\Gamma$$を出力する。$$\alpha$$、$$\mathbf{s}_t$$、$$\Gamma(\mathbf{S}_{t})$$および$$\lambda$$はConcatenationされ、RNN(GRU)により処理される。$$\Gamma(\mathbf{S}_{t})$$は、位置$$\mathbf{S}_{t}$$に対応したサブピクセルにもどづいてbilinear保管された特徴ベクトルである。RNNは位置を直接出力する代わりにベレの方法([wiki](https://en.wikipedia.org/wiki/Verlet_integration))のステップ$$m_{\theta}(\mathbf{S}_{1:t-1}, \phi)$$と位置の分散$$\sigma_{\theta}(\mathbf{S}_{1:t-1}, \phi)$$を出力する。位置の平均は次式で計算できる。
+$$
+\mu_{\theta}(\mathbf{S}_{1:t-1}, \phi) = 2 \mathbf{S}_{t-1} - \mathbf{S}_{t-2} + m_{\theta}(\mathbf{S}_{1:t-1}, \phi)
+$$
+
+### Imitative Planning
+
+実行時にGradient ascentによって式(1)を最適化することでゴールに到達するエキスパートらしい計画を計算する。Algorithm 2で示すように潜在空間$$z$$を通して最適化計算を行う。
+
+![imitaive_planning_to_goals](./imitaive_planning_to_goals.png)
 
 ![imitative_plan](./imitative_plan.png)
 
-ここで
+### ゴール尤度関数の設計
 
-* $$q$$ : エキスパートの軌跡を模倣する確率モデル$$q_{\theta}(S \mid \phi)$$ 
-* $$f$$: 観測$$\phi$$および正規分布に従う潜在変数$$ Z \sim q_0 = \mathcal{N}(0, I)$$から計画$$S$$にワープする可逆かつ微分可能な関数 $$ S = f_{\theta}(Z; \phi) $$ （論文では関数$$f$$にR2P2を使う。）
-* パラメータ$$\theta$$は、エキスパートの軌跡を使い$$q(S\mid\phi)$$を最大化することで求める。
-
-> Nicholas Rhinehart, Kris M. Kitani, and Paul Vernaza. R2P2: A reparameterized pushforward policy for diverse, precise generative path forecasting. In European Conference on Computer Vision (ECCV), September 2018.
->
-> 車両の経路を予測する論文である。計画Sは２次元座標x,yからなるwaypointで構成される。論文内で使われたネットワークのアーキテクチャは以下の図のように自己回帰的に動作する。 ネットワークは位置の平均ではなく、１,２サンプル前の位置との平均速度、位置の分散を出力する。
->
-> ![deep_imitative_model](./deep_imitative_model.png)
-
-ゴールの尤度関数設計は自由度が高く、ゴール内ならば１，ゴール外ならば０を返すという簡単な関数を尤度関数とすることができる。
+ゴール尤度関数の設計は自由度が高く、ゴール内ならば１，ゴール外ならば０を返すという簡単な関数を尤度関数とすることができる。
 
 ![goal_likelihood](./goal_likelihood.png)
 
