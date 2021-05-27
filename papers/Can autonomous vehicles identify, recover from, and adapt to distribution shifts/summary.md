@@ -23,13 +23,17 @@
 
 ## 手法は？
 
-RIPは不確実性の下での計画としてエキスパートの軌跡を模倣する確率モデル$$q(\mathbf{y} \mid x; \theta)$$を複数使い(Deep Ensembles)、集約された複数の尤度を最大化するような経路計画$$\mathbf{y}_{RIP}^{\mathcal{G}}$$を求める。計画$$\mathbf{y}$$は二次元の位置で構成される。確率モデル$$q(\mathbf{y} \mid x; \theta)$$はエキスパートのデータを用いて模倣尤度を最大化するように訓練済みである。集約する方法として、最小の尤度をとるWorst Case Aggregationと重み付き平均をおこなうModel Averaging Aggregationを提案する。DIMと同様にこの問題はGradient Ascentで解く。
+エキスパートのデータから分割されたデータおよびランダムな初期パラメータから模倣尤度を最大化するように訓練された複数の確率モデル$$q(\mathbf{y} \mid x; \theta)$$を用いて、実行時に次式(4)の最適化問題を解くことで経路計画$$\mathbf{y}_{RIP}^{\mathcal{G}}$$を求める。計画$$\mathbf{y}$$は二次元の位置で構成される。
 
 <img src="./rip.png" alt="rip" style="zoom: 67%;" />
+
+$$\oplus$$はaggregation operatorである。集約する方法として、最小の尤度をとるWorst Case Aggregationと重み付き平均をおこなうModel Averaging Aggregationを提案する。
 
 ![rip_wca](./rip_wca.png)
 
 ![rip_ma](./rip_ma.png)
+
+式（4）はDeep Imitative Planningと同様に次のような最適化計算を行うことで解く。
 
 ![rip_algorithm](./rip_algorithm.png)
 
