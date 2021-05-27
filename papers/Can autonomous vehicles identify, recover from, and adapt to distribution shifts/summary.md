@@ -23,7 +23,7 @@
 
 ## 手法は？
 
-RIPは不確実性の下での計画としてエキスパートの軌跡を模倣する確率モデル$$q(y \mid x; \theta)$$を複数使い(Deep Ensembles)、集約された複数の尤度を最大化するような経路計画$$y_{RIP}^{\mathcal{G}}$$を求める。集約する方法として、最小の尤度をとるWorst Case Aggregationと重み付き平均をおこなうModel Averaging Aggregationを提案する。DIMと同様にこの問題はGradient Ascentで解く。
+RIPは不確実性の下での計画としてエキスパートの軌跡を模倣する確率モデル$$q(\mathbf{y} \mid x; \theta)$$を複数使い(Deep Ensembles)、集約された複数の尤度を最大化するような経路計画$$\mathbf{y}_{RIP}^{\mathcal{G}}$$を求める。計画$$\mathbf{y}$$は二次元の位置で構成される。確率モデル$$q(\mathbf{y} \mid x; \theta)$$はエキスパートのデータを用いて模倣尤度を最大化するように訓練済みである。集約する方法として、最小の尤度をとるWorst Case Aggregationと重み付き平均をおこなうModel Averaging Aggregationを提案する。DIMと同様にこの問題はGradient Ascentで解く。
 
 <img src="./rip.png" alt="rip" style="zoom: 67%;" />
 
@@ -33,7 +33,7 @@ RIPは不確実性の下での計画としてエキスパートの軌跡を模�
 
 ![rip_algorithm](./rip_algorithm.png)
 
-また複数のモデル尤度の分散は訓練分布内であれば低く、分布外であれば大きくなることから、閾値を設けることで分布シフトを検出する。
+また複数のモデル尤度の分散は訓練分布内であれば低く、分布外であれば大きくなることから、閾値を設けることで分布シフトを検出することができる。
 
 ![detecting_distribution_shift](./detecting_distribution_shift.png)
 

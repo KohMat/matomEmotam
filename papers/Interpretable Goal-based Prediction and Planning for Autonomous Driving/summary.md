@@ -39,7 +39,7 @@ IGP2アルゴリズムは次の手順で自車両のmacro actionを計算する�
 * *Trajectory predictions* 各車両がその軌道を選択する確率分布$$p(s_{1:n}^{i, k})$$を求める
 * *MCTS Planner* $$p(w_i)$$ 、$$p(G^i \mid s_{1:n}^i, w^i)$$、$$p(\hat{s}_{1:n}^{i, k})$$および自車両の状態$$s_t$$からMCTSアルゴリズムにより最適なmacro actionを求める
 
-![overview](/home/x/Workspace/matomEmotam/papers/Interpretable Goal-based Prediction and Planning for Autonomous Driving/overview.png)
+![overview](./overview.png)
 
 ![mcts](./mcts.png)
 
