@@ -30,7 +30,7 @@ def get_papers(base) -> List[str]:
 
 if __name__ == "__main__":
     git_top = get_git_root(".")
-    papers = get_papers(git_top)
+    papers = get_papers(f"{git_top}/papers")
     print(papers)
 
     with open("index.md", "w") as f:
