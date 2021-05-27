@@ -33,23 +33,15 @@
 
 ESPはマルチエージェントのTステップ先のダイナミクスを確率的に予測する尤度ベースの生成モデル$$\mathbf{S} \sim q(\mathbf{S} \mid \phi;\mathcal{D})$$である。$$\mathcal{D}$$はデータセットである。エキスパートの軌跡を模倣する確率モデル$$q(\mathbf{S} \mid \phi)$$ は遷移確率の積として表すことができる。
 
+$$q(\mathbf{S})= \prod_{t=1}^T q(\mathbf{S}_t \mid \mathbf{S}_{1:t-1}, \phi)$$
 
-$$
-q(\mathbf{S})= \prod_{t=1}^T q(\mathbf{S}_t \mid \mathbf{S}_{1:t-1}, \phi)
-$$
+すべてのエージェントの遷移確率および各エージェントの遷移確率を正規分布と仮定するとエージェント$$a$$の状態遷移は次で表せる。
 
-各エージェントの遷移確率を正規分布と仮定すると、すべてのエージェントの遷移確率およびエージェント$$a$$の状態遷移は次で表せる。
-
-
-$$
-q(\mathbf{S}_t \mid \mathbf{S}_{1:t-1}, \phi)
+$$q(\mathbf{S}_t \mid \mathbf{S}_{1:t-1}, \phi)
 = \prod_{a=1}^A
-\mathcal{N}(\mathbf{S}_t^a ; \mu_t^a, \sigma_t^a{\sigma_t^a}^{\top})
-$$
+\mathcal{N}(\mathbf{S}_t^a ; \mu_t^a, \sigma_t^a{\sigma_t^a}^{\top})$$
 
-$$
-\mathbf{S}_{t}^{a} = f(\mathbf{Z}_t^a) = \mu_{\theta}^a(\mathbf{S}_{1:t-1}, \phi) + \sigma_{\theta}^a(\mathbf{S}_{1:t-1}, \phi) \cdot \mathbf{Z}_t^a
-$$
+$$\mathbf{S}_{t}^{a} = f(\mathbf{Z}_t^a) = \mu_{\theta}^a(\mathbf{S}_{1:t-1}, \phi) + \sigma_{\theta}^a(\mathbf{S}_{1:t-1}, \phi) \cdot \mathbf{Z}_t^a$$
 
 $$f(\cdot)$$は観測$$\phi$$および正規分布に従う潜在変数$$\mathbf{Z}_t^a$$から計画$$\mathbf{S}$$にワープする可逆かつ微分可能な関数、$$\mathbf{Z}_t$$ : 正規分布に従う潜在変数$$\mathbf{Z} \sim q_0 = \mathcal{N}(0, I)$$、$$\mu_{\theta}^a(\cdot)$$および$$\sigma_{\theta}^a(\cdot)$$は状態$$\mathbf{S}_{t}$$の平均および分散を出力するネットワーク関数である。パラメータ$$\theta$$はエキスパートの軌跡を模倣する確率モデル$$q(S \mid \phi;\mathcal{D})$$ を尤度を最大化して求められる。
 
@@ -65,37 +57,39 @@ ESPによる予測は次の通りである。
 
 ### ネットワークアーキテクチャ(詳細はAppendix C)
 
-エージェントが２個の場合の状態$$\mathbf{S}_{t}$$の平均および分散を出力するESPのアーキテクチャを示す。RNN(GRU)とCNNはそれぞれ$$\mathbf{s}_{-\tau:0}$$と$$\chi$$を処理して$$\alpha$$と$$\Gamma$$を出力する。各エージェントごとに$$\alpha$$、$$\mathbf{s}_t$$、$$\Gamma(\mathbf{S}_{t}^a)$$および$$\lambda$$はConcatenationされ、RNN(GRU)により処理される。$$\Gamma(\mathbf{S}_{t}^a)$$は、位置$$\mathbf{S}_{t}^a$$に対応したサブピクセルにもどづいてbilinear補間された特徴ベクトルである。RNNは位置の平均を直接出力する代わりにベレの方法([wiki](https://en.wikipedia.org/wiki/Verlet_integration))のステップ$$m_{\theta}^a(\mathbf{S}_{1:t-1}, \phi)$$と位置の分散$$\sigma_{\theta}^a(\mathbf{S}_{1:t-1}, \phi)$$を出力する。位置の平均は次式で計算できる。
-$$
-\mu_{\theta}(\mathbf{S}_{1:t-1}, \phi) = 2 \mathbf{S}_{t-1} - \mathbf{S}_{t-2} + m_{\theta}(\mathbf{S}_{1:t-1}, \phi)
-$$
+エージェントが２個の場合の状態$$\mathbf{S}_{t}$$の平均および分散を出力するESPのアーキテクチャを示す。
+
 <img src="./EmbeddedImage.png" alt="EmbeddedImage" style="zoom: 50%;" />
+
+RNN(GRU)とCNNはそれぞれ$$\mathbf{s}_{-\tau:0}$$と$$\chi$$を処理して$$\alpha$$と$$\Gamma$$を出力する。各エージェントごとに$$\alpha$$、$$\mathbf{s}_t$$、$$\Gamma(\mathbf{S}_{t}^a)$$および$$\lambda$$はConcatenationされ、RNN(GRU)により処理される。$$\Gamma(\mathbf{S}_{t}^a)$$は、位置$$\mathbf{S}_{t}^a$$に対応したサブピクセルにもどづいてbilinear補間された特徴ベクトルである。RNNは位置の平均を直接出力する代わりにベレの方法([wiki](https://en.wikipedia.org/wiki/Verlet_integration))のステップ$$m_{\theta}^a(\mathbf{S}_{1:t-1}, \phi)$$と位置の分散$$\sigma_{\theta}^a(\mathbf{S}_{1:t-1}, \phi)$$を出力する。位置の平均は次式で計算できる。
+
+$$\mu_{\theta}(\mathbf{S}_{1:t-1}, \phi) = 2 \mathbf{S}_{t-1} - \mathbf{S}_{t-2} + m_{\theta}(\mathbf{S}_{1:t-1}, \phi)$$
 
 エージェント数がデータ中に変わるようなデータに対しては、最大エージェント数$$A_{train}$$を決めた上でRNNの入力にマスク$$M \in \{ 0, 1 \} ^{A_{train}}$$を使うことで欠落しているエージェントを表現する。
 
 ### PREdiction Conditioned On Goals (PRECOG)
 
 エージェント（自車両）が設定したゴールに止まるような制御変数$$z^{r*}$$を次の最適化問題を解いた(プランニングした)あと、ESPと同様に自車両以外のエージェントの決定をサンプリングし、予測を行う。
-$$
-\DeclareMathOperator*{\argmin}{arg\,min}
+
+$$\DeclareMathOperator*{\argmin}{arg\,min}
 \DeclareMathOperator*{\argmax}{arg\,max}
 \begin{equation}
 z^{r *} = \argmax_{z^r} \mathcal{L}(\mathbf{z}^r, \mathcal{G}, \phi)
-\end{equation}
-$$
+\end{equation}$$
+
 ここで$$\mathcal{L}(\mathbf{z}^r, \mathcal{G})$$はマルチエージェントの模倣尤度とゴールの尤度の和の期待値
-$$
-\mathcal{L}(\mathbf{z}^r, \mathcal{G}, \phi) = \mathbb{E}_{\mathbf{Z}^h} \left[ \log q(f(\mathbf{Z}) \mid \phi) + \log q(\mathcal{G} \mid f(\mathbf{Z}), \phi) \right]
-$$
+
+$$\mathcal{L}(\mathbf{z}^r, \mathcal{G}, \phi) = \mathbb{E}_{\mathbf{Z}^h} \left[ \log q(f(\mathbf{Z}) \mid \phi) + \log q(\mathcal{G} \mid f(\mathbf{Z}), \phi) \right]$$
+
 である。実際にこの最適化問題は解くときは他エージェントの潜在変数$$\mathbf{Z}^h$$を正規分布$$\mathcal{N}(0, \mathbf{I})$$からサンプリングしてゴールの尤度による重み付き平均を行うことで期待値の近似を行う。すなわち、近似された期待値は
-$$
-\hat{\mathcal{L}}(\mathbf{z}^r, \mathcal{G}, \phi)
+
+$$\hat{\mathcal{L}}(\mathbf{z}^r, \mathcal{G}, \phi)
 = \frac{1}{K} \sum_{k=1}^{K}
 \log(
 p(f(^k\mathbf{z}) \mid \phi)
 p(\mathcal{G} \mid f(^k\mathbf{z}), \phi)
-)
-$$
+)$$
+
 である。だたし$$^{1:K}\mathbf{z}$$はサンプリングされたK個のすべてのエージェントの潜在変数である。$$^{k}\mathbf{z}$$は最適化問題で求める制御変数$$\mathbf{z}^r$$と$$k$$番目のサンプリングが含まれている。$$^k\mathbf{z}=[\mathbf{z}^r, ^k\mathbf{z}^h]$$。この近似期待値をつかったGradient Ascentによるアルゴリズムは次のとおりである。
 
 ![multimitativeplanning](./multimitativeplanning.png)

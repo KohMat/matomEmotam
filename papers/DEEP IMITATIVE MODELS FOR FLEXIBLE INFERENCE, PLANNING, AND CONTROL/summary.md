@@ -50,7 +50,7 @@ $$f(\cdot)$$は観測$$\phi$$および正規分布に従う潜在変数$$\mathbf
 
 <img src="./arch_detail.png" alt="arch_detail"  />
 
-観測$\phi \doteq \{\mathbf{s}_{-\tau:0}, \chi , \lambda\}$は過去から現在までの位置およびLiDARの情報を俯瞰図で表現した$$\chi = \mathbb{R}^{200 \times 200 \times 2}$$である。各グリッドの面積は$$0.5 m^2$$であり、地面の上と下にあるポイントの2ビンのヒストグラムである。$$\lambda$$は低次元の信号機の情報である。RNN(GRU)とCNNはそれぞれ$$\mathbf{s}_{-\tau:0}$$と$$\chi$$を処理して$$\alpha$$と$$\Gamma$$を出力する。$$\alpha$$、$$\mathbf{s}_t$$、$$\Gamma(\mathbf{S}_{t})$$および$$\lambda$$はConcatenationされ、RNN(GRU)により処理される。$$\Gamma(\mathbf{S}_{t})$$は、位置$$\mathbf{S}_{t}$$に対応したサブピクセルにもどづいてbilinear補間された特徴ベクトルである。RNNは位置の平均を直接出力する代わりにベレの方法([wiki](https://en.wikipedia.org/wiki/Verlet_integration))のステップ$$m_{\theta}(\mathbf{S}_{1:t-1}, \phi)$$と位置の分散$$\sigma_{\theta}(\mathbf{S}_{1:t-1}, \phi)$$を出力する。位置の平均は次式で計算できる。
+観測$$\phi \doteq \{\mathbf{s}_{-\tau:0}, \chi , \lambda\}$$は過去から現在までの位置およびLiDARの情報を俯瞰図で表現した$$\chi = \mathbb{R}^{200 \times 200 \times 2}$$である。各グリッドの面積は$$0.5 m^2$$であり、地面の上と下にあるポイントの2ビンのヒストグラムである。$$\lambda$$は低次元の信号機の情報である。RNN(GRU)とCNNはそれぞれ$$\mathbf{s}_{-\tau:0}$$と$$\chi$$を処理して$$\alpha$$と$$\Gamma$$を出力する。$$\alpha$$、$$\mathbf{s}_t$$、$$\Gamma(\mathbf{S}_{t})$$および$$\lambda$$はConcatenationされ、RNN(GRU)により処理される。$$\Gamma(\mathbf{S}_{t})$$は、位置$$\mathbf{S}_{t}$$に対応したサブピクセルにもどづいてbilinear補間された特徴ベクトルである。RNNは位置の平均を直接出力する代わりにベレの方法([wiki](https://en.wikipedia.org/wiki/Verlet_integration))のステップ$$m_{\theta}(\mathbf{S}_{1:t-1}, \phi)$$と位置の分散$$\sigma_{\theta}(\mathbf{S}_{1:t-1}, \phi)$$を出力する。位置の平均は次式で計算できる。
 
 
 $$
