@@ -33,10 +33,14 @@ Imitative Planningとゴール尤度関数の設計である。単一エージ�
 ### エキスパートの軌跡を模倣する確率モデル$$q(\mathbf{S} \mid \phi)$$ のモデリング
 
 連続空間、離散時間、POMDPの仮定の下モデル化を行う。時刻$$t$$におけるすべてのエージェントの状態（位置）を$$\mathbf{s}_t \in \mathbb{R}^{D}$$とする。また観測を$$\phi$$とする。変数をボールド、確率変数を大文字とする。添え付き文字の省略はすべての未来の時刻を含む。$$\mathbf{S}=\mathbf{S}_{1:T}$$とする。エキスパートの軌跡$$\mathbf{S}$$を模倣する確率モデル$$q(\mathbf{S} \mid \phi)$$ は遷移確率の積として表すことができる。
+
+
 $$
 q(\mathbf{S}_{1:T} \mid \phi) = \prod_{t=1}^T q(\mathbf{S}_t \mid \mathbf{S}_{1:t-1}, \phi)
 $$
 遷移確率$$q(\mathbf{S}_t \mid \mathbf{S}_{1:t-1}, \phi)$$は正規分布を仮定し、状態の遷移が次式で表せるとする。
+
+
 $$
 \mathbf{S}_{t} = f(\mathbf{Z}_t) = \mu_{\theta}(\mathbf{S}_{1:t-1}, \phi) + \sigma_{\theta}(\mathbf{S}_{1:t-1}, \phi) \cdot \mathbf{Z}_t
 $$
@@ -51,6 +55,8 @@ $$f(\cdot)$$は観測$$\phi$$および正規分布に従う潜在変数$$\mathbf
 <img src="./arch_detail.png" alt="arch_detail"  />
 
 観測$\phi \doteq \{\mathbf{s}_{-\tau:0}, \chi , \lambda\}$は過去から現在までの位置およびLiDARの情報を俯瞰図で表現した$$\chi = \mathbb{R}^{200 \times 200 \times 2}$$である。各グリッドの面積は$$0.5 m^2$$であり、地面の上と下にあるポイントの2ビンのヒストグラムである。$$\lambda$$は低次元の信号機の情報である。RNN(GRU)とCNNはそれぞれ$$\mathbf{s}_{-\tau:0}$$と$$\chi$$を処理して$$\alpha$$と$$\Gamma$$を出力する。$$\alpha$$、$$\mathbf{s}_t$$、$$\Gamma(\mathbf{S}_{t})$$および$$\lambda$$はConcatenationされ、RNN(GRU)により処理される。$$\Gamma(\mathbf{S}_{t})$$は、位置$$\mathbf{S}_{t}$$に対応したサブピクセルにもどづいてbilinear補間された特徴ベクトルである。RNNは位置の平均を直接出力する代わりにベレの方法([wiki](https://en.wikipedia.org/wiki/Verlet_integration))のステップ$$m_{\theta}(\mathbf{S}_{1:t-1}, \phi)$$と位置の分散$$\sigma_{\theta}(\mathbf{S}_{1:t-1}, \phi)$$を出力する。位置の平均は次式で計算できる。
+
+
 $$
 \mu_{\theta}(\mathbf{S}_{1:t-1}, \phi) = 2 \mathbf{S}_{t-1} - \mathbf{S}_{t-2} + m_{\theta}(\mathbf{S}_{1:t-1}, \phi)
 $$

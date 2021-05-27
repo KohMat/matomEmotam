@@ -32,11 +32,15 @@
 ### Estimating Social-forecast Probability (ESP)
 
 ESPはマルチエージェントのTステップ先のダイナミクスを確率的に予測する尤度ベースの生成モデル$$\mathbf{S} \sim q(\mathbf{S} \mid \phi;\mathcal{D})$$である。$$\mathcal{D}$$はデータセットである。エキスパートの軌跡を模倣する確率モデル$$q(\mathbf{S} \mid \phi)$$ は遷移確率の積として表すことができる。
+
+
 $$
 q(\mathbf{S})= \prod_{t=1}^T q(\mathbf{S}_t \mid \mathbf{S}_{1:t-1}, \phi)
 $$
 
 各エージェントの遷移確率を正規分布と仮定すると、すべてのエージェントの遷移確率およびエージェント$$a$$の状態遷移は次で表せる。
+
+
 $$
 q(\mathbf{S}_t \mid \mathbf{S}_{1:t-1}, \phi)
 = \prod_{a=1}^A
