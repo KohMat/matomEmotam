@@ -20,7 +20,7 @@ Henry Pulver , Francisco Eiras†, Ludovico Carozza, Majd Hawasly , Stefano V. A
 
 オプティマイザの目的関数を直接近似するネットワークを作成するConstrained Policy Nets([Safe and feasible motion generation for autonomous driving via constrained policy net](https://ieeexplore.ieee.org/document/8216790))に対して、拘束条件を考慮することがないのでPILOTで用いる模倣ネットワークの訓練は簡単である。
 
-## 技術や手法の核はどこ？
+## 手法は？
 
 PILOTは経路計画を出力するネットワークを最適化問題の初期解として使用する。これにより、テスト時の実行時間が短縮できる。使われるネットワークは、共変量シフトに適応するため、模倣学習の一つである[DAgger(Dataset Aggregation)](https://arxiv.org/abs/1011.0686)アルゴリズムで訓練される(Algorithm 2)。具体的には2s-OPTなどの実行が高価なプランナーで最適な解を作成し、初期データセットのもとでネットワークを訓練する。そして得られたネットワークを用いてPILOTアルゴリズムをシミュレーター環境内で動かし、新しいデータを得る。新しいデータを含めたデータセットでネットワークの重みを逐次更新する。
 

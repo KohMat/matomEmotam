@@ -9,7 +9,7 @@
 
 ## どんなもの？
 
-可変数のエージェント（車両）の確率予測モデルESP(Estimating Social-forecast Probabilities)を提案する。ESPは単一エージェントを予測するR2P2([link](https://people.eecs.berkeley.edu/~nrhinehart/papers/r2p2_cvf.pdf), [summary](../R2P2: A reparameterized pushforward policy for diverse, precise generative path forecasting/summary.md))をマルチエージェント間の相互作用を考慮して一般化したもので、エージェント間の尤もらしい将来の相互作用を確率的に説明する。ESPでは各エージェントの決断をfactorized潜在変数によって表現する。マルチエージェントと時間にまたがる分解により、任意の時間における任意エージェントの状態を独立に変えたときの効果を調べることができる。つまり潜在変数をサンプリングすることで、マルチエージェントの相互作用を考慮した予測を行うことができる。
+可変数のエージェント（車両）の確率予測モデルESP(Estimating Social-forecast Probabilities)およびESPを用いた予測方法を提案する。ESPは単一エージェントを予測するR2P2([link](https://people.eecs.berkeley.edu/~nrhinehart/papers/r2p2_cvf.pdf), [summary](../R2P2: A reparameterized pushforward policy for diverse, precise generative path forecasting/summary.md))をマルチエージェント間の相互作用を考慮して一般化したもので、エージェント間の尤もらしい将来の相互作用を確率的に説明する。ESPでは各エージェントの決断をfactorized潜在変数によって表現する。マルチエージェントと時間にまたがる分解により、任意の時間における任意エージェントの状態を独立に変えたときの効果を調べることができる。つまり潜在変数をサンプリングすることで、マルチエージェントの相互作用を考慮した予測を行うことができる。
 
 またESPを用いた予測法PRECOG(PREdition Conditioned On Goal)を提案する。PRECOGは単一エージェントのプランニングを行うDeep Imitative Planning([arxiv](https://arxiv.org/pdf/1810.06544.pdf), [summary](../DEEP IMITATIVE MODELS FOR FLEXIBLE INFERENCE, PLANNING, AND CONTROL/summary.md))をマルチエージェント間の相互作用を考慮して一般化したプランニングを使う。ESPを用いてこのプランニングを行うことで自車両が目的地（ゴールに向かって）に向かうような自車両の潜在変数を求めることができる。予測時にこの求めた潜在変数を使う。
 
@@ -23,9 +23,9 @@
 
 ### ゴール条件付きマルチエージェント予測
 
-エージェントが向かうべきゴールを条件に予測を行う初の生成型のマルチエージェント予測法PRECOG(PREdition Conditioned On Goal)を提案した。自車両のエージェントにゴールを条件付け、マルチエージェント環境でのImitative Planningを行うことで、相互に作用するその他のエージェントの予測性能が改善されることを示した。
+エージェントが向かうべきゴールを条件に予測を行う初の生成型のマルチエージェント予測法PRECOG　(PREdition Conditioned On Goal)を提案した。自車両のエージェントにゴールを条件付け、マルチエージェント環境でのImitative Planningを行うことで、自車両だけでなく相互に作用するその他のエージェントの予測性能が改善されることを示した。
 
-## 技術や手法の核はどこ？
+## 手法は？
 
 連続空間、離散時間、POMDPのマルチエージェントシステムを扱う。時刻$$t$$におけるすべてのエージェントの状態（位置）を$$\mathbf{S}_t \in \mathbb{R}^{A \times D}$$とする。$$A$$はエージェント個数、$$D=2$$である。変数を関数と区別するためにボールドで表す。大文字は確率変数であることを示す。$$\mathbf{S}_t^a$$は時刻$$t$$におけるエージェント$$a$$の2次元位置$$x,y$$を示す。$$t=0$$は現在時刻、$$a$$が$$r$$もしくは$$1$$の場合は自車両、$$h$$もしくは$$2\sim$$の場合は他車両、人を示す。添字を省略した$$\mathbf{S}$$は$$\mathbf{S}_{1:T}^{1:A} \in \mathbb{R}^{T \times A \times D}$$を示す。すなわちすべてのエージェントの予測である。$$\chi$$はLIDARや道路などの高次元の観測である。実験した例ではLIDARの情報を俯瞰図で表現した観測$$\chi= \mathbb{R}^{200 \times 200 \times 2}$$を使った。各グリッドの面積は$$0.5 m^2$$であり、地面の上と下にあるポイントの2ビンのヒストグラムである。各エージェントは$$\phi \doteq \{\mathbf{s}_{-\tau:0}, \chi \}$$にアクセスできる。
 
@@ -55,21 +55,23 @@ ESPによる予測は次の通りである。
 
     $$^{1:K}\mathbf{z}_{1:T}^{1:A} \overset{iid}{\sim} \mathcal{N}(0, I)$$
 
-2. 潜在空間からワープする
+2. 潜在空間から状態へワープする
 
    $$^{1:K}\mathbf{s}_{1:T}^{1:A} \leftarrow f(^{1:K}\mathbf{z}_{1:T}^{1:A}, \phi) $$
 
 ### ネットワークアーキテクチャ(詳細はAppendix C)
 
-エージェントが２個の場合の状態$$\mathbf{S}_{t}$$の平均および分散を出力するESPのアーキテクチャを示す。RNN(GRU)とCNNはそれぞれ$$\mathbf{s}_{-\tau:0}$$と$$\chi$$を処理して$$\alpha$$と$$\Gamma$$を出力する。各エージェントごとに$$\alpha$$、$$\mathbf{s}_t$$、$$\Gamma(\mathbf{S}_{t}^a)$$および$$\lambda$$はConcatenationされ、RNN(GRU)により処理される。$$\Gamma(\mathbf{S}_{t}^a)$$は、位置$$\mathbf{S}_{t}^a$$に対応したサブピクセルにもどづいてbilinear保管された特徴ベクトルである。RNNは位置を直接出力する代わりにベレの方法([wiki](https://en.wikipedia.org/wiki/Verlet_integration))のステップ$$m_{\theta}^a(\mathbf{S}_{1:t-1}, \phi)$$と位置の分散$$\sigma_{\theta}^a(\mathbf{S}_{1:t-1}, \phi)$$を出力する。位置の平均は次式で計算できる。
+エージェントが２個の場合の状態$$\mathbf{S}_{t}$$の平均および分散を出力するESPのアーキテクチャを示す。RNN(GRU)とCNNはそれぞれ$$\mathbf{s}_{-\tau:0}$$と$$\chi$$を処理して$$\alpha$$と$$\Gamma$$を出力する。各エージェントごとに$$\alpha$$、$$\mathbf{s}_t$$、$$\Gamma(\mathbf{S}_{t}^a)$$および$$\lambda$$はConcatenationされ、RNN(GRU)により処理される。$$\Gamma(\mathbf{S}_{t}^a)$$は、位置$$\mathbf{S}_{t}^a$$に対応したサブピクセルにもどづいてbilinear補間された特徴ベクトルである。RNNは位置の平均を直接出力する代わりにベレの方法([wiki](https://en.wikipedia.org/wiki/Verlet_integration))のステップ$$m_{\theta}^a(\mathbf{S}_{1:t-1}, \phi)$$と位置の分散$$\sigma_{\theta}^a(\mathbf{S}_{1:t-1}, \phi)$$を出力する。位置の平均は次式で計算できる。
 $$
 \mu_{\theta}(\mathbf{S}_{1:t-1}, \phi) = 2 \mathbf{S}_{t-1} - \mathbf{S}_{t-2} + m_{\theta}(\mathbf{S}_{1:t-1}, \phi)
 $$
 <img src="/home/x/Workspace/matomEmotam/papers/PRECOG: PREdiction Conditioned On Goals in Visual Multi-Agent Settings/EmbeddedImage.png" alt="EmbeddedImage" style="zoom: 50%;" />
 
+エージェント数がデータ中に変わるようなデータに対しては、最大エージェント数$$A_{train}$$を決めた上でRNNの入力にマスク$$M \in \{ 0, 1 \} ^{A_{train}}$$を使うことで欠落しているエージェントを表現する。
+
 ### PREdiction Conditioned On Goals (PRECOG)
 
-エージェント（自車両）が設定したゴールに止まるような制御変数$$z^{r*}$$を次の最適化問題を解く(プランニングする)ことで求めたあと、ESPと同様に自車両以外のエージェントの決定をサンプリングし、予測を行う。
+エージェント（自車両）が設定したゴールに止まるような制御変数$$z^{r*}$$を次の最適化問題を解いた(プランニングした)あと、ESPと同様に自車両以外のエージェントの決定をサンプリングし、予測を行う。
 $$
 \DeclareMathOperator*{\argmin}{arg\,min}
 \DeclareMathOperator*{\argmax}{arg\,max}
@@ -77,11 +79,11 @@ $$
 z^{r *} = \argmax_{z^r} \mathcal{L}(\mathbf{z}^r, \mathcal{G}, \phi)
 \end{equation}
 $$
-$$\mathcal{L}(\mathbf{z}^r, \mathcal{G})$$はマルチエージェントの模倣尤度とゴールの尤度の和の期待値
+ここで$$\mathcal{L}(\mathbf{z}^r, \mathcal{G})$$はマルチエージェントの模倣尤度とゴールの尤度の和の期待値
 $$
 \mathcal{L}(\mathbf{z}^r, \mathcal{G}, \phi) = \mathbb{E}_{\mathbf{Z}^h} \left[ \log q(f(\mathbf{Z}) \mid \phi) + \log q(\mathcal{G} \mid f(\mathbf{Z}), \phi) \right]
 $$
-である。実際にはこの最適化問題は解くとき、他エージェントの潜在変数$$\mathbf{Z}^h$$を正規分布$$\mathcal{N}(0, \mathbf{I})$$からサンプリングしてゴールの尤度による重み付き平均を行うことで期待値の近似を行う。近似された期待値は
+である。実際にこの最適化問題は解くときは他エージェントの潜在変数$$\mathbf{Z}^h$$を正規分布$$\mathcal{N}(0, \mathbf{I})$$からサンプリングしてゴールの尤度による重み付き平均を行うことで期待値の近似を行う。すなわち、近似された期待値は
 $$
 \hat{\mathcal{L}}(\mathbf{z}^r, \mathcal{G}, \phi)
 = \frac{1}{K} \sum_{k=1}^{K}
@@ -90,13 +92,11 @@ p(f(^k\mathbf{z}) \mid \phi)
 p(\mathcal{G} \mid f(^k\mathbf{z}), \phi)
 )
 $$
-である。$$^{1:K}\mathbf{z}$$はサンプリングされたK個のすべてのエージェントの潜在変数である。$$^{k}\mathbf{z}$$は最適化問題で求める制御変数$$\mathbf{z}^r$$と$$k$$番目のサンプリングが含まれている。$$^k\mathbf{z}=[\mathbf{z}^r, ^k\mathbf{z}^h]$$。
-
-この近似期待値をつかったGradient Ascentによるアルゴリズムは次のとおりである。
+である。だたし$$^{1:K}\mathbf{z}$$はサンプリングされたK個のすべてのエージェントの潜在変数である。$$^{k}\mathbf{z}$$は最適化問題で求める制御変数$$\mathbf{z}^r$$と$$k$$番目のサンプリングが含まれている。$$^k\mathbf{z}=[\mathbf{z}^r, ^k\mathbf{z}^h]$$。この近似期待値をつかったGradient Ascentによるアルゴリズムは次のとおりである。
 
 ![multimitativeplanning](./multimitativeplanning.png)
 
-この制御変数$$z^{r*}$$を使った予測は次のとおりである
+またこの制御変数$$z^{r*}$$を使った予測は次のとおりである
 
 ![precog_algorithm](./precog_algorithm.png)
 
@@ -104,7 +104,7 @@ $$
 
 ### ESPの検証
 
-**Didactic Example**：簡素な交差点でのナビゲーションを使い予測性能を検証した。交差点には人間（オレンジ）およびロボット（青）が存在する。人間は常に4ステップ直進し、その後直進もしくは左折のどちらかの行動を行う（50％の確率）。ロボットは直視しようと試みるが、人間が左折した場合には譲歩する。このナビゲーションシミュレーションを行い、データセットを作成し、ESPおよびベースラインR2P2-MAの訓練を行った。学習したそれぞれの方法の予測結果を次に示す。R2P2-MAはエージェント間の相互作用を考慮していないので、50％の確率で人間とロボットがぶつかる予測を行った。これに対してESPは人間の決定に対して反応していることを示している。
+**Didactic Example**：簡素な交差点でのナビゲーションを使い予測性能を検証した。交差点には人間（オレンジ）およびロボット（青）が存在する。人間は常に4ステップ直進し、その後50％の確率で直進もしくは左折のどちらかの行動を行う。ロボットは交差点を直進しようと試みるが、人間が左折した場合には譲歩する。このナビゲーションシミュレーションを行い、データセットを作成し、ESPおよびベースラインR2P2-MAの訓練を行った。学習したそれぞれの方法の予測結果を次に示す。R2P2-MAはエージェント間の相互作用を考慮していないので、50％の確率で人間とロボットがぶつかる予測を行った。これに対してESPは人間の決定に対して反応していることを示している。
 
 ![didactic_example](./didactic_example.png)
 
@@ -125,7 +125,7 @@ CALRAおよびnuScenesを使い、PRECOGの予測性能を検証した。Planing
 個人的に
 
 * Didactic Exampleで自車両は人間が左折したとき、人間もしくはロボットが交差点前に止まるパターンを検証してみたい。
-* 上に書かれているとおり、PRECOGの検証で、自車両だけでなく、観測範囲内の道路の構造上到達しうる点も加えて検証をしてみたい
+* 上に書かれているとおり、PRECOGの検証で、自車両だけでなく、観測範囲内の道路の構造上到達しうる点も加えて検証をしてみたい。
 
 ## 次に読むべき論文は？
 

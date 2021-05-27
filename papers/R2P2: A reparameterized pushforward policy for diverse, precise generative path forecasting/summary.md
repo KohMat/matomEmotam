@@ -16,7 +16,7 @@ LIDARや画像などの情報が埋め込まれた俯瞰図から自車両の運
 
 Write a content that can be read within 30~1 minute.
 
-## 技術や手法の核はどこ？
+## 手法は？
 
 ccccc
 

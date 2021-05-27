@@ -13,7 +13,7 @@ aaaa
 
 Write a content that can be read within 30~1 minute.
 
-## 技術や手法の核はどこ？
+## 手法は？
 
 ccccc
 
