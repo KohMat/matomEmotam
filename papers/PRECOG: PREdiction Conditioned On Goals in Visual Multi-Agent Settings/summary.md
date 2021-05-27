@@ -65,7 +65,7 @@ ESPによる予測は次の通りである。
 $$
 \mu_{\theta}(\mathbf{S}_{1:t-1}, \phi) = 2 \mathbf{S}_{t-1} - \mathbf{S}_{t-2} + m_{\theta}(\mathbf{S}_{1:t-1}, \phi)
 $$
-<img src="/home/x/Workspace/matomEmotam/papers/PRECOG: PREdiction Conditioned On Goals in Visual Multi-Agent Settings/EmbeddedImage.png" alt="EmbeddedImage" style="zoom: 50%;" />
+<img src="./EmbeddedImage.png" alt="EmbeddedImage" style="zoom: 50%;" />
 
 エージェント数がデータ中に変わるようなデータに対しては、最大エージェント数$$A_{train}$$を決めた上でRNNの入力にマスク$$M \in \{ 0, 1 \} ^{A_{train}}$$を使うことで欠落しているエージェントを表現する。
 

@@ -20,6 +20,8 @@ def get_papers(base) -> List[str]:
     lookingfor = "summary.md"
     for path in Path(base).rglob(lookingfor):
         paper = os.path.basename(path.parent)
+        if paper == "template":
+            continue
 
         link = f"{path.parent.relative_to(base)}/{lookingfor}"
         # link = link.replace(" ", "%20")
@@ -30,7 +32,7 @@ def get_papers(base) -> List[str]:
 
 if __name__ == "__main__":
     git_top = get_git_root(".")
-    papers = get_papers(f"{git_top}/papers")
+    papers = get_papers(f"{git_top}")
     print(papers)
 
     with open("index.md", "w") as f:
