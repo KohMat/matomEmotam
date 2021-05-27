@@ -31,9 +31,9 @@
 
 ### Estimating Social-forecast Probability (ESP)
 
-ESPはマルチエージェントのTステップ先のダイナミクスを確率的に予測する尤度ベースの生成モデル$$\mathbf{S} \sim q(\mathbf{S} \mid \phi;\mathcal{D})$$である。$$\mathcal{D}$$はデータセットである。エキスパートの軌跡を模倣する確率モデル$$q(\mathbf{S} \mid \phi)$$ は遷移確率の積として表すことができる。
+ESPはマルチエージェントのTステップ先のダイナミクスを確率的に予測する尤度ベースの生成モデル$$\mathbf{S} \sim q(\mathbf{S} \mid \phi;\mathcal{D})$$である。$$\mathcal{D}$$はデータセットである。複数のエキスパートの軌跡を模倣する確率モデル$$q(\mathbf{S} \mid \phi)$$ は遷移確率の積として表すことができる。
 
-$$q(\mathbf{S})= \prod_{t=1}^T q(\mathbf{S}_t \mid \mathbf{S}_{1:t-1}, \phi)$$
+$$q(\mathbf{S} \mid \phi)= \prod_{t=1}^T q(\mathbf{S}_t \mid \mathbf{S}_{1:t-1}, \phi)$$
 
 すべてのエージェントの遷移確率および各エージェントの遷移確率を正規分布と仮定するとエージェント$$a$$の状態遷移は次で表せる。
 
@@ -69,7 +69,7 @@ $$\mu_{\theta}(\mathbf{S}_{1:t-1}, \phi) = 2 \mathbf{S}_{t-1} - \mathbf{S}_{t-2}
 
 ### PREdiction Conditioned On Goals (PRECOG)
 
-エージェント（自車両）が設定したゴールに止まるような制御変数$$z^{r*}$$を次の最適化問題を解いた(プランニングした)あと、ESPと同様に自車両以外のエージェントの決定をサンプリングし、予測を行う。
+エージェント（自車両）が設定したゴールに止まるような制御変数$$z^{r*}$$を次の最適化問題を解いた(プランニングした)あと、ESPと同様に自車両以外のエージェントの潜在変数をサンプリングし、予測を行う。
 
 $$\DeclareMathOperator*{\argmin}{arg\,min}
 \DeclareMathOperator*{\argmax}{arg\,max}
