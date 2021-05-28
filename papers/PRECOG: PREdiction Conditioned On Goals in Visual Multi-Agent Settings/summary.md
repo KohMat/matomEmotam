@@ -27,7 +27,7 @@
 
 ## 手法は？
 
-連続空間、離散時間、POMDPのマルチエージェントシステムを扱う。時刻$$t$$におけるすべてのエージェントの状態（位置）を$$\mathbf{S}_t \in \mathbb{R}^{A \times D}$$とする。$$A$$はエージェント個数、$$D=2$$である。変数を関数と区別するためにボールドで表す。大文字は確率変数であることを示す。$$\mathbf{S}_t^a$$は時刻$$t$$におけるエージェント$$a$$の2次元位置$$x,y$$を示す。$$t=0$$は現在時刻、$$a$$が$$r$$もしくは$$1$$の場合は自車両、$$h$$もしくは$$2\sim$$の場合は他車両、人を示す。添字を省略した$$\mathbf{S}$$は$$\mathbf{S}_{1:T}^{1:A} \in \mathbb{R}^{T \times A \times D}$$を示す。すなわちすべてのエージェントの予測である。$$\chi$$はLIDARや道路などの高次元の観測である。実験した例ではLIDARの情報を俯瞰図で表現した観測$$\chi= \mathbb{R}^{200 \times 200 \times 2}$$を使った。各グリッドの面積は$$0.5 m^2$$であり、地面の上と下にあるポイントの2ビンのヒストグラムである。各エージェントは$$\phi \doteq \{\mathbf{s}_{-\tau:0}, \chi \}$$にアクセスできる。
+連続空間、離散時間、POMDPのマルチエージェントシステムを扱う。時刻$$t$$におけるすべてのエージェントの状態（位置）を$$\mathbf{S}_t \in \mathbb{R}^{A \times D}$$とする。$$A$$はエージェント個数、$$D=2$$である。変数を関数と区別するためにボールドで表す。大文字は確率変数であることを示す。$$\mathbf{S}_t^a$$は時刻$$t$$におけるエージェント$$a$$の2次元位置$$x,y$$を示す。$$t=0$$は現在時刻、$$a$$が$$r$$もしくは$$1$$の場合は自車両、$$h$$もしくは$$2\sim$$の場合は他車両を示す。添字を省略した$$\mathbf{S}$$は$$\mathbf{S}_{1:T}^{1:A} \in \mathbb{R}^{T \times A \times D}$$を示す。すなわちすべてのエージェントの予測である。$$\chi$$はLIDARや道路などの高次元の観測である。実験した例ではLIDARの情報を俯瞰図で表現した観測$$\chi= \mathbb{R}^{200 \times 200 \times 2}$$を使った。各グリッドの面積は$$0.5 m^2$$であり、地面の上と下にあるポイントの2ビンのヒストグラムである。各エージェントは$$\phi \doteq \{\mathbf{s}_{-\tau:0}, \chi \}$$にアクセスできる。
 
 ### Estimating Social-forecast Probability (ESP)
 
@@ -43,9 +43,13 @@ $$q(\mathbf{S}_t \mid \mathbf{S}_{1:t-1}, \phi)
 
 $$\mathbf{S}_{t}^{a} = f(\mathbf{Z}_t^a) = \mu_{\theta}^a(\mathbf{S}_{1:t-1}, \phi) + \sigma_{\theta}^a(\mathbf{S}_{1:t-1}, \phi) \cdot \mathbf{Z}_t^a$$
 
-$$f(\cdot)$$は観測$$\phi$$および正規分布に従う潜在変数$$\mathbf{Z}_t^a$$から計画$$\mathbf{S}$$にワープする可逆かつ微分可能な関数、$$\mathbf{Z}_t$$ : 正規分布に従う潜在変数$$\mathbf{Z} \sim q_0 = \mathcal{N}(0, I)$$、$$\mu_{\theta}^a(\cdot)$$および$$\sigma_{\theta}^a(\cdot)$$は状態$$\mathbf{S}_{t}$$の平均および分散を出力するネットワーク関数である。パラメータ$$\theta$$はエキスパートの軌跡を模倣する確率モデル$$q(S \mid \phi;\mathcal{D})$$ を尤度を最大化して求められる。
+ここで
 
-ESPによる予測は次の通りである。
+* $$f(\cdot)$$は観測$$\phi$$および正規分布に従う潜在変数$$\mathbf{Z}_t^a$$から計画$$\mathbf{S}$$にワープする可逆かつ微分可能な関数
+* $$\mu_{\theta}^a(\cdot)$$および$$\sigma_{\theta}^a(\cdot)$$は状態$$\mathbf{S}_{t}$$の平均および分散を出力するネットワーク関数(パラメータ$$\theta$$はエキスパートの軌跡を模倣する確率モデル$$q(S \mid \phi;\mathcal{D})$$ の尤度を最大化して求める）
+* $$\mathbf{Z}_t$$ : 正規分布に従う潜在変数$$\mathbf{Z} \sim q_0 = \mathcal{N}(0, I)$$
+
+である。ワープ関数$$f(\cdot)$$を用いたESPによる予測は次の通りである。
 
 1. K個のすべてのエージェントの潜在変数$$^{1:K}\mathbf{z}$$をサンプリングする
 
@@ -55,17 +59,42 @@ ESPによる予測は次の通りである。
 
    $$^{1:K}\mathbf{s}_{1:T}^{1:A} \leftarrow f(^{1:K}\mathbf{z}_{1:T}^{1:A}, \phi) $$
 
-### ネットワークアーキテクチャ(詳細はAppendix C)
+### ネットワークアーキテクチャ
 
-エージェントが２個の場合の状態$$\mathbf{S}_{t}$$の平均および分散を出力するESPのアーキテクチャを示す。
+エージェントが２個の場合のESPのアーキテクチャを示す。
 
 <img src="./EmbeddedImage.png" alt="EmbeddedImage" style="zoom: 50%;" />
 
-RNN(GRU)とCNNはそれぞれ$$\mathbf{s}_{-\tau:0}$$と$$\chi$$を処理して$$\alpha$$と$$\Gamma$$を出力する。各エージェントごとに$$\alpha$$、$$\mathbf{s}_t$$、$$\Gamma(\mathbf{S}_{t}^a)$$および$$\lambda$$はConcatenationされ、RNN(GRU)により処理される。$$\Gamma(\mathbf{S}_{t}^a)$$は、位置$$\mathbf{S}_{t}^a$$に対応したサブピクセルにもどづいてbilinear補間された特徴ベクトルである。RNNは位置の平均を直接出力する代わりにベレの方法([wiki](https://en.wikipedia.org/wiki/Verlet_integration))のステップ$$m_{\theta}^a(\mathbf{S}_{1:t-1}, \phi)$$と位置の分散$$\sigma_{\theta}^a(\mathbf{S}_{1:t-1}, \phi)$$を出力する。位置の平均は次式で計算できる。
+観測$$\phi \doteq \{\mathbf{s}_{-\tau:0}, \chi \}$$は
 
-$$\mu_{\theta}(\mathbf{S}_{1:t-1}, \phi) = 2 \mathbf{S}_{t-1} - \mathbf{S}_{t-2} + m_{\theta}(\mathbf{S}_{1:t-1}, \phi)$$
+* $$\mathbf{s}_{-\tau:0}$$は過去から現在までの位置
+* $$\chi = \mathbb{R}^{200 \times 200 \times 2}$$はLiDARの情報を俯瞰図で表現したもの(各グリッドの面積は$$0.5 m^2$$であり、地面の上と下にあるポイントの2ビンのヒストグラムである)
+
+である。観測$$\mathbf{s}_{-\tau:0}$$と$$\chi$$はそれぞれ空間特徴を抽出するCNNと過去位置をエンコードするRNN(GRU)で処理され、$$\alpha$$と$$\Gamma$$が計算される。その後以下の手順によって時刻Tまでの予測を行う。
+
+1. 各エージェントの位置$$\mathbf{s}_{t-1}^a$$に対応した$$\Gamma$$サブピクセルにもどづいてbilinear補間された特徴ベクトルを取り出
+
+   $$\Gamma^{1:A} = \{ \Gamma(\mathbf{s}_{t-1}^1),..., \Gamma(\mathbf{s}_{t-1}^A) \}$$
+
+2. 各エージェントで以下の手順を行って状態$$\mathbf{s}_{t}^a$$を計算する
+
+   1. $$\alpha$$、$$\mathbf{s}_{t}^{1:A}$$、$$\Gamma^{1:A}$$をConcatenationして特徴$$p_{t-1}$$を作る
+
+   2. 予測用のRNN(GRU)は特徴$$p_{t-1}$$から位置の平均を直接出力する代わりにベレの方法([wiki](https://en.wikipedia.org/wiki/Verlet_integration))のステップ$$m_{\theta}$$と位置の分散$$\sigma_{\theta}$$を出力する
+
+   3. ベレの方法から位置の平均を計算する
+
+      $$\mu = 2 \mathbf{s}_{t-1}^a - \mathbf{s}_{t-2}^a + m_{\theta}$$
+
+   4. 状態$$\mathbf{s}_{t}^a$$を計算する
+
+      $$\mathbf{s}_{t}^a = \mu_{\theta} + \sigma_{\theta} \cdot \mathbf{z}_t^a$$
+
+3. 1.2を時刻Tまで繰り返す。
 
 エージェント数がデータ中に変わるようなデータに対しては、最大エージェント数$$A_{train}$$を決めた上でRNNの入力にマスク$$M \in \{ 0, 1 \} ^{A_{train}}$$を使うことで欠落しているエージェントを表現する。
+
+詳細はAppendix Cに紹介されており大きなアーキテクチャの構造の変化はないものの、MLPの追加などいくつかの変更点がある。
 
 ### PREdiction Conditioned On Goals (PRECOG)
 
@@ -81,16 +110,18 @@ z^{r *} = \argmax_{z^r} \mathcal{L}(\mathbf{z}^r, \mathcal{G}, \phi)
 
 $$\mathcal{L}(\mathbf{z}^r, \mathcal{G}, \phi) = \mathbb{E}_{\mathbf{Z}^h} \left[ \log q(f(\mathbf{Z}) \mid \phi) + \log q(\mathcal{G} \mid f(\mathbf{Z}), \phi) \right]$$
 
-である。実際にこの最適化問題は解くときは他エージェントの潜在変数$$\mathbf{Z}^h$$を正規分布$$\mathcal{N}(0, \mathbf{I})$$からサンプリングしてゴールの尤度による重み付き平均を行うことで期待値の近似を行う。すなわち、近似された期待値は
+である。$$q(\mathcal{G} \mid f(\mathbf{Z}), \phi)$$は例えば自車両が向かうべき位置$$\mathbf{b} \in \mathbb{R}^D$$を使って$$\mathcal{N}(\mathbf{w}; \mathbf{S}_T^r, \epsilon \mathbf{I})$$をとすることができる。
 
-$$\hat{\mathcal{L}}(\mathbf{z}^r, \mathcal{G}, \phi)
+実際にこの最適化問題は解くときは他エージェントの潜在変数$$\mathbf{Z}^h$$を正規分布$$\mathcal{N}(0, \mathbf{I})$$からサンプリングしてゴールの尤度による重み付き平均を行うことで期待値の近似を行う。すなわち、近似された期待値は
+
+$$\hat{\mathcal{L}}(^{1:K}\mathbf{z}, \mathcal{G}, \phi)
 = \frac{1}{K} \sum_{k=1}^{K}
 \log(
 p(f(^k\mathbf{z}) \mid \phi)
 p(\mathcal{G} \mid f(^k\mathbf{z}), \phi)
 )$$
 
-である。だたし$$^{1:K}\mathbf{z}$$はサンプリングされたK個のすべてのエージェントの潜在変数である。$$^{k}\mathbf{z}$$は最適化問題で求める制御変数$$\mathbf{z}^r$$と$$k$$番目のサンプリングが含まれている。$$^k\mathbf{z}=[\mathbf{z}^r, ^k\mathbf{z}^h]$$。この近似期待値をつかったGradient Ascentによるアルゴリズムは次のとおりである。
+である。だたし$$^{1:K}\mathbf{z}$$はサンプリングされたK個のすべてのエージェントの潜在変数である。$$^{k}\mathbf{z}$$は最適化問題で求める制御変数$$\mathbf{z}^r$$と$$k$$番目のサンプリング$$^k\mathbf{z}^h$$が含まれている。$$^k\mathbf{z}=[\mathbf{z}^r, ^k\mathbf{z}^h]$$。この近似期待値をつかったGradient Ascentによるアルゴリズムは次のとおりである。
 
 ![multimitativeplanning](./multimitativeplanning.png)
 
@@ -112,7 +143,7 @@ p(\mathcal{G} \mid f(^k\mathbf{z}), \phi)
 
 ### PRECOGの検証
 
-CALRAおよびnuScenesを使い、PRECOGの予測性能を検証した。Planingを行うエージェントは自車両のみとした。各データの最後の位置をゴールとして設定した。ゴールの尤度は正規分布を用いた。[DESIRE](https://arxiv.org/abs/1704.04394)およびESPと比較した結果は次のとおりである。ゴールを設定して予測することにより、自車両$$\hat{m}_K^1$$だけでなく、その他すべての予測が向上することを示している。エージェントは近い順からソーティングされており、一番近い車両$$\hat{m}_K^2$$が最も影響を受けていることも示している。
+CALRAおよびnuScenesを使い、PRECOGの予測性能を検証した。Planingを行うエージェントは自車両のみとした。各データの最後の位置をゴールとして設定した。ゴールの尤度は正規分布を用いた。[DESIRE](https://arxiv.org/abs/1704.04394)およびESPと比較した結果は次のとおりである。ゴールを設定して予測することにより、自車両$$\hat{m}_K^1$$だけでなく、その他の予測が向上することを示している。エージェントは近い順からソーティングされており、一番近い車両$$\hat{m}_K^2$$が最も影響を受けていることも示している。
 
 ![precog_result](./precog_result.png)
 
