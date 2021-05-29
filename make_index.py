@@ -1,10 +1,12 @@
-from pathlib import Path
 import os
-import git
+import pprint
+from pathlib import Path
 from typing import List
 
+import git
+
 MAIN = """
-経路計画に主に
+# 経路計画関連の読んだ論文のリストと日本語のまとめ
 
 """
 
@@ -33,7 +35,6 @@ def get_papers(base) -> List[str]:
 if __name__ == "__main__":
     git_top = get_git_root(".")
     papers = get_papers(f"{git_top}")
-    print(papers)
 
     with open("index.md", "w") as f:
         f.write(MAIN)
@@ -42,3 +43,5 @@ if __name__ == "__main__":
         f.writelines(papers)
 
     f.close()
+
+    print("Generated index.md!")
