@@ -7,7 +7,7 @@ Authors
 
 ## どんなもの？
 
-aaaa
+Coming soon
 
 ## 先行研究と比べてどこがすごい？何を解決したか？
 
@@ -15,17 +15,17 @@ Write a content that can be read within 30~1 minute.
 
 ## 手法は？
 
-ccccc
+Coming soon
 
 ## どうやって有効だと検証した？
 
-dddd
+Coming soon
 
 ## 課題は？議論はある？
 
-eeee
+Coming soon
 
 ## 次に読むべき論文は？
 
-未定
+Coming soon
 

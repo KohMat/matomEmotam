@@ -19,29 +19,33 @@
 
 ## 先行研究と比べてどこがすごい？何を解決したか？
 
-Deep Imitative Models([arxiv](https://arxiv.org/pdf/1810.06544.pdf), [summary](../DEEP IMITATIVE MODELS FOR FLEXIBLE INFERENCE, PLANNING, AND CONTROL/summary.md))(以下、DIM)で結論に課題として述べられている認識論的不確実性について取り組んだ手法であり、OODシナリオを検出およびいくつかのOODシナリオに対して対応することができる。例えば訓練データに含まれないRoundaboutのシーンに対して走行することができる。これはDIMや[Learning by Cheating](https://arxiv.org/abs/1912.12294)の方法ではできなかったことである。
+提案手法のRIPはDeep Imitative Models([arxiv](https://arxiv.org/pdf/1810.06544.pdf), [summary](../DEEP IMITATIVE MODELS FOR FLEXIBLE INFERENCE, PLANNING, AND CONTROL/summary.md))(以下、DIM)の性能向上版といえる。DIMの論文の結論に課題として述べられている認識論的不確実性について取り組んだ手法であり、OODシナリオを検出およびいくつかのOODシナリオに対して対応することができる。例えば訓練データに含まれないRoundaboutのシーンに対して走行することができる。これはDIMや[Learning by Cheating](https://arxiv.org/abs/1912.12294)の方法ではできなかったことである。
 
 ## 手法は？
 
-エキスパートのデータから分割されたデータおよびランダムな初期パラメータから模倣尤度を最大化するように訓練された複数の確率モデル$$q(\mathbf{y} \mid x; \theta)$$を用いて、実行時に次式(4)の最適化問題を解くことで経路計画$$\mathbf{y}_{RIP}^{\mathcal{G}}$$を求める。計画$$\mathbf{y}$$は二次元の位置で構成される。
+### Robust Imitative Planning
+
+提案手法のRIPは確率モデルDIMを複数用いて実行時に次式の最適化問題を解くことで、二次元の位置で構成される経路計画$$\mathbf{y}_{RIP}^{\mathcal{G}}$$を求める計画方法である。複数のDIMは例えばエキスパートのデータから分割されたデータおよびランダムな初期パラメータから模倣尤度を最大化するように別々に訓練されている。
 
 <img src="./rip.png" alt="rip" style="zoom: 67%;" />
 
-$$\oplus$$はaggregation operatorである。集約する方法として、最小の尤度をとるWorst Case Aggregationと重み付き平均をおこなうModel Averaging Aggregationを提案する。
+最適化問題に表れる$$\oplus$$はaggregation operatorである。集約する方法として最小の尤度をとるWorst Case Aggregationと重み付き平均をおこなうModel Averaging Aggregationを提案する。
 
 ![rip_wca](./rip_wca.png)
 
 ![rip_ma](./rip_ma.png)
 
-式（4）はDeep Imitative Planningと同様に次のような最適化計算を行うことで解く。
+この最適化問題はDeep Imitative Planningと同様に次のような最適化計算を行うことで解く。
 
 ![rip_algorithm](./rip_algorithm.png)
 
-また複数のモデル尤度の分散は訓練分布内であれば低く、分布外であれば大きくなることから、閾値を設けることで分布シフトを検出することができる。
+### Adaptive RIP
+
+複数のモデル尤度の分散は訓練分布内であれば低く、分布外であれば大きくなることから、閾値を設けることで分布シフトを検出することができる。
 
 ![detecting_distribution_shift](./detecting_distribution_shift.png)
 
-この検出方法を用いて、オンラインでエキスパートの協力を得るAdaRIPは次のアルゴリズムである。
+この検出方法を用いたAdaRIPは次のアルゴリズムである。RIPにより求めた経路計画の分散を計算し、その分散が一定以上であれば、求めた計画の実行をやめ、エキスパートの助けを求める。そして得られたデータを使ってモデルを更新する。
 
 ![adarip](./adarip.png)
 

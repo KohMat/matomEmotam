@@ -112,4 +112,4 @@ IGP2および次に示すアルゴリズムでシナリオS1~S4を走行させ�
 
 ## 次に読むべき論文は？
 
-未定
+[Contingencies from Observations: Tractable Contingency Planning with Learned Behavior Models](../Contingencies from Observations: Tractable Contingency Planning with Learned Behavior Models/summary.md)
