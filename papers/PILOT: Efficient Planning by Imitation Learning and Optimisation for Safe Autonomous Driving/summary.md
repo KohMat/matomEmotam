@@ -6,13 +6,13 @@ Henry Pulver , Francisco Eiras†, Ludovico Carozza, Majd Hawasly , Stefano V. A
 
 ## どんなもの？
 
-安全な自動運転のための、模倣ネットワークとネットワークの計画を積極的に修正するオプティマイザで構成されるプランニングフレームワーク(PILOT, Planning by Imitation Learning and Optimisation at Training time)を提案する。最適化ベースのモーションプランニングは安全でスムーズかつ快適な計画を計算できる一方で、その計算コストの効率が問題になる。深層模倣学習により得られた素朴な軌跡は効率的な計算である一方で、その安全性を無視する可能性がある。PILOTはこれらのハイブリッドなアプローチである。最適な計画を模倣するネットワークにより効率的に初期の計画を計算する。そしてその計画を下に最適化を行うことにより、安全性や快適性を損なう可能性のあるOut-of-Distributionでの失敗や学習不足からのオンライン保護を行い、安全と快適性の要件を満たすことを保証する。PILOTは、プランニングの質を損なうことなく、これまでの手法と比べて、実行時間の大幅な削減を達成する。
+安全な自動運転のための、模倣ネットワークとネットワークの計画を修正するオプティマイザで構成されるプランニングフレームワーク(PILOT, Planning by Imitation Learning and Optimisation at Training time)を提案する。最適化ベースのモーションプランニングは安全でスムーズかつ快適な計画を計算できる一方で、その計算コストの効率が問題になる。深層模倣学習により得られた素朴な軌跡は効率的な計算である一方で、その安全性を無視する可能性がある。PILOTはこれらのハイブリッドなアプローチである。最適な計画を模倣するネットワークにより効率的に初期の計画を計算する。そしてその計画を下に最適化を行うことにより、安全性や快適性を損なう可能性のあるOut-of-Distributionでの失敗や学習不足からのオンライン保護を行い、安全と快適性の要件を満たすことを保証する。PILOTは、プランニングの質を損なうことなく、これまでの手法と比べて、実行時間の大幅な削減を達成する。
 
 ![pilot_framework](./pilot_framework.png)
 
 ## 先行研究と比べてどこがすごい？何を解決したか？
 
-模倣モデルを組み合わせることで2s-OPT([Twostage optimization-based motion planner for safe urban driving](https://arxiv.org/abs/2002.02215))の7倍の実行時間の改善ができる。
+PILOTは最適な経路計画を模倣するネットワークを最適化問題の初期解として使用することで2s-OPT([Twostage optimization-based motion planner for safe urban driving](https://arxiv.org/abs/2002.02215))の7倍の実行時間の改善ができる。
 
 ![pilot_runtime_result](./pilot_runtime_result.png)
 
@@ -22,17 +22,37 @@ Henry Pulver , Francisco Eiras†, Ludovico Carozza, Majd Hawasly , Stefano V. A
 
 ## 手法は？
 
-PILOTは経路計画を出力するネットワークを最適化問題の初期解として使用する。これによりテスト時の実行時間が短縮できる。使われるネットワークは共変量シフトに適応するため、模倣学習の一つである[DAgger(Dataset Aggregation)](https://arxiv.org/abs/1011.0686)アルゴリズムで訓練される(Algorithm 2)。具体的には2s-OPTなどの実行が高価なプランナーで最適な解を作成し、初期データセットのもとでネットワークを訓練する。そして得られたネットワークを用いてPILOTアルゴリズムをシミュレーター環境内で動かし、新しいデータを得る。新しいデータを含めたデータセットでネットワークの重みを逐次更新する。
+次の３つが経路計画に利用できると仮定する。
+
+1. 自車両、その他の道路上のユーザー（他車両や歩行者など）そして静的な関連する特徴
+2. 目的地までのルートプラン
+3. 予測モジュールから、その他の道路上のユーザーの予測軌道
+
+この仮定の下、次の最適化問題を解くことで自車両の経路計画を得ることを目的とする。
+
+![2sopt_problem](./2sopt_problem.png)
+
+$$f$$: discrete kinematic bicycle model、 $$x$$: 位置、ヘディングと速度、$$u=(a, \delta)$$: 制御入力、加速度とステアリング角、$$\mathcal{E}(x_k)$$: 時刻kに自車両が有しているエリア（そのコーナー点で近似）、$$\mathcal{B} \subset \mathcal{R}^2$$: 走行可能領域、$$S_k^{1:w}$$: 他のユーザー$$w$$が有している楕円体の領域である。
+
+[Twostage optimization-based motion planner for safe urban driving](https://arxiv.org/abs/2002.02215)で提案された2s-OPTはこの問題を２段階手法で解く方法である。簡単に言えば、2s-OPTはこの最適化問題を線形化しMixed-Integer Linear Programming(MILIP)ソルバーで解いた後、その解を初期解として改めてNonlinear Programing(NLP)オプティマイザで解く方法である。
+
+PILOTはこの最適化問題で得られる経路計画を出力する模倣ネットワーク$$\mathcal{N}_{\theta}^{2s-OPT}$$をNLPの初期解として使用する。これによりテスト時の実行時間が短縮できる。
+
+![pilotfor2sOPT](./pilotfor2sOPT.png)
+
+使われるネットワーク$$\mathcal{N}_{\theta}^{2s-OPT}$$は共変量シフトに適応するため、模倣学習の一つである[DAgger(Dataset Aggregation)](https://arxiv.org/abs/1011.0686)アルゴリズムで訓練される(Algorithm 2)。具体的には2s-OPTなどの実行が高価なプランナーで最適な解を作成し、初期データセットのもとでネットワークを訓練する。そして得られたネットワークを用いてPILOTアルゴリズムをシミュレーター環境内で動かし、新しいデータを得る。新しいデータを含めたデータセットでネットワークの重みを逐次更新する。
 
 ![training](./training.png)
 
-PILOTで使われるネットワークのアーキテクチャは以下のとおりである。CNNへの入力は[ChauffeurNet](https://arxiv.org/pdf/1812.03079.pdf)のような入力であり、現在時刻から未来の時刻Nまでの情報が含まれている。各チャンネルの画像は、静的な道路のレイアウト、その時刻の道路上のユーザー、ルートプランがpath-based座標系で表現された俯瞰図である。初期速度などのパラメータは、FCNに入力される。ネットワークは、経路計画をN個の位置として出力する。
+PILOTで使われるネットワーク$$\mathcal{N}_{\theta}^{2s-OPT}$$のアーキテクチャは以下のとおりである。CNNへの入力は[ChauffeurNet](https://arxiv.org/pdf/1812.03079.pdf)のような入力であり、現在時刻から未来の時刻Nまでの情報が含まれている。各チャンネルの画像は、静的な道路のレイアウト、その時刻の道路上のユーザー、ルートプランがpath-based座標系で表現された俯瞰図である。初期速度などのパラメータはFCNに入力される。ネットワークは、経路計画をN個の位置$$p_i^{\theta} = \{ (x_j, y_j) \}_{=1,....,N}$$として出力する。
 
 ![architechture](./architechture.png)
 
 ![coordinate-transform](./coordinate-transform.png)
 
-最適化部分では[2s-OPT(Twostage optimization-based motion planner for safe urban driving)](https://arxiv.org/abs/2002.02215)を用いる。
+損失関数は次式である。
+
+$$\mathcal{L}_{\theta}(\mathcal{D}) = \frac{1}{nN} \sum_{i \in \mathcal{D}} \| p_i^{\theta} - p_i^{*} \| + \mu \| \theta \|^2$$
 
 ## どうやって有効だと検証した？
 
@@ -73,24 +93,6 @@ None: 軌道の各位置を(0, 0)にする、ConstVel: 車両のヘディング�
 ## 次に読むべき論文は？
 
 未定
-
-## 補足
-
-### 最適化問題および2s-OPTの２段階解法
-
-![2sopt_problem](./2sopt_problem.png)
-
-$$f$$: discrete kinematic bicycle model、 $$x$$: 位置、ヘディングと速度、$$u=(a, \delta)$$: 制御入力、加速度とステアリング角、$$\mathcal{E}(x_k)$$: 時刻kに自車両が有しているエリア（そのコーナー点で近似）、$$\mathcal{B} \subset \mathcal{R}^2$$: 走行可能領域、$$S_k^{1:w}$$: 他のユーザー$$w$$が有している楕円体の領域。
-
-2s-OPTは、この問題を線形化した後、Mixed-Integer Linear Programming(MILIP)ソルバーで解いた後、その解を初期解として改めてNonlinear Programing(NLP)オプティマイザで解く。
-
-### 問題の仮定
-
-問題の仮定として、システムの入力は以下の3つである
-
-1. 自車両、その他の道路上のユーザー（他車両や歩行者など）そして静的な関連する特徴
-2. ルートプラン
-3. 予測モジュールから、その他の道路上のユーザーの予測軌道
 
 
 

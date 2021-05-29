@@ -51,7 +51,7 @@ microscopicな都市の交通シミュレーションによりIGP2を評価し�
 
 車両の動作が決められたシナリオは４つで用意した。シナリオの全てで他車両はマニュアルのヒューリスティックに基づいてゴールに向かって走行する。各車両の加速度およびステアリングのためのコントローラは独立であり、車間維持のためにIDM(Intelligent Driver Model)が使われている。自車両は青色。他車両の予測経路を確率の高い順から２個表示している。各経路の色の濃さは、その道を進む確率である。各車両の縦位置を±10m、速度を[5, 10]msの範囲で変更して、100個のシナリオを作成した。
 
-![4_test_scenarios](/home/x/Workspace/matomEmotam/papers/Interpretable Goal-based Prediction and Planning for Autonomous Driving/4_test_scenarios.png)
+![4_test_scenarios](./4_test_scenarios.png)
 
 各シナリオでIGP2は以下のように行動した。
 
