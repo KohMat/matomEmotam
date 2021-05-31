@@ -9,7 +9,7 @@
 
 ## どんなもの？
 
-Contingency Planning([補足](#Contingency planningについて (Introductionから作成)))を行うCfO(Contingencies from Observations)を提案する。CfOはマルチエージェントの相互作用による行動を表す学習済み画像条件付きautoregressive flowモデル$$q(\mathbf{X} \mid \phi)$$を使う。このモデルはマルチエージェントの軌道を模倣するように訓練される。CfOはセンサーの観測からゴールに到達するように、訓練したモデルを使った観測とゴールの条件付き事後分布を最大化するような計画を最適化計算により求める。CfOは人間の意図の不確実性のもとで人間との協力が不可欠なシナリオで様々なnon-contingentのプランニング方法の性能を凌駕した。
+Contingency Planning([補足](#Contingency planningについて (Introductionから作成)))を行うCfO(Contingencies from Observations)を提案する。CfOはマルチエージェントの相互作用による行動を表す学習済み条件付きautoregressive flowモデル$$q(\mathbf{X} \mid \phi)$$を使う。このモデルはマルチエージェントの軌道を模倣するように訓練される。CfOはセンサーの観測からゴールに到達するように、訓練したモデルを使った観測とゴールの条件付き事後分布を最大化するような計画を最適化計算により求める。CfOは人間の意図の不確実性のもとで人間との協力が不可欠なシナリオで様々なnon-contingentプランニング方法の性能を凌駕した。
 
 ![flowchart](./flowchart.png)
 
@@ -18,7 +18,6 @@ Contingency Planning([補足](#Contingency planningについて (Introductionか
 ## 先行研究と比べてどこがすごい？何を解決したか？
 
 * 提案手法Contingencies from Observations (CfO)は学習した行動(behavior)モデルを使ってActive Contingency Planning([補足](#Active Contingency Planning))を行う。自動運転の経路計画においてこの２つの要素を持った計画方法はCfOが初である。
-* CfOで扱う
 * CfOは既存の機械学習の方法と比較して、最も良い性能が出た。
 
 ![recent_planning_methods](./recent_planning_methods.png)
@@ -69,14 +68,14 @@ $$\mathcal{L}_{CfO}$$は制御できない他車両の不確実性を考慮し�
 
 である。実際にはPRECOGと同様に他エージェントの潜在変数$$\mathbf{Z}^h$$を正規分布$$\mathcal{N}(0, \mathbf{I})$$からサンプリングしてゴールの尤度による重み付き平均を行うことで期待値の近似を行う。
 
->  $$\mathcal{L}_{CfO}$$は観測とゴールの条件付き事後分布$$p(\mathbf{z}_{\le T}^{r} \mid \mathcal{G}, \mathbf{o})$$を最大化するような潜在変数$$\mathbf{z}_{\le T}^{r*}$$を求めるMAP推定の下限近似である。
->
-> $$\DeclareMathOperator*{\argmin}{arg\,min}
-> \DeclareMathOperator*{\argmax}{arg\,max}
-> \begin{equation}
-> \mathbf{z}_{\le T}^{r*}
-> = \displaystyle \argmax_{\mathbf{z}_{\le T}^{r}} p(\mathbf{z}_{\le T}^{r} \mid \mathcal{G}, \mathbf{o})
-> \end{equation}$$
+$$\mathcal{L}_{CfO}$$は観測とゴールの条件付き事後分布$$p(\mathbf{z}_{\le T}^{r} \mid \mathcal{G}, \mathbf{o})$$を最大化するような潜在変数$$\mathbf{z}_{\le T}^{r*}$$を求めるMAP推定の下限近似である。またAppendixにこの最適化問題を解くことで実際にContingency Planningが行えることを示す。
+
+$$\DeclareMathOperator*{\argmin}{arg\,min}
+\DeclareMathOperator*{\argmax}{arg\,max}
+\begin{equation}
+\mathbf{z}_{\le T}^{r*}
+= \displaystyle \argmax_{\mathbf{z}_{\le T}^{r}} p(\mathbf{z}_{\le T}^{r} \mid \mathcal{G}, \mathbf{o})
+\end{equation}$$
 
 ### Noncontingency Planner
 
@@ -169,11 +168,11 @@ End-to-Endシステム(例えば[Deep Imitative Models](../DEEP IMITATIVE MODELS
 
 ### Active Contingency Planning
 
-ロボットと人間の共依存性はロボットの行動に対して他のエージェントがどのように反応するか、他のエージェントの行動によってロボットの行動がどう変化するかの２つの依存がある。Contingency Planningでは例えば左折のシーンにおいて、自車両のウィンカーを点灯し、意思を対向車線から走行してくる車に伝えることでその車の意図を明らかにする可能性がある。その車は自車両を先に行かせるように減速するかもしれないし、そのまま通過や逆に加速する可能性もある。またウィンカーを付けて左折する意図を見せるかもしれない。すなわち、積極的にロボット自身から他のエージェントの意図の不確実性を軽減するように行動する。このような行動を計画することをActive Contingency Planning (前述の４つの論文の内の[13], [14])と呼ぶ。そしてロボットが他のエージェントに与える影響を無視した計画方法をPassive Contingency Planning ([11], [12])と呼ぶ。
+ロボットと人間の共依存性はロボットの行動に対して他のエージェントがどのように反応するか、他のエージェントの行動によってロボットの行動がどう変化するかの２つの依存がある。例えば左折のシーンにおいて、自車両のウィンカーを点灯し、意思を対向車線から走行してくる車に伝えることでその車の意図を明らかにすることができる。その車は自車両を先に行かせるように減速するかもしれないし、そのまま通過や逆に加速する可能性もある。またウィンカーを付けて左折する意図を見せるかもしれない。すなわち、積極的にロボット自身から他のエージェントの意図の不確実性を軽減するように行動する。このような行動を計画することをActive Contingency Planning (前述の４つの論文の内の[13], [14])と呼ぶ。そしてロボットが他のエージェントに与える影響を無視した計画方法をPassive Contingency Planning ([11], [12])と呼ぶ。
 
 ### Co-leader planning
 
-これまでのプランニングを以下の要素から４つに分類することができる。
+これまでのプランニングを以下の要素から論文中で４つに分類する。
 
 * Contingencyの度合い (Noncontingent、Passively Contingent、Actively Contingent)
 * モデル(決定論的もしくは確率論的)
@@ -189,4 +188,6 @@ End-to-Endシステム(例えば[Deep Imitative Models](../DEEP IMITATIVE MODELS
 * CfOが目的関数に$$\mathcal{L}^{\mathbf{r}}$$を用いたCfOに比べてRGの成功率が下がっているのが気になる。
 * CfOのRG\*の成功率は高いが、実際どれくらいエキスパートと走行時間が近いのだろうか？
 * 模倣モデルが実際にどれくらい妥当な尤度を出すのか興味がある。[PILOT](../PILOT: Efficient Planning by Imitation Learning and Optimisation for Safe Autonomous Driving/summary.md)で検証されたような自明の拘束条件を満たしているかどうか確認してみたい。
+* 論文の検証でPPOがそこそこの結果を出しているのが気になった。使っているPPOはAppendix Cに詳細が記載されている。PPOは[Stable Baselines repository](https://github.com/hill-a/stable-baselines)に実装されているPPO2である。検証用のシナリオがOpenAI Gymライクに使える [OATomobile](https://github.com/OATML/oatomobile)にContingentタスクを追加したものを使っている。
+* アグレッシブな行動を制御できるようにならないだろうか？どれくらいアグレッシブにするなど。
 * 訳したときはICRA版がまだ出ていなかったので、出たあとで追記したい。
