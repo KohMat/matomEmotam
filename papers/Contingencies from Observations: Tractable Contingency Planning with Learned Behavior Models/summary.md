@@ -18,6 +18,7 @@ Contingency Planning([補足](#Contingency planningについて (Introductionか
 ## 先行研究と比べてどこがすごい？何を解決したか？
 
 * 提案手法Contingencies from Observations (CfO)は学習した行動(behavior)モデルを使ってActive Contingency Planning([補足](#Active Contingency Planning))を行う。自動運転の経路計画においてこの２つの要素を持った計画方法はCfOが初である。
+* CfOで扱う
 * CfOは既存の機械学習の方法と比較して、最も良い性能が出た。
 
 ![recent_planning_methods](./recent_planning_methods.png)
@@ -48,9 +49,9 @@ $$\mathbf{x}_{t}^{1:A} = \pi^a (\mathbf{x}_{<t}^{1:A}, \mathbf{o};\phi_t^a, \the
 
 検証に用いるモデルのアーキテクチャは[PRECOG](../PRECOG: PREdiction Conditioned On Goals in Visual Multi-Agent Settings/summary.md)のESPと同様のものを用いる。
 
-### Contingency planner CfO
+### Contingencies from Observations
 
-CfOは行動モデル$$q(\mathbf{X} \mid \phi)$$を使って次の最適化問題をGradient ascentで解くことで、マルチエージェントの相互作用を考慮した（Contingent）計画を求める。
+CfOは行動モデル$$q(\mathbf{X} \mid \phi)$$を使って次の最適化問題をstochastic gradient ascentで解くことで、マルチエージェントの相互作用を考慮した（Contingent）計画を求める。
 
 $$\begin{equation}
 \mathcal{L}_{CfO}(\pi_{\mathbf{z}_{\le T}^{r}}^{r})=
@@ -60,7 +61,7 @@ $$\begin{equation}
 \log \delta_{\mathbb{G}}(\bar{\mathbf{x}}_{\le T}) \right]
 \end{equation}$$
 
-$$\mathcal{L}_{CfO}$$の各項は
+$$\mathcal{L}_{CfO}$$は制御できない他車両の不確実性を考慮した期待値であり、各項は
 
 1. 学習した行動モデルを使った計画の尤度
 2. ゴールに対する計画の最後の位置の尤度
@@ -124,6 +125,10 @@ CfOおよび比較手法でゴールの到達率の比較結果を次に示す�
 
 CfOはRGおよびRG\*の両方の成功率が高い。これはCfOがContingent動作が必要なシナリオに有効なことを示している。Noncontingent, $$\mathcal{L}^{\mathbf{r}}$$はRGの完璧な成功率を達成しているが、自信がない動作が走行時間を伸ばしているためRG\*の成功率は０である。Noncontingent, $$\mathcal{L}^{\mathbf{joint}}$$は他車両が譲らない場合には安全でない行動を行うことがあった。Single-agentはすべてのシナリオでその他のエージェントよりも低い成功率である。自車両の行動のみを考慮するプランナーでは不十分なことを示している。
 
+CfOによる左折及び追い越しのタスクの結果を示す。状況に応じて異なる自車両および他車両の予測を行っていることがわかる。
+
+![contingency_combo_v2](./contingency_combo_v2.jpg)
+
 ## 課題は？議論はある？
 
 なし
@@ -178,7 +183,8 @@ End-to-Endシステム(例えば[DIM](../DEEP IMITATIVE MODELS FOR FLEXIBLE INFE
 ## 個人的メモ
 
 * Contingentを訳せなかった。
-* 模倣モデルを用いた経路計画方である[Deep Imitative Models](../DEEP IMITATIVE MODELS FOR FLEXIBLE INFERENCE, PLANNING, AND CONTROL/summary.md)を軸にマルチエージェントの相互作用を考慮した予測を行う[PRECOG](../PRECOG: PREdiction Conditioned On Goals in Visual Multi-Agent Settings/summary.md)を計画に使用してみた論文。モデルおよび目的関数自体はこれらの論文で提案されている。
+* 模倣モデルを用いた経路計画方法である[Deep Imitative Models](../DEEP IMITATIVE MODELS FOR FLEXIBLE INFERENCE, PLANNING, AND CONTROL/summary.md)を軸にマルチエージェントの相互作用を考慮した予測を行う[PRECOG](../PRECOG: PREdiction Conditioned On Goals in Visual Multi-Agent Settings/summary.md)を車両の計画に使用してみた論文。モデルおよび目的関数自体はこれらの論文で提案されている。
 * CfOが目的関数に$$\mathcal{L}^{\mathbf{r}}$$を用いたCfOに比べてRGの成功率が下がっているのが気になる。
 * CfOのRG\*の成功率は高いが、実際どれくらいエキスパートと走行時間が近いのだろうか？
 * 模倣モデルが実際にどれくらい妥当な尤度を出すのか興味がある。[PILOT](../PILOT: Efficient Planning by Imitation Learning and Optimisation for Safe Autonomous Driving/summary.md)で検証されたような自明の拘束条件を満たしているかどうか確認してみたい。
+* 訳したときはICRA版がまだ出ていなかったので、出たあとで追記したい。
