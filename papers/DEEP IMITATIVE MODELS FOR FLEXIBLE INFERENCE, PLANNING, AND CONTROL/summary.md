@@ -151,10 +151,12 @@ potholeに対する回避実験を行った。Gaussian Final-State Mixtureおよ
 
 > Balaji Lakshminarayanan, Alexander Pritzel, and Charles Blundell. Simple and scalable predictive uncertainty estimation using deep ensembles. In Neural Information Processing Systems (NeurIPS), pp. 6402–6413, 2017.
 
-ゴール内の尤度とエキスパートの尤度のバランスはどうしたらいいだろうか？
-
 ## 次に読むべき論文は？
 
 [A. Filos, P. Tigas, R. McAllister, N. Rhinehart, S. Levine, and Y. Gal, “Can autonomous vehicles identify, recover from, and adapt to distribution shifts?” arXiv preprint arXiv:2006.14911, 2020.](../Can autonomous vehicles identify, recover from, and adapt to distribution shifts/summary.md)
 
 [N. Rhinehart, R. McAllister, K. Kitani, and S. Levine, “PRECOG: prediction conditioned on goals in visual multi-agent settings,” in Proceedings of the IEEE International Conference on Computer Vision, 2019, pp. 2821–2830.](../PRECOG: PREdiction Conditioned On Goals in Visual Multi-Agent Settings/summary.md)
+
+## 個人的メモ
+
+ゴール内の尤度とエキスパートの尤度のバランスはどうしたらいいだろうか？

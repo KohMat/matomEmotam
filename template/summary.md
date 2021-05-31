@@ -29,3 +29,6 @@ Coming soon
 
 Coming soon
 
+## 個人的メモ
+
+なし

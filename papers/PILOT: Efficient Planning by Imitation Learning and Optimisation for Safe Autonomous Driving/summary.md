@@ -88,11 +88,11 @@ None: 軌道の各位置を(0, 0)にする、ConstVel: 車両のヘディング�
 
 エキスパートを模倣するネットワークに改良の余地がある。例えば初期化時にネットワークアンサンブルを使用し、それらのコストが最も引くものを出力として用いることや、よりよい初期化を行うためにConditional imitation learning([Deep imitation learning for autonomous driving in generic urban scenarios with enhanced safety](https://arxiv.org/pdf/1903.00640.pdf))を使うことが考えられる。
 
-個人的にはOODシーン対する明示的な評価（例えば実行時間）がないので、OODシーンに対して実行できるか不明である。[Can autonomous vehicles identify, recover from, and adapt to distribution shifts](../Can autonomous vehicles identify, recover from, and adapt to distribution shifts/summary.md)で提案されたような、OODシーンに明確に含まれているデータを使って評価したほうがいいのではないだろうか？
-
 ## 次に読むべき論文は？
 
 未定
 
+## 個人的メモ
 
+OODシーン対する明示的な評価（例えば実行時間）がないので、OODシーンに対して実行できるか不明である。[Can autonomous vehicles identify, recover from, and adapt to distribution shifts](../Can autonomous vehicles identify, recover from, and adapt to distribution shifts/summary.md)で提案されたような、OODシーンに明確に含まれているデータを使って評価したほうがいいのではないだろうか？
 

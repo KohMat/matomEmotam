@@ -19,7 +19,7 @@
 
 ## 先行研究と比べてどこがすごい？何を解決したか？
 
-提案手法のRIPはDeep Imitative Models([arxiv](https://arxiv.org/pdf/1810.06544.pdf), [summary](../DEEP IMITATIVE MODELS FOR FLEXIBLE INFERENCE, PLANNING, AND CONTROL/summary.md))(以下、DIM)の性能向上版といえる。DIMの論文の結論に課題として述べられている認識論的不確実性について取り組んだ手法であり、OODシナリオを検出およびいくつかのOODシナリオに対して対応することができる。例えば訓練データに含まれないRoundaboutのシーンに対して走行することができる。これはDIMや[Learning by Cheating](https://arxiv.org/abs/1912.12294)の方法ではできなかったことである。
+DIMの論文の結論に課題として述べられている認識論的不確実性について取り組んだ手法であり、OODシナリオを検出およびいくつかのOODシナリオに対して対応することができる。例えば訓練データに含まれないRoundaboutのシーンに対して走行することができる。これはDIMや[Learning by Cheating](https://arxiv.org/abs/1912.12294)の方法ではできなかったことである。
 
 ## 手法は？
 
@@ -63,8 +63,6 @@ RIPは複数のモデルを使うので計算量が大きく、リアルタイ�
 
 AdaRIPは、多くのオンライン方法と同様に、壊滅的な忘却とサンプルの非効率性が発生する。
 
-私自身の疑問であるが、AdaRIPはフィードバックを促すことはよいが、ドライバーにとってどのような告知を行うかについては、記述されていない。そこに余地があるのではと考える。例えば、数秒前にとか。検出した段階で少し速度を下げるとか。あと挙動ががたがたしている。
-
 ## 次に読むべき論文は？
 
 [PILOT: Efficient Planning by Imitation Learning and Optimisation for Safe Autonomous Driving](../PILOT: Efficient Planning by Imitation Learning and Optimisation for Safe Autonomous Driving/summary.md)
@@ -103,3 +101,10 @@ Machine Learning for Autonomous Driving Workshop at the 33rd Conference on Neura
 1. 緒方　裕光, リスク解析における不確実性, 日本リスク研究学会誌 19（2）：３－９（2009）
 2. [Deep EnsemblesでDeep Learningの不確かさを評価する](https://st1990.hatenablog.com/entry/2019/08/15/200842)
 3. [私たちが愛した3つのNIPS論文](https://magazine.techcareer.jp/instacart-blog/technology-instacart-blog/383/?doing_wp_cron=1564408832.5697760581970214843750)
+
+## 個人的メモ
+
+* 提案手法のRIPはDeep Imitative Models([arxiv](https://arxiv.org/pdf/1810.06544.pdf), [summary](../DEEP IMITATIVE MODELS FOR FLEXIBLE INFERENCE, PLANNING, AND CONTROL/summary.md))(以下、DIM)の性能向上版といえる。
+
+* AdaRIPはおまけという感じ。
+* AdaRIPはフィードバックを促すことはよいが、ドライバーにとってどのような告知を行うかについては、記述されていない。そこに余地があるのではと考える。例えば、数秒前にとか。検出した段階で少し速度を下げるとか。あと挙動ががたがたしている。

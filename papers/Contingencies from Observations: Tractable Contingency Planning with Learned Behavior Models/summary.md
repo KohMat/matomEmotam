@@ -126,15 +126,7 @@ CfOはRGおよびRG\*の両方の成功率が高い。これはCfOがContingent�
 
 ## 課題は？議論はある？
 
-
-
-個人的には
-
-* CfOはマルチエージェントの相互作用を考慮した予測を行う[PRECOG](../PRECOG: PREdiction Conditioned On Goals in Visual Multi-Agent Settings/summary.md)のモデルESPを使った性能向上版の[Deep Imitative Models](../DEEP IMITATIVE MODELS FOR FLEXIBLE INFERENCE, PLANNING, AND CONTROL/summary.md)である。
-* CfOが目的関数に$$\mathcal{L}^{\mathbf{r}}$$を用いたCfOに比べてRGの成功率が下がっているのが気になる。
-
-* CfOのRG\*の成功率は高いが、実際どれくらいエキスパートと走行時間が近いのだろうか？
-* 模倣モデルが実際にどれくらい妥当な尤度を出すのか興味がある。[PILOT](../PILOT: Efficient Planning by Imitation Learning and Optimisation for Safe Autonomous Driving/summary.md)で検証されたような自明の拘束条件を満たしているかどうか確認してみたい。
+なし
 
 ## 次に読むべき論文は？
 
@@ -183,3 +175,10 @@ End-to-Endシステム(例えば[DIM](../DEEP IMITATIVE MODELS FOR FLEXIBLE INFE
 
 ![4_planning_types](./4_planning_types.png)
 
+## 個人的メモ
+
+* Contingentを訳せなかった。
+* 模倣モデルを用いた経路計画方である[Deep Imitative Models](../DEEP IMITATIVE MODELS FOR FLEXIBLE INFERENCE, PLANNING, AND CONTROL/summary.md)を軸にマルチエージェントの相互作用を考慮した予測を行う[PRECOG](../PRECOG: PREdiction Conditioned On Goals in Visual Multi-Agent Settings/summary.md)を計画に使用してみた論文。モデルおよび目的関数自体はこれらの論文で提案されている。
+* CfOが目的関数に$$\mathcal{L}^{\mathbf{r}}$$を用いたCfOに比べてRGの成功率が下がっているのが気になる。
+* CfOのRG\*の成功率は高いが、実際どれくらいエキスパートと走行時間が近いのだろうか？
+* 模倣モデルが実際にどれくらい妥当な尤度を出すのか興味がある。[PILOT](../PILOT: Efficient Planning by Imitation Learning and Optimisation for Safe Autonomous Driving/summary.md)で検証されたような自明の拘束条件を満たしているかどうか確認してみたい。

@@ -157,11 +157,11 @@ CALRAおよびnuScenesを使い、PRECOGの予測性能を検証した。Planing
 
 将来の方向としては、自車両だけでなく他車両のゴールを条件付けた予測がある。
 
-個人的に
-
-* Didactic Exampleで自車両は人間が左折したとき、人間もしくはロボットが交差点前に止まるパターンを検証してみたい。
-* 上に書かれているとおり、PRECOGの検証で、自車両だけでなく、観測範囲内の道路の構造上到達しうる点も加えて検証をしてみたい。
-
 ## 次に読むべき論文は？
 
 [Contingencies from Observations: Tractable Contingency Planning with Learned Behavior Models](../Contingencies from Observations: Tractable Contingency Planning with Learned Behavior Models/summary.md)
+
+## 個人的メモ
+
+* Didactic Exampleの行動パターン数を増やして検証したい。。例えば自車両は人間が左折したとき、人間もしくはロボットが交差点前に止まるパターン
+* 上に書かれているとおり、PRECOGの検証で、自車両だけでなく、観測範囲内の道路の構造上到達しうる点も加えて検証をしたい。
