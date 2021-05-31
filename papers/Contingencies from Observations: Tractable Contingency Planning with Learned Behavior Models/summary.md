@@ -51,7 +51,7 @@ $$\mathbf{x}_{t}^{1:A} = \pi^a (\mathbf{x}_{<t}^{1:A}, \mathbf{o};\phi_t^a, \the
 
 ### Contingencies from Observations
 
-CfOは行動モデル$$q(\mathbf{X} \mid \phi)$$を使って次の最適化問題をstochastic gradient ascentで解くことで、マルチエージェントの相互作用を考慮した（Contingent）計画を求める。
+CfOは行動モデル$$q(\mathbf{X} \mid \phi)$$を使って$$\mathbf{z}_{\le T}^{r}$$に関して次の最適化問題をstochastic gradient ascentで解くことで、マルチエージェントの相互作用を考慮した（Contingent）計画を求める。
 
 $$\begin{equation}
 \mathcal{L}_{CfO}(\pi_{\mathbf{z}_{\le T}^{r}}^{r})=
@@ -65,16 +65,18 @@ $$\mathcal{L}_{CfO}$$は制御できない他車両の不確実性を考慮し�
 
 1. 学習した行動モデルを使った計画の尤度
 2. ゴールに対する計画の最後の位置の尤度
-3. ゴールへ向かうための移動可能領域に関する拘束
+3. ゴールへ向かうための移動可能領域に関する拘束（例えば道路外や他車両との衝突である。数値計算上$$\delta_{\mathbb{G}}(\bar{\mathbf{x}}_{\le T}) = 0$$のときには、代わりに大きな負の値を使う。）
 
-である。$$\mathcal{L}_{CfO}$$は観測とゴールの条件付き事後分布$$p(\mathbf{z}_{\le T}^{r} \mid \mathcal{G}, \mathbf{o})$$を最大化するような潜在変数$$\mathbf{z}_{\le T}^{r*}$$を求めるMAP推定の下限近似である。
+である。実際にはPRECOGと同様に他エージェントの潜在変数$$\mathbf{Z}^h$$を正規分布$$\mathcal{N}(0, \mathbf{I})$$からサンプリングしてゴールの尤度による重み付き平均を行うことで期待値の近似を行う。
 
-$$\DeclareMathOperator*{\argmin}{arg\,min}
-\DeclareMathOperator*{\argmax}{arg\,max}
-\begin{equation}
-\mathbf{z}_{\le T}^{r*}
-= \displaystyle \argmax_{\mathbf{z}_{\le T}^{r}} p(\mathbf{z}_{\le T}^{r} \mid \mathcal{G}, \mathbf{o})
-\end{equation}$$
+>  $$\mathcal{L}_{CfO}$$は観測とゴールの条件付き事後分布$$p(\mathbf{z}_{\le T}^{r} \mid \mathcal{G}, \mathbf{o})$$を最大化するような潜在変数$$\mathbf{z}_{\le T}^{r*}$$を求めるMAP推定の下限近似である。
+>
+> $$\DeclareMathOperator*{\argmin}{arg\,min}
+> \DeclareMathOperator*{\argmax}{arg\,max}
+> \begin{equation}
+> \mathbf{z}_{\le T}^{r*}
+> = \displaystyle \argmax_{\mathbf{z}_{\le T}^{r}} p(\mathbf{z}_{\le T}^{r} \mid \mathcal{G}, \mathbf{o})
+> \end{equation}$$
 
 ### Noncontingency Planner
 
