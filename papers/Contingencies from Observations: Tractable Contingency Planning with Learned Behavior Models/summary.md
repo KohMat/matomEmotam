@@ -9,7 +9,7 @@
 
 ## どんなもの？
 
-Contingency Planning([補足](#Contingency planningについて (Introductionから作成)))を行うCfO(Contingencies from Observations)を提案する。CfOはマルチエージェントの相互作用による行動を表す学習済み画像条件付きautoregressive flowモデル$$q(\mathbf{X} \mid \phi)$$を使う。このモデルはマルチエージェントの軌道を模倣するように訓練される。CfOはセンサーの観測からゴールに到達するように、訓練したモデルを使った観測とゴールの条件付き事後確率を最大化するような計画を最適化計算により求める。CfOはContingent(不測の事態が起きる)シナリオで様々なnon-contingentのプランニング方法の性能を凌駕した。
+Contingency Planning([補足](#Contingency planningについて (Introductionから作成)))を行うCfO(Contingencies from Observations)を提案する。CfOはマルチエージェントの相互作用による行動を表す学習済み画像条件付きautoregressive flowモデル$$q(\mathbf{X} \mid \phi)$$を使う。このモデルはマルチエージェントの軌道を模倣するように訓練される。CfOはセンサーの観測からゴールに到達するように、訓練したモデルを使った観測とゴールの条件付き事後分布を最大化するような計画を最適化計算により求める。CfOは人間の意図の不確実性のもとで人間との協力が不可欠なシナリオで様々なnon-contingentのプランニング方法の性能を凌駕した。
 
 ![flowchart](./flowchart.png)
 
@@ -24,27 +24,82 @@ Contingency Planning([補足](#Contingency planningについて (Introductionか
 
 ## 手法は？
 
-連続空間、離散時間を扱う。時刻$$t$$のエージェント$$a$$の位置を$$\mathbf{x}_{t}^a \in \mathbb{R}^{d}$$とする。時刻$$t$$のすべての車両の位置を$$\mathbf{x}_{t} \in \mathbb{R}^{A \times d}$$とする。$$A$$はエージェント個数である。制御できる車両の位置を$$\mathbf{x}_{t}^r = \mathbf{x}_{t}^1 \in \mathbb{R}^{A \times d}$$、制御できないすべての車両の位置を$$\mathbf{x}_{t}^h = \mathbf{x}_{t}^{2:A} \in \mathbb{R}^{(A-1) \times d}$$とする。$$t=0$$を現在時刻とする。$$\mathbf{x}_{\le t}$$を時刻$$[1,...,t]$$の位置とする。小文字は実現値、大文字は確率変数とする。現在の時刻の観測を。$$\mathbf{o} \doteq \{\mathbf{x}_0, \mathbf{i}_0\}$$とする。$$\mathbf{i}_0$$は高次元の環境に関する情報である。
+連続空間、離散時間を扱う。時刻$$t$$のエージェント$$a$$の位置を$$\mathbf{x}_{t}^a \in \mathbb{R}^{d}$$とする。時刻$$t$$のすべての車両の位置を$$\mathbf{x}_{t} \in \mathbb{R}^{A \times d}$$とする。$$A$$はエージェント個数である。制御できる車両の位置を$$\mathbf{x}_{t}^r = \mathbf{x}_{t}^1 \in \mathbb{R}^{A \times d}$$、制御できないすべての車両の位置を$$\mathbf{x}_{t}^h = \mathbf{x}_{t}^{2:A} \in \mathbb{R}^{(A-1) \times d}$$とする。$$t=0$$を現在時刻とする。$$\mathbf{x}_{\le t}$$を時刻$$[1,...,t]$$の位置とする。小文字は実現値、大文字は確率変数とする。現在の時刻の観測を。$$\mathbf{o} \doteq \{\mathbf{x}_0, \mathbf{i}_0\}$$とする。$$\mathbf{i}_0$$は高次元の環境に関する情報である。自車両が向かうべきゴールを$$\mathcal{G} = (\mathbf{g}, \mathbb{G})$$とする。$$\mathbf{g}$$は2次元の位置であり、$$\mathbb{G}$$は$$\mathbf{g}$$に向かう移動可能領域$$\delta_{\mathbb{G}}(\mathbf{x})$$である。$$\delta_{\mathbb{G}}(\mathbf{x})$$は$$\mathbf{x}$$が領域内ならば1、そうでなければ0となる。
 
-### 仮定
+エージェントが２個以上のマルチエージェントシステムを考える。すべてのエージェントの位置は観測できるとする。ただしエージェント間でゴールなどの意図は伝わらないものとする。模倣モデルの訓練に用いるデータセットはゴールに到達するために有効な行動のモードを多く含んでいると仮定する。有効な行動としては右左折、受動的な走行、能動的な走行などである。例えば前方車両の速度が遅く追い越しをすることで快適になるシナリオの場合、データセットに積極的に追い越しをするデータを含んでいる必要がある。
 
-エージェントが２個以上のマルチエージェントシステムを考える。すべてのエージェントの位置は観測できるとする。ただしゴールなどの意図は伝わらないものとする。模倣モデルの訓練に用いるデータセットはゴールに到達するために有効な行動のモードを多く含んでいると仮定する。有効な行動としては右左折、受動的な走行、能動的な走行などである。例えば前方車両の速度が遅く追い越しをすることで快適になるシナリオの場合、データセットに積極的に追い越しをするデータを含んでいる必要がある。
+### Behavioral Model
 
-### Behavioral Modeling
+CfOに用いるマルチエージェントの軌道を予測する行動モデル$$q(\mathbf{X} \mid \phi)$$は過去の状態及び観測を受け取るネットワークによる自己回帰確率分布モデルの積に分解できる。
 
-マルチエージェントの軌道を予測するモデルを設計する(基本的には[PRECOG](../PRECOG: PREdiction Conditioned On Goals in Visual Multi-Agent Settings/summary.md)のモデリングと同じ)。
+$$q(\mathbf{X}_{\le T}^{1:A} = \mathbf{x}_{\le T}^{1:A} \mid \mathbf{o})= \prod_{t=1}^T \prod_{a=1}^A q^a(\mathbf{X}_t^a = \mathbf{x}_t^a ; \phi_t^a)$$
 
-Autoregressive normalizing flowに使われるような説明をしたい。
+$$\phi_t^a$$は過去の状態および観測を受け取るネットワークが出力したパラメータ$$\phi_t^a=f_{\theta}^a(\mathbf{x}_{\le T}^{1:A}; \mathbf{o})$$である。$$q^a$$は事前に設定された単純な基本分布$$\bar{q}^a$$からサンプルした$$\mathbf{z}_t^a \in \mathbb{R}^d$$を$$\mathbf{x}_t^a$$に可逆な変換することによってサンプルできる確率分布とする。そしてこのような変換関数を$$\mathbf{x}_t^a = m(\mathbf{z}_t^a; \phi_t^a)$$とする。例えば基本分布$$\bar{q}^a$$を正規分布とすると、$$m$$$と$$$\phi_t^a$$は
 
-### Contingency planner
+$$m(\mathbf{z}_t^a; \phi_t^a) = \mu_t^a + \sigma_t^a \mathbf{z}_t^a$$
 
+$$\phi_t^a = \{ \mu_t^a, \sigma_t^a \}$$
 
+と表せる。$$\mu_t^a$$、$$\sigma_t^a$$は状態$$\mathbf{X}_t^a$$における平均と分散となる。
 
+また変換関数$$m$$は$$\mathbf{z}_t^a$$と$$\theta$$によってパラメータ化される決定的な方策$$\pi$$として表すことができる。
 
+$$\mathbf{x}_{t}^{1:A} = \pi^a (\mathbf{x}_{<t}^{1:A}, \mathbf{o};\phi_t^a, \theta)$$
+
+検証に用いるモデルのアーキテクチャは[PRECOG](../PRECOG: PREdiction Conditioned On Goals in Visual Multi-Agent Settings/summary.md)のESPと同様のものを用いる。
+
+### Contingency planner CfO
+
+CfOは行動モデル$$q(\mathbf{X} \mid \phi)$$を使って次の最適化問題をGradient ascentで解くことで、マルチエージェントの相互作用を考慮した（Contingent）計画を求める。
+
+$$\begin{equation}
+\mathcal{L}_{CfO}(\pi_{\mathbf{z}_{\le T}^{r}}^{r})=
+\displaystyle \mathbb{E}_{\mathbf{z}^{h} \sim \mathcal{N}(0, I)} \left[
+\log q_{\theta}(\bar{\mathbf{x}}_{\le T} \mid \mathbf{o}) +
+\log \mathcal{N}(\bar{\mathbf{x}}_{T}^{r} ; \mathbf{g}, I) +
+\log \delta_{\mathbb{G}}(\bar{\mathbf{x}}_{\le T}) \right]
+\end{equation}$$
+
+$$\mathcal{L}_{CfO}$$の各項は
+
+1. 学習した行動モデルを使った計画の尤度
+2. ゴールに対する計画の最後の位置の尤度
+3. ゴールへ向かうための移動可能領域に関する拘束
+
+である。$$\mathcal{L}_{CfO}$$は観測とゴールの条件付き事後分布$$p(\mathbf{z}_{\le T}^{r} \mid \mathcal{G}, \mathbf{o})$$を最大化するような潜在変数$$\mathbf{z}_{\le T}^{r*}$$を求めるMAP推定の下限近似である。
+
+$$\DeclareMathOperator*{\argmin}{arg\,min}
+\DeclareMathOperator*{\argmax}{arg\,max}
+\begin{equation}
+\mathbf{z}_{\le T}^{r*}
+= \displaystyle \argmax_{\mathbf{z}_{\le T}^{r}} p(\mathbf{z}_{\le T}^{r} \mid \mathcal{G}, \mathbf{o})
+\end{equation}$$
+
+### Noncontingency Planner
+
+2つのNoncontingency Plannerを検証時の比較のため提案する。１つめはロボットから人間への影響をモデル化しない[Human leader planner](#Co-leader planning)である。このプランナーによる計画はundercondientとなる。他車両の軌道$$\hat{\mathbf{x}}^h$$を予測した後、自車両の軌道を計画を次の目的関数$$\mathcal{L}^{\mathbf{r}}$$を最大化することで計算する。
+
+$$\begin{equation}
+\mathcal{L}^{\mathbf{r}}(\mathbf{x}_{\le T}^{r})=
+\displaystyle \mathbb{E}_{\hat{\mathbf{x}} \sim q}
+\log q_{\theta}([\mathbf{x}^r, \hat{\mathbf{x}}^h]_{\le T} \mid \mathbf{o}) +
+\log \mathcal{N}(\bar{\mathbf{x}}_{T}^{r} ; \mathbf{g}, I) +
+\log \delta_{\mathbb{G}}([\mathbf{x}^r, \hat{\mathbf{x}}^h]_{\le T})
+\end{equation}$$
+
+２つめはプランナーおよびロボットを同時に制御する[Join planner](#Co-leader planning)である。このプランナーによる計画はoverconfidentとなる。自車両および他車両の計画を同時に次の目的関数$$\mathcal{L}^{\mathbf{joint}}$$を最大化することで求める。
+
+$$\begin{equation}
+\mathcal{L}^{\mathbf{joint}}(\mathbf{x}_{\le T}^{r})=
+\displaystyle
+\log q_{\theta}(\mathbf{x}_{\le T} \mid \mathbf{o}) +
+\log \mathcal{N}(\mathbf{x}_{T}^{r} ; \mathbf{g}, I) +
+\log \delta_{\mathbb{G}}(\mathbf{x}_{\le T})
+\end{equation}$$
 
 ## どうやって有効だと検証した？
 
-人間にとっては簡単であるが、学習ベースのナビゲーションシステムにとって難しい左折、追い越し、右折時の合流の３つのシナリオをCARLAを使い用意した。これらのシナリオを事故なくスムーズに走行することはContinent（人間の意図の不確実性のもとで人間との協力が不可欠な）タスクである。
+人間にとっては簡単であるが、学習ベースのナビゲーションシステムにとって難しい左折、追い越し、右折時の合流の３つのシナリオをCARLAを使い用意した。これらのシナリオを事故なくスムーズに走行することは人間の意図の不確実性のもとで人間との協力が不可欠な（Contingent動作が求められる）タスクである。
 
 ![scenarios](./scenarios.png)
 
@@ -52,10 +107,10 @@ Autoregressive normalizing flowに使われるような説明をしたい。
 
 | 方法                                            | 内容                                                         |
 | ----------------------------------------------- | ------------------------------------------------------------ |
-| Single-agent                                    | [Deep Imitative Models](../DEEP IMITATIVE MODELS FOR FLEXIBLE INFERENCE, PLANNING, AND CONTROL/summary.md)、obliviousプランナー |
-| Noncontingent, $$\mathcal{L}^{\mathbf{r}}$$     | 目的関数に$$\mathcal{L}^{\mathbf{r}}$$を用いたCfO、 underconfidentプランナー |
-| Noncontingent, $$\mathcal{L}^{\mathbf{joint}}$$ | 目的関数に$$\mathcal{L}^{\mathbf{joint}}$$を用いたCfO、overconfientプランナー |
-| MFP                                             | 学習済みの行動モデルを用いたnoncontingentプランニング        |
+| Single-agent                                    | [Deep Imitative Models](../DEEP IMITATIVE MODELS FOR FLEXIBLE INFERENCE, PLANNING, AND CONTROL/summary.md)を用いたobliviousプランナー |
+| Noncontingent, $$\mathcal{L}^{\mathbf{r}}$$     | 目的関数に$$\mathcal{L}^{\mathbf{r}}$$を用いたunderconfidentプランナー |
+| Noncontingent, $$\mathcal{L}^{\mathbf{joint}}$$ | 目的関数に$$\mathcal{L}^{\mathbf{joint}}$$を用いたoverconfientプランナー |
+| MFP                                             | 学習済みの行動モデルを用いたnoncontingentプランナー          |
 
 CfOおよび比較手法はハンドクラフトしたポリシーを使って作成したデータで訓練された。このポリシーはエキスパートのパス、交差点や反対車線に入らない保守的なパス、もしくは他のエージェントが譲らない場合でも走行を続ける危険なパスのいずれかを出力する。このポリシーの動作例を示す。
 
@@ -67,17 +122,19 @@ CfOおよび比較手法でゴールの到達率の比較結果を次に示す�
 
 ![comparison](./comparison.png)
 
-CfOはRGおよびRG\*の両方の成功率が高い。これはCfOがContingent(不測の事態が起きる)シナリオに有効なことを示している。Noncontingent, $$\mathcal{L}^{\mathbf{r}}$$はRGの完璧な成功率を達成しているが、自信がない(underconfident)動作が走行時間を伸ばしているためRG\*の成功率は０である。Noncontingent, $$\mathcal{L}^{\mathbf{joint}}$$は他車両が譲らない場合には安全でない行動を行うことがあった。Single-agentはすべてのシナリオでその他のエージェントよりも低い成功率である。自車両の行動のみを考慮するプランナーでは不十分なことを示している。
+CfOはRGおよびRG\*の両方の成功率が高い。これはCfOがContingent動作が必要なシナリオに有効なことを示している。Noncontingent, $$\mathcal{L}^{\mathbf{r}}$$はRGの完璧な成功率を達成しているが、自信がない動作が走行時間を伸ばしているためRG\*の成功率は０である。Noncontingent, $$\mathcal{L}^{\mathbf{joint}}$$は他車両が譲らない場合には安全でない行動を行うことがあった。Single-agentはすべてのシナリオでその他のエージェントよりも低い成功率である。自車両の行動のみを考慮するプランナーでは不十分なことを示している。
 
 ## 課題は？議論はある？
 
-データセットに含まれる行動の条件
+
 
 個人的には
 
+* CfOはマルチエージェントの相互作用を考慮した予測を行う[PRECOG](../PRECOG: PREdiction Conditioned On Goals in Visual Multi-Agent Settings/summary.md)のモデルESPを使った性能向上版の[Deep Imitative Models](../DEEP IMITATIVE MODELS FOR FLEXIBLE INFERENCE, PLANNING, AND CONTROL/summary.md)である。
 * CfOが目的関数に$$\mathcal{L}^{\mathbf{r}}$$を用いたCfOに比べてRGの成功率が下がっているのが気になる。
 
 * CfOのRG\*の成功率は高いが、実際どれくらいエキスパートと走行時間が近いのだろうか？
+* 模倣モデルが実際にどれくらい妥当な尤度を出すのか興味がある。[PILOT](../PILOT: Efficient Planning by Imitation Learning and Optimisation for Safe Autonomous Driving/summary.md)で検証されたような自明の拘束条件を満たしているかどうか確認してみたい。
 
 ## 次に読むべき論文は？
 
