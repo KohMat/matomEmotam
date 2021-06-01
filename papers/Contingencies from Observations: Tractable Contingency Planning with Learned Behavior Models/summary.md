@@ -46,7 +46,7 @@ $$\phi_t^a = \{ \mu_t^a, \sigma_t^a \}$$
 
 $$\mathbf{x}_{t}^{1:A} = \pi^a (\mathbf{x}_{<t}^{1:A}, \mathbf{o};\phi_t^a, \theta)$$
 
-検証に用いるモデルのアーキテクチャは[PRECOG](../PRECOG: PREdiction Conditioned On Goals in Visual Multi-Agent Settings/summary.md)のESPと同様のものを用いる。
+検証に用いるモデルのアーキテクチャは[PRECOG](../PRECOG: PREdiction Conditioned On Goals in Visual Multi-Agent Settings/summary.md)のESPと同様のものを用いる。センサは俯瞰図方式ではなくレンジイメージでCNNに入力する。
 
 ### Contingencies from Observations
 
@@ -89,7 +89,7 @@ $$\begin{equation}
 \log \delta_{\mathbb{G}}([\mathbf{x}^r, \hat{\mathbf{x}}^h]_{\le T})
 \end{equation}$$
 
-２つめはプランナーおよびロボットを同時に制御する[Join planner](#Co-leader planning)である。このプランナーによる計画はoverconfidentとなる。自車両および他車両の計画を同時に次の目的関数$$\mathcal{L}^{\mathbf{joint}}$$を最大化することで求める。
+２つめは自車両および他車両を同時に制御する[Join planner](#Co-leader planning)である。このプランナーによる計画はoverconfidentとなる。自車両および他車両の計画を同時に次の目的関数$$\mathcal{L}^{\mathbf{joint}}$$を最大化することで求める。
 
 $$\begin{equation}
 \mathcal{L}^{\mathbf{joint}}(\mathbf{x}_{\le T}^{r})=
