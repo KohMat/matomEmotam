@@ -1,5 +1,5 @@
 
-# 経路計画関連の読んだ論文のリストとまとめ
+# 読んだ論文のリストとまとめ
 
 * [PILOT: Efficient Planning by Imitation Learning and Optimisation for Safe Autonomous Driving](papers/PILOT: Efficient Planning by Imitation Learning and Optimisation for Safe Autonomous Driving/summary.md)
 * [DEEP IMITATIVE MODELS FOR FLEXIBLE INFERENCE, PLANNING, AND CONTROL](papers/DEEP IMITATIVE MODELS FOR FLEXIBLE INFERENCE, PLANNING, AND CONTROL/summary.md)

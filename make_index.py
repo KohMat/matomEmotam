@@ -6,7 +6,7 @@ from typing import List
 import git
 
 MAIN = """
-# 経路計画関連の読んだ論文のリストとまとめ
+# 読んだ論文のリストとまとめ
 
 """
 
