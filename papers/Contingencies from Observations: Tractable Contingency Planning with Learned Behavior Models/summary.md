@@ -44,9 +44,9 @@ $$\phi_t^a = \{ \mu_t^a, \sigma_t^a \}$$
 
 また変換関数$$m$$は$$\mathbf{z}_t^a$$と$$\theta$$によってパラメータ化される決定的な方策$$\pi$$として表すことができる。
 
-$$\mathbf{x}_{t}^{1:A} = \pi^a (\mathbf{x}_{<t}^{1:A}, \mathbf{o};\phi_t^a, \theta)$$
+$$\mathbf{x}_{t}^{a} = \pi^a (\mathbf{x}_{<t}^{1:A}, \mathbf{o};\phi_t^a, \theta)$$
 
-検証に用いるモデルのアーキテクチャは[PRECOG](../PRECOG: PREdiction Conditioned On Goals in Visual Multi-Agent Settings/summary.md)のESPと同様のものを用いる。センサは俯瞰図方式ではなくレンジイメージでCNNに入力する。
+検証に用いるモデルのアーキテクチャは[PRECOG](../PRECOG: PREdiction Conditioned On Goals in Visual Multi-Agent Settings/summary.md)のESPと同様のものを用いる。ただしセンサは俯瞰図方式ではなくレンジイメージでCNNに入力する。
 
 ### Contingencies from Observations
 
@@ -66,7 +66,7 @@ $$\mathcal{L}_{CfO}$$は制御できない他車両の不確実性を考慮し�
 2. ゴールに対する計画の最後の位置の尤度
 3. ゴールへ向かうための移動可能領域に関する拘束（例えば道路外や他車両との衝突である。数値計算上$$\delta_{\mathbb{G}}(\bar{\mathbf{x}}_{\le T}) = 0$$のときには、代わりに大きな負の値を使う。）
 
-である。実際にはPRECOGと同様に他エージェントの潜在変数$$\mathbf{Z}^h$$を正規分布$$\mathcal{N}(0, \mathbf{I})$$からサンプリングしてゴールの尤度による重み付き平均を行うことで期待値の近似を行う。
+である。実際にはPRECOGと同様に最適化のステップごとに他エージェントの潜在変数$$\mathbf{Z}^h$$を正規分布$$\mathcal{N}(0, \mathbf{I})$$からサンプリングしてゴールの尤度による重み付き平均を行うことで期待値の近似を行う。
 
 $$\mathcal{L}_{CfO}$$は観測とゴールの条件付き事後分布$$p(\mathbf{z}_{\le T}^{r} \mid \mathcal{G}, \mathbf{o})$$を最大化するような潜在変数$$\mathbf{z}_{\le T}^{r*}$$を求めるMAP推定の下限近似である。またAppendixにこの最適化問題を解くことで実際にContingency Planningが行えることを示す。
 
