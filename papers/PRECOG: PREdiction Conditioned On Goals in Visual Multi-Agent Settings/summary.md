@@ -13,7 +13,7 @@
 
 ESP(Estimating Social-forecast Probabilities)は単一エージェントを予測するR2P2([link](https://people.eecs.berkeley.edu/~nrhinehart/papers/r2p2_cvf.pdf), [summary](../R2P2: A reparameterized pushforward policy for diverse, precise generative path forecasting/summary.md))をマルチエージェント間の相互作用を考慮して一般化したもので、エージェント間の尤もらしい将来の相互作用を確率的に説明する。ESPでは各エージェントの状態をfactorized潜在変数によって表現する。マルチエージェントと時間にまたがる分解により、任意の時間における任意エージェントの状態を独立に変えたときの効果（確率）を調べることができる。つまり潜在変数をサンプリングすることで、マルチエージェントの相互作用を考慮した予測を行うことができる。
 
-PRECOG(PREdition Conditioned On Goal)を提案する。PRECOGは次にエージェントが向かうべきゴールを条件に予測を行う初の生成型のマルチエージェント予測法である。これはまず自車両のエージェントにゴールを条件付け、マルチエージェント環境でのImitative Planning([arxiv](https://arxiv.org/pdf/1810.06544.pdf), [summary](../DEEP IMITATIVE MODELS FOR FLEXIBLE INFERENCE, PLANNING, AND CONTROL/summary.md))を行うことで、自車両がゴールに到達するようなエキスパートらしい軌道を求める。そしてその求めた軌道を使ってESP同様に他車両の予測を行う。これにより相互に作用する他のエージェントの軌道の予測精度を高めることができる。
+PRECOG(PREdition Conditioned On Goal)は次にエージェントが向かうべきゴールを条件に予測を行う初の生成型のマルチエージェント予測法である。これはまず自車両のエージェントにゴールを条件付け、マルチエージェント環境でのImitative Planning([arxiv](https://arxiv.org/pdf/1810.06544.pdf), [summary](../DEEP IMITATIVE MODELS FOR FLEXIBLE INFERENCE, PLANNING, AND CONTROL/summary.md))を行うことで、自車両がゴールに到達するようなエキスパートらしい軌道を求める。そしてその求めた軌道を使ってESP同様に他車両の予測を行う。これにより相互に作用する他のエージェントの軌道の予測精度を高めることができる。
 
 ![EmbeddedImage](./EmbeddedImage.gif)
 
@@ -21,7 +21,7 @@ PRECOG(PREdition Conditioned On Goal)を提案する。PRECOGは次にエージ�
 
 * ESPによる予測がエージェント間の相互作用を考慮する予測を実行できることを示した。
 * ESPがCALRAおよびnuScenesのデータセットで３つのstate-of-artの方法の性能を上回ることを示した。
-* PRECOG　(PREdition Conditioned On Goal)が相互に作用するその他のエージェントの予測性能が改善されることをCALRAおよびnuScenesのデータセットを使い示した。
+* PRECOGが相互に作用するその他のエージェントの予測性能が改善されることをCALRAおよびnuScenesのデータセットを使い示した。
 
 ## 手法は？
 
