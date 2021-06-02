@@ -46,7 +46,7 @@ $$\phi_t^a = \{ \mu_t^a, \sigma_t^a \}$$
 
 $$\mathbf{x}_{t}^{a} = \pi^a (\mathbf{x}_{<t}^{1:A}, \mathbf{o};\phi_t^a, \theta)$$
 
-検証に用いるモデルのアーキテクチャは[PRECOG](../PRECOG: PREdiction Conditioned On Goals in Visual Multi-Agent Settings/summary.md)のESPと同様のものを用いる。ただしセンサは俯瞰図方式ではなくレンジイメージでCNNに入力する。
+具体的なモデルのアーキテクチャは[PRECOG](../PRECOG: PREdiction Conditioned On Goals in Visual Multi-Agent Settings/summary.md)のESPと同様のものを使う。ただしセンサは俯瞰図方式ではなくレンジイメージでCNNに入力する。
 
 ### Contingencies from Observations
 
