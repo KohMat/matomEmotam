@@ -9,7 +9,7 @@
 
 ## どんなもの？
 
-Contingency Planning([補足](#Contingency planningについて (Introductionから作成)))を行うCfO(Contingencies from Observations)を提案する。CfOはマルチエージェントの相互作用による行動を表す学習済み条件付きautoregressive flowモデル$$q(\mathbf{X} \mid \phi)$$を使う。このモデルはマルチエージェントの軌道を模倣するように訓練される。CfOはセンサーの観測からゴールに到達するように、訓練したモデルを使った観測とゴールの条件付き事後分布を最大化するような計画を最適化計算により求める。CfOは人間の意図の不確実性のもとで人間との協力が不可欠なシナリオで様々なnon-contingentプランニング方法の性能を凌駕した。
+エキスパートの軌道を模倣する行動モデルを使いContingency Planning([補足](#Contingency planningについて (Introductionから作成)))を行う経路計画方法CfO(Contingencies from Observations)を提案する。CfOはマルチエージェントの相互作用による行動を表す学習済み条件付きautoregressive flowモデル$$q(\mathbf{X} \mid \phi)$$を使う。このモデルはマルチエージェントの軌道を模倣するように訓練される。CfOはセンサーの観測$$o_t$$からゴール$$\mathcal{G}$$に到達するように、訓練したモデルを使った観測とゴールの条件付き事後分布を最大化するような計画を最適化計算により求める。これにより人間の意図の不確実性のもとで人間との協力が不可欠なシナリオで安全かつ速やかに行動する計画を行うことができる。
 
 ![flowchart](./flowchart.png)
 
@@ -17,8 +17,8 @@ Contingency Planning([補足](#Contingency planningについて (Introductionか
 
 ## 先行研究と比べてどこがすごい？何を解決したか？
 
-* 提案手法Contingencies from Observations (CfO)は学習した行動(behavior)モデルを使ってActive Contingency Planning([補足](#Active Contingency Planning))を行う。自動運転の経路計画においてこの２つの要素を持った計画方法はCfOが初である。
-* CfOは既存の機械学習の方法と比較して、最も良い性能が出た。
+* CfOは行動(behavior)モデルを使ってActive Contingency Planning([補足](#Active Contingency Planning))を行う初の経路計画方法である。
+* CfOは人間との協力が不可欠なシナリオで既存の機械学習の方法と比較して、最も良い性能が出た。
 
 ![recent_planning_methods](./recent_planning_methods.png)
 
@@ -50,7 +50,7 @@ $$\mathbf{x}_{t}^{a} = \pi^a (\mathbf{x}_{<t}^{1:A}, \mathbf{o};\phi_t^a, \theta
 
 ### Contingencies from Observations
 
-CfOは行動モデル$$q(\mathbf{X} \mid \phi)$$を使って$$\mathbf{z}_{\le T}^{r}$$に関して次の最適化問題をstochastic gradient ascentで解くことで、マルチエージェントの相互作用を考慮した（Contingent）計画を求める。
+CfOは行動モデル$$q(\mathbf{X} \mid \phi)$$を使って$$\mathbf{z}_{\le T}^{r}$$に関して次の最適化問題をで解くことで、マルチエージェントの相互作用を考慮した（Contingent）計画を求める。
 
 $$\begin{equation}
 \mathcal{L}_{CfO}(\pi_{\mathbf{z}_{\le T}^{r}}^{r})=
@@ -66,9 +66,9 @@ $$\mathcal{L}_{CfO}$$は制御できない他車両の不確実性を考慮し�
 2. ゴールに対する計画の最後の位置の尤度
 3. ゴールへ向かうための移動可能領域に関する拘束（例えば道路外や他車両との衝突である。数値計算上$$\delta_{\mathbb{G}}(\bar{\mathbf{x}}_{\le T}) = 0$$のときには大きな負の値を使う。）
 
-である。実際にはPRECOGと同様に最適化のステップごとに他エージェントの潜在変数$$\mathbf{Z}^h$$を正規分布$$\mathcal{N}(0, \mathbf{I})$$からサンプリングしてゴールの尤度による重み付き平均を行うことで期待値の近似を行う。
+である。実際にはDeep Imitative Models([arxiv](https://arxiv.org/pdf/1810.06544.pdf), [summary](../DEEP IMITATIVE MODELS FOR FLEXIBLE INFERENCE, PLANNING, AND CONTROL/summary.md))およびPRECOGと同様にstochastic gradient ascentを使い、最適化のステップごとに他エージェントの潜在変数$$\mathbf{Z}^h$$を正規分布$$\mathcal{N}(0, \mathbf{I})$$からサンプリングしてゴールの尤度による重み付き平均を行うことで期待値の近似を行う。
 
-$$\mathcal{L}_{CfO}$$は観測とゴールの条件付き事後分布$$p(\mathbf{z}_{\le T}^{r} \mid \mathcal{G}, \mathbf{o})$$を最大化するような潜在変数$$\mathbf{z}_{\le T}^{r*}$$を求めるMAP推定の下限近似である。またAppendixにこの最適化問題を解くことで実際にContingency Planningが行えることを示す。
+$$\mathcal{L}_{CfO}$$は観測とゴールの条件付き事後分布$$p(\mathbf{z}_{\le T}^{r} \mid \mathcal{G}, \mathbf{o})$$を最大化するような潜在変数$$\mathbf{z}_{\le T}^{r*}$$を求めるMAP推定の下限近似である。
 
 $$\DeclareMathOperator*{\argmin}{arg\,min}
 \DeclareMathOperator*{\argmax}{arg\,max}
@@ -184,6 +184,7 @@ End-to-Endシステム(例えば[Deep Imitative Models](../DEEP IMITATIVE MODELS
 ## 個人的メモ
 
 * Contingentを訳せなかった。
+* Appendixに最適化問題$$\mathcal{L}_{CfO}$$を解くことで実際にContingency Planningが行えることを示している（離散化している）。
 * 模倣モデルを用いた経路計画方法である[Deep Imitative Models](../DEEP IMITATIVE MODELS FOR FLEXIBLE INFERENCE, PLANNING, AND CONTROL/summary.md)を軸にマルチエージェントの相互作用を考慮した予測を行う[PRECOG](../PRECOG: PREdiction Conditioned On Goals in Visual Multi-Agent Settings/summary.md)を車両の計画に使用してみた論文。モデルおよび目的関数自体はこれらの論文で提案されている。
 * CfOが目的関数に$$\mathcal{L}^{\mathbf{r}}$$を用いたCfOに比べてRGの成功率が下がっているのが気になる。
 * CfOのRG\*の成功率は高いが、実際どれくらいエキスパートと走行時間が近いのだろうか？
