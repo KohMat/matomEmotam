@@ -12,13 +12,12 @@ Henry Pulver , Francisco Eiras†, Ludovico Carozza, Majd Hawasly , Stefano V. A
 
 ## 先行研究と比べてどこがすごい？何を解決したか？
 
-PILOTは最適な経路計画を模倣するネットワークを最適化問題の初期解として使用することで2s-OPT([Twostage optimization-based motion planner for safe urban driving](https://arxiv.org/abs/2002.02215))の7倍の実行時間の改善ができる。
+* PILOTは最適な経路計画を模倣するネットワークを最適化問題の初期解として使用することで2s-OPT([Twostage optimization-based motion planner for safe urban driving](https://arxiv.org/abs/2002.02215))の7倍の実行時間の改善ができる。
 
 ![pilot_runtime_result](./pilot_runtime_result.png)
 
-同じく模倣学習を使い最適化を行う手法の[A fast integrated planning and control framework for autonomous driving via imitation learning](https://arxiv.org/abs/1707.02515)は推論時の最適化が短いホライゾンで制限されているが、PILOT内のオプティマイザはネットワークによって生成される長いホライゾンの軌道上で動作することができる。
-
-オプティマイザの目的関数を直接近似するネットワークを作成するConstrained Policy Nets([Safe and feasible motion generation for autonomous driving via constrained policy net](https://ieeexplore.ieee.org/document/8216790))に対して、拘束条件を考慮することがないのでPILOTで用いる模倣ネットワークの訓練は簡単である。
+* 同じく模倣学習を使い最適化を行う手法の[A fast integrated planning and control framework for autonomous driving via imitation learning](https://arxiv.org/abs/1707.02515)は推論時の最適化が短いホライゾンで制限されているが、PILOT内のオプティマイザはネットワークによって生成される長いホライゾンの軌道上で動作することができる。
+* オプティマイザの目的関数を直接近似するネットワークを作成するConstrained Policy Nets([Safe and feasible motion generation for autonomous driving via constrained policy net](https://ieeexplore.ieee.org/document/8216790))に対して、拘束条件を考慮することがないのでPILOTで用いる模倣ネットワークの訓練は簡単である。
 
 ## 手法は？
 
@@ -86,7 +85,7 @@ None: 軌道の各位置を(0, 0)にする、ConstVel: 車両のヘディング�
 
 ## 課題は？議論はある？
 
-エキスパートを模倣するネットワークに改良の余地がある。例えば初期化時にネットワークアンサンブルを使用し、それらのコストが最も引くものを出力として用いることや、よりよい初期化を行うためにConditional imitation learning([Deep imitation learning for autonomous driving in generic urban scenarios with enhanced safety](https://arxiv.org/pdf/1903.00640.pdf))を使うことが考えられる。
+エキスパートを模倣するネットワークに改良の余地がある。例えば初期化時にネットワークアンサンブルを使用し、それらのコストが最も低い計画を初期値として用いることや、よりよい初期化を行うためにConditional imitation learning([Deep imitation learning for autonomous driving in generic urban scenarios with enhanced safety](https://arxiv.org/pdf/1903.00640.pdf))を使うことが考えられる。
 
 ## 次に読むべき論文は？
 

@@ -66,9 +66,9 @@ $$\mathcal{L}_{CfO}$$は制御できない他車両の不確実性を考慮し�
 2. ゴールに対する計画の最後の位置の尤度
 3. ゴールへ向かうための移動可能領域に関する拘束（例えば道路外や他車両との衝突である。数値計算上$$\delta_{\mathbb{G}}(\bar{\mathbf{x}}_{\le T}) = 0$$のときには大きな負の値を使う。）
 
-である。実際にはDeep Imitative Models([arxiv](https://arxiv.org/pdf/1810.06544.pdf), [summary](../DEEP IMITATIVE MODELS FOR FLEXIBLE INFERENCE, PLANNING, AND CONTROL/summary.md))およびPRECOGと同様にstochastic gradient ascentを使い、最適化のステップごとに他エージェントの潜在変数$$\mathbf{Z}^h$$を正規分布$$\mathcal{N}(0, \mathbf{I})$$からサンプリングしてゴールの尤度による重み付き平均を行うことで期待値の近似を行う。
+である。実際にはDeep Imitative Models([arxiv](https://arxiv.org/pdf/1810.06544.pdf), [summary](../DEEP IMITATIVE MODELS FOR FLEXIBLE INFERENCE, PLANNING, AND CONTROL/summary.md))およびPRECOGと同様にstochastic gradient ascentを使う。最適化のステップごとに他エージェントの潜在変数$$\mathbf{Z}^h$$を正規分布$$\mathcal{N}(0, \mathbf{I})$$からサンプリングしてゴールの尤度による重み付き平均を行うことで期待値の近似を行う。
 
-$$\mathcal{L}_{CfO}$$は観測とゴールの条件付き事後分布$$p(\mathbf{z}_{\le T}^{r} \mid \mathcal{G}, \mathbf{o})$$を最大化するような潜在変数$$\mathbf{z}_{\le T}^{r*}$$を求めるMAP推定の下限近似である。
+$$\mathcal{L}_{CfO}$$は観測とゴールの条件付き事後分布$$p(\mathbf{z}_{\le T}^{r} \mid \mathcal{G}, \mathbf{o})$$を最大化するような潜在変数$$\mathbf{z}_{\le T}^{r*}$$を求める問題の下限近似である。
 
 $$\DeclareMathOperator*{\argmin}{arg\,min}
 \DeclareMathOperator*{\argmax}{arg\,max}
