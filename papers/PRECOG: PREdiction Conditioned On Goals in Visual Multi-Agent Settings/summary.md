@@ -11,7 +11,7 @@
 
 可変数のエージェント（車両）の確率予測モデルESP(Estimating Social-forecast Probabilities)およびESPを用いた予測方法を提案する。ESPは単一エージェントを予測するR2P2([link](https://people.eecs.berkeley.edu/~nrhinehart/papers/r2p2_cvf.pdf), [summary](../R2P2: A reparameterized pushforward policy for diverse, precise generative path forecasting/summary.md))をマルチエージェント間の相互作用を考慮して一般化したもので、エージェント間の尤もらしい将来の相互作用を確率的に説明する。ESPでは各エージェントの決断をfactorized潜在変数によって表現する。マルチエージェントと時間にまたがる分解により、任意の時間における任意エージェントの状態を独立に変えたときの効果を調べることができる。つまり潜在変数をサンプリングすることで、マルチエージェントの相互作用を考慮した予測を行うことができる。
 
-またESPを用いた予測法PRECOG(PREdition Conditioned On Goal)を提案する。PRECOGは単一エージェントのプランニングを行うDeep Imitative Planning([arxiv](https://arxiv.org/pdf/1810.06544.pdf), [summary](../DEEP IMITATIVE MODELS FOR FLEXIBLE INFERENCE, PLANNING, AND CONTROL/summary.md))をマルチエージェント間の相互作用を考慮して一般化したプランニングを使う。ESPを用いてこのプランニングを行うことで自車両が目的地（ゴールに向かって）に向かうような自車両の潜在変数を求めることができる。予測時にこの求めた潜在変数を使う。
+またESPを用いた予測法PRECOG(PREdition Conditioned On Goal)を提案する。PRECOGは単一エージェントのプランニングを行うDeep Imitative Models([arxiv](https://arxiv.org/pdf/1810.06544.pdf), [summary](../DEEP IMITATIVE MODELS FOR FLEXIBLE INFERENCE, PLANNING, AND CONTROL/summary.md))をマルチエージェント間の相互作用を考慮して一般化したプランニングを使う。ESPを用いてこのプランニングを行うことで自車両が目的地（ゴールに向かって）に向かうような自車両の潜在変数を求めることができる。予測時にこの求めた潜在変数を使う。
 
 ![EmbeddedImage](./EmbeddedImage.gif)
 
@@ -49,7 +49,7 @@ $$\mathbf{S}_{t}^{a} = f(\mathbf{Z}_t^a) = \mu_{\theta}^a(\mathbf{S}_{1:t-1}, \p
 
   invertible generative modelとしても知られる
 
-* $$\mu_{\theta}^a(\cdot)$$および$$\sigma_{\theta}^a(\cdot)$$は状態$$\mathbf{S}_{t}$$の平均および分散を出力するネットワーク関数
+* $$\mu_{\theta}^a(\cdot)$$および$$\sigma_{\theta}^a(\cdot)$$は状態$$\mathbf{S}_{t}$$の平均および標準偏差を出力するネットワーク関数
 
   パラメータ$$\theta$$はエキスパートの軌跡を模倣する確率モデル$$q(S \mid \phi;\mathcal{D})$$ の尤度を最大化して求める
 
@@ -86,7 +86,7 @@ $$\mathbf{S}_{t}^{a} = f(\mathbf{Z}_t^a) = \mu_{\theta}^a(\mathbf{S}_{1:t-1}, \p
 
    1. $$\alpha$$、$$\mathbf{s}_{t}^{1:A}$$、$$\Gamma^{1:A}$$をConcatenationして特徴$$p_{t-1}$$を作る
 
-   2. 予測用のRNN(GRU)は特徴$$p_{t-1}$$から位置の平均を直接出力する代わりにベレの方法([wiki](https://en.wikipedia.org/wiki/Verlet_integration))のステップ$$m_{\theta}$$と位置の分散$$\sigma_{\theta}$$を出力する
+   2. 予測用のRNN(GRU)は特徴$$p_{t-1}$$から位置の平均を直接出力する代わりにベレの方法([wiki](https://en.wikipedia.org/wiki/Verlet_integration))のステップ$$m_{\theta}$$と位置の標準偏差$$\sigma_{\theta}$$を出力する
 
    3. ベレの方法から位置の平均を計算する
 

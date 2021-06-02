@@ -80,21 +80,15 @@ AdaRIPは、多くのオンライン方法と同様に、壊滅的な忘却と�
 3. 目的地に向かうまでのナビゲーション（右折、左折など）が得られるとする。
 4. ゴールや事故位置などの位置情報は完璧である。
 
-### RIP
+### RIP(Robust Imitative Planning)
 
 ほぼ同じ著者で構成されるRobust Imitative Planning: Planning from Demonstrations Under Uncertaintyという論文をWeb上で見つけることができる。RIPのみが提案されている。
 
-[Robust Imitative Planning: Planning from Demonstrations Under Uncertainty](https://ml4ad.github.io/files/papers/Robust Imitative Planning: Planning from Demonstrations Under Uncertainty.pdf)
-
-Panagiotis Tigas, Angelos Filos, Rowan McAllister, Nicholas Rhinehart, Sergey Levine, Yarin Gal
-
-Machine Learning for Autonomous Driving Workshop at the 33rd Conference on Neural Information Processing Systems (NeurIPS 2019), Vancouver, Canada.
-
- [PDF](https://ml4ad.github.io/files/papers/Robust Imitative Planning: Planning from Demonstrations Under Uncertainty.pdf) | bibtex
+Panagiotis Tigas, Angelos Filos, Rowan McAllister, Nicholas Rhinehart, Sergey Levine, Yarin Gal, Robust Imitative Planning: Planning from Demonstrations Under UncertaintyMachine Learning for Autonomous Driving Workshop at the 33rd Conference on Neural Information Processing Systems (NeurIPS 2019), Vancouver, Canada. [PDF](https://ml4ad.github.io/files/papers/Robust Imitative Planning: Planning from Demonstrations Under Uncertainty.pdf)
 
 ### 認識論的不確実性
 
-認識論的不確実性とは、知識または情報が不足していることに起因する不確実性である。知識や情報を蓄積することでこの不確実性を小さくすることができる。一方で偶然的不確実性とは、時間または空間的な変動、個体間に存在するばらつきなどから生じる不確実性である。この不確実性は小さくすることはできない。認識論的不確実性に対して、ネットワークモデルはあまりにも脆弱である。訓練データ分布外のデータに対する推論は信用できるものではない。これに対して、[Simple and Scalable Predictive Uncertainty Estimation using Deep Ensembles](https://arxiv.org/abs/1612.01474)は、Bayesian Networkに代わって複数のモデルを用いたモデルの不確実性を定量化する方法を提供する。Deep Ensemblesの他に[Dropout as a Bayesian Approximation: Representing Model Uncertainty in Deep Learning](http://proceedings.mlr.press/v48/gal16.html)がある。
+認識論的不確実性とは知識または情報が不足していることに起因する不確実性である。知識や情報を蓄積することでこの不確実性を小さくすることができる。一方で偶然的不確実性とは、時間または空間的な変動、個体間に存在するばらつきなどから生じる不確実性である。この不確実性は小さくすることはできない。認識論的不確実性に対して、ネットワークモデルはあまりにも脆弱である。訓練データ分布外のデータに対する推論は信用できるものではない。これに対して、[Simple and Scalable Predictive Uncertainty Estimation using Deep Ensembles](https://arxiv.org/abs/1612.01474)は、Bayesian Networkに代わって複数のモデルを用いたモデルの不確実性を定量化する方法を提供する。Deep Ensemblesの他に[Dropout as a Bayesian Approximation: Representing Model Uncertainty in Deep Learning](http://proceedings.mlr.press/v48/gal16.html)がある。
 
 #### 参考
 
@@ -104,7 +98,7 @@ Machine Learning for Autonomous Driving Workshop at the 33rd Conference on Neura
 
 ## 個人的メモ
 
-* 提案手法のRIPはDeep Imitative Models([arxiv](https://arxiv.org/pdf/1810.06544.pdf), [summary](../DEEP IMITATIVE MODELS FOR FLEXIBLE INFERENCE, PLANNING, AND CONTROL/summary.md))(以下、DIM)の性能向上版といえる。
+* 提案手法のRIPはDeep Imitative Models([arxiv](https://arxiv.org/pdf/1810.06544.pdf), [summary](../DEEP IMITATIVE MODELS FOR FLEXIBLE INFERENCE, PLANNING, AND CONTROL/summary.md))の性能向上版といえる。
 
 * AdaRIPはおまけという感じ。
 * AdaRIPはフィードバックを促すことはよいが、ドライバーにとってどのような告知を行うかについては、記述されていない。そこに余地があるのではと考える。例えば、数秒前にとか。検出した段階で少し速度を下げるとか。あと挙動ががたがたしている。

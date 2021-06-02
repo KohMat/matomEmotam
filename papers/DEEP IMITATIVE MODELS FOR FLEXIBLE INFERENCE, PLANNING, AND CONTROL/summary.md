@@ -5,7 +5,7 @@ Nicholas Rhinehart, Rowan McAllister, Sergey Levine
 * [Published as a conference paper at ICLR 2020](https://openreview.net/pdf?id=Skl4mRNYDr)
 * [Arxiv 1st Oct. 2019](https://arxiv.org/pdf/1810.06544.pdf)
 * [github](https://github.com/nrhine1/deep_imitative_models)
-* [site](https://sites.google.com/view/imitative-models)
+* [site](https://sites.google.com/view/imitative-models) [結果](https://sites.google.com/view/imitative-models)を動画で見ることができる
 
 ## どんなもの？
 
@@ -19,16 +19,12 @@ Nicholas Rhinehart, Rowan McAllister, Sergey Levine
 
 ## 先行研究と比べてどこがすごい？何を解決したか？
 
-* Imitation Planningという推論フレームワークを行うことで、柔軟にゴールへ到達することができる。
-* 訓練時にゴールの設定を必要せず、エキスパートの軌跡との尤度を最大化することでネットワークを訓練する。
-* 実行時に複雑なゴールの設定を行うことができる。今までのImitation Learning（IL)の方法は訓練時にゴールの設定を必要とする。またこれらはゴールの設定は簡単なものに限られる（右左折など）。
-* モデルベース強化学習(MBRL)のような複雑な報酬関数の設計を必要としない。
-* CARLA上で６つのILとMBRLの性能を上回った。
-* ゴール設定にノイズが入った場合でもロバストである。
+* 今までのImitation Learning（IL)によるPath Planningは訓練時にゴールの設定を必要としていた。またゴールの設定は簡単なものに限られていた（直進、右左折など）。Deep Imitative Models（DIM)はこの問題を解決し、
+  * 模倣モデルは通常通り単純にエキスパートの軌跡との尤度を最大化することでネットワークを訓練することができる。
+  * またゴールの設定を柔軟に行うことができる。
+* DIMはCARLA上で６つのILとMBRL（モデルベース強化学習）の性能を上回った。
 
 ## 手法は？
-
-単一エージェントの行動を予測するR2P2([link](https://people.eecs.berkeley.edu/~nrhinehart/papers/r2p2_cvf.pdf), [summary](../R2P2: A reparameterized pushforward policy for diverse, precise generative path forecasting/summary.md))と確率モデルおよびネットワークアーキテクチャは同じである。新しいところはImitative Planningとゴール尤度関数の設計である。
 
 ### エキスパートの軌跡を模倣する確率モデル$$q(\mathbf{S} \mid \phi)$$ のモデリング
 
@@ -44,11 +40,13 @@ $$\mathbf{S}_{t} = f(\mathbf{Z}_t) = \mu_{\theta}(\mathbf{S}_{1:t-1}, \phi) + \s
 
 * $$f(\cdot)$$は観測$$\phi$$および正規分布に従う潜在変数$$\mathbf{Z}_t$$から計画$$\mathbf{S}$$にワープする可逆かつ微分可能な関数
 * $$\mathbf{Z}_t$$ : 正規分布に従う潜在変数$$\mathbf{Z} \sim q_0 = \mathcal{N}(0, I)$$
-* $$\mu_{\theta}(\cdot)$$および$$\sigma_{\theta}(\cdot)$$は状態$$\mathbf{S}_{t}$$の平均および分散を出力するネットワーク関数(パラメータ$$\theta$$はエキスパートの軌道からなるデータセットを用いてエキスパートの軌跡を模倣する確率モデル$$q(S \mid \phi)$$ の尤度を最大化して求める）
+* $$\mu_{\theta}(\cdot)$$および$$\sigma_{\theta}(\cdot)$$は状態$$\mathbf{S}_{t}$$の平均および標準偏差を出力するネットワーク関数(パラメータ$$\theta$$はエキスパートの軌道からなるデータセットを用いてエキスパートの軌跡を模倣する確率モデル$$q(S \mid \phi)$$ の尤度を最大化して求める）
 
 である。
 
 ### ネットワークアーキテクチャ
+
+具体的な$$\mu_{\theta}(\cdot)$$および$$\sigma_{\theta}(\cdot)$$のアーキテクチャを示す。
 
 ![deep_imitative_model](./deep_imitative_model.png)
 
@@ -66,7 +64,7 @@ $$\mathbf{S}_{t} = f(\mathbf{Z}_t) = \mu_{\theta}(\mathbf{S}_{1:t-1}, \phi) + \s
 
 2. $$\alpha$$、$$\mathbf{s}_t$$、$$\Gamma(\mathbf{S}_{t-1})$$および$$\lambda$$はConcatenationし、特徴$$p_{t-1}$$を作る
 
-3. 予測用のRNN(GRU)は特徴$$p_{t-1}$$から位置の平均を直接出力する代わりにベレの方法([wiki](https://en.wikipedia.org/wiki/Verlet_integration))のステップ$$m_{\theta}(\mathbf{S}_{1:t-1}, \phi)$$と位置の分散$$\sigma_{\theta}(\mathbf{S}_{1:t-1}, \phi)$$を出力する
+3. 予測用のRNN(GRU)は特徴$$p_{t-1}$$から位置の平均を直接出力する代わりにベレの方法([wiki](https://en.wikipedia.org/wiki/Verlet_integration))のステップ$$m_{\theta}(\mathbf{S}_{1:t-1}, \phi)$$と位置の標準偏差$$\sigma_{\theta}(\mathbf{S}_{1:t-1}, \phi)$$を出力する
 
 4. ベレの方法から位置の平均を計算する
 
@@ -80,7 +78,7 @@ $$\mathbf{S}_{t} = f(\mathbf{Z}_t) = \mu_{\theta}(\mathbf{S}_{1:t-1}, \phi) + \s
 
 ### Imitative Planning
 
-DIMは実行時にGradient ascentによって式(1)を最適化することでゴールに到達するエキスパートらしい計画を計算する。Algorithm 2で示すように潜在空間$$z$$を通して最適化計算を行う。
+実行時にGradient ascentによって式(1)を最適化することでゴールに到達するエキスパートらしい計画を計算する。Algorithm 2で示すように潜在空間$$z$$を通して最適化計算を行う。
 
 ![imitaive_planning_to_goals](./imitaive_planning_to_goals.png)
 
@@ -97,11 +95,11 @@ DIMは実行時にGradient ascentによって式(1)を最適化することで�
 * ゴールへ向かうルートとして与えられた各waypointの半径以内にいる場合は１，そうでない場合は０
 * 移動可能領域をポリゴンで表現し、ポリゴン内ならば１、そうでない場合は０
 
-その他にも１，０のバイナリの代わりにゴール内のより良い場所を目指すようにガウシアン関数を用いたりできる。論文中にいくつかのゴール尤度関数が提案されている。
+その他にも１，０のバイナリの代わりにゴール内のより良い場所を目指すようにガウシアン関数を用いることが可能である。
 
 ## どうやって有効だと検証した？
 
-CARLAを使い以下を検証した。[結果](https://sites.google.com/view/imitative-models)を動画で見ることができる。
+CARLAを使い以下を検証した。
 
 1. 最低限の報酬関数の設計とオフライン学習によって解釈可能なエキスパートのような計画を生成できるか？この手法が有効であるか？
 2. 実際の車両の設定のもとでstate-of-the-artの性能を達成できるか？
@@ -159,4 +157,6 @@ potholeに対する回避実験を行った。Gaussian Final-State Mixtureおよ
 
 ## 個人的メモ
 
-ゴール内の尤度とエキスパートの尤度のバランスはどうしたらいいだろうか？
+* 模倣モデルとそのアーキテクチャはR2P2([link](https://people.eecs.berkeley.edu/~nrhinehart/papers/r2p2_cvf.pdf), [summary](../R2P2: A reparameterized pushforward policy for diverse, precise generative path forecasting/summary.md))と同じである。
+* 論文中にいくつかのゴール尤度関数が提案されている。
+* ゴール内の尤度とエキスパートの尤度のバランスはどうしたらいいだろうか？
