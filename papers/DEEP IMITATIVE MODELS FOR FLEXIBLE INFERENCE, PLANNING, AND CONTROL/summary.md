@@ -9,7 +9,7 @@ Nicholas Rhinehart, Rowan McAllister, Sergey Levine
 
 ## どんなもの？
 
-自動運転のための模倣学習(Imitation Learning)を用いたPath Planningを提案する。訓練済みのエキスパートの軌跡を模倣する確率モデル（Imitative Model）$$q(\mathbf{S} \mid \phi)$$ を使い、実行時に観測$$\phi$$からゴールに到達するエキスパートらしい経路計画$$s^*$$をエキスパート軌跡との尤度とゴールとの尤度を最大化することで求める(Imitative Planning)。ゴールの尤度関数に有効な移動間領域を使うことでpotholesを避けるように計画する(Costed planning)ことも可能である。
+自動運転のための模倣学習(Imitation Learning)を用いた経路計画法DIM(Deep Imitative Models)を提案する。DIMは訓練済みのエキスパートの軌跡を模倣する確率モデル（Imitative Model）$$q(\mathbf{S} \mid \phi)$$ を使い、実行時に観測$$\phi$$からゴールに到達するエキスパートらしい経路計画$$s^*$$を、エキスパート軌跡との尤度とゴールとの尤度を最大化することで求める(Imitative Planning)。ゴールの尤度関数に有効な移動間領域を設定することでpotholesを避けるように計画する(Costed planning)ことも可能である。
 
 ![PathPlanning](./PathPlanning.png)
 
@@ -161,6 +161,11 @@ potholeに対する回避実験を行った。Gaussian Final-State Mixtureおよ
 
 ## 個人的メモ
 
-* 模倣モデルとそのアーキテクチャはR2P2([link](https://people.eecs.berkeley.edu/~nrhinehart/papers/r2p2_cvf.pdf), [summary](../R2P2: A reparameterized pushforward policy for diverse, precise generative path forecasting/summary.md))と同じである。
+* 実験で用いた模倣モデルの具体的なアーキテクチャはR2P2([link](https://people.eecs.berkeley.edu/~nrhinehart/papers/r2p2_cvf.pdf), [summary](../R2P2: A reparameterized pushforward policy for diverse, precise generative path forecasting/summary.md))と同じである。しかし例えば以下のようなgenerative autoregressive flowを適用することもできる。
+  * Danilo Rezende and Shakir Mohamed. Variational inference with normalizing flows. In International
+    Conference on Machine Learning (ICML), pp. 1530–1538, 2015.
+  * Aaron van den Oord, Yazhe Li, Igor Babuschkin, Karen Simonyan, Oriol Vinyals, Koray Kavukcuoglu,
+    George van den Driessche, Edward Lockhart, Luis C Cobo, Florian Stimberg, et al. Parallel
+    WaveNet: Fast high-fidelity speech synthesis. arXiv preprint arXiv:1711.10433, 2017.
 * 論文中にいくつかのゴール尤度関数が提案されている。
 * ゴール内の尤度とエキスパートの尤度のバランスはどうしたらいいだろうか？
