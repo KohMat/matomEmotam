@@ -59,11 +59,11 @@ $$\mathbf{S}_{t} = f(\mathbf{Z}_t) = \mu_{\theta}(\mathbf{S}_{1:t-1}, \phi) + \s
 * $$\chi = \mathbb{R}^{200 \times 200 \times 2}$$はLiDARの情報を俯瞰図で表現したもの(各グリッドの面積は$$0.5 m^2$$であり、地面の上と下にあるポイントの2ビンのヒストグラムである)
 * $$\lambda$$は低次元の信号機の情報
 
-である。観測$$\mathbf{s}_{-\tau:0}$$と$$\chi$$はそれぞれ空間特徴を抽出するCNNと過去位置をエンコードするRNN(GRU)で処理され、$$\alpha$$と$$\Gamma$$が計算される。その後以下の手順によって時刻$$1:T$$の計画$$\mathbf{S}_{1:T}$$を行う。
+である。過去の位置$$\mathbf{s}_{-\tau:0}$$とLiDAR$$\chi$$はそれぞ過去位置をエンコードするRNN(GRU)とれ空間特徴を抽出するCNNで処理され、$$\alpha$$と$$\Gamma$$が計算される。その後以下の手順によって時刻$$1:T$$の計画$$\mathbf{S}_{1:T}$$を行う。
 
 1. 位置$$\mathbf{S}_{t-1}$$に対応した$$\Gamma$$サブピクセルにもどづいてbilinear補間された特徴ベクトル$$\Gamma(\mathbf{S}_{t-1})$$を取り出す
 
-2. $$\alpha$$、$$\mathbf{s}_t$$、$$\Gamma(\mathbf{S}_{t-1})$$および$$\lambda$$はConcatenationし、特徴$$p_{t-1}$$を作る
+2. $$\alpha$$、$$\mathbf{s}_t$$、$$\Gamma(\mathbf{S}_{t-1})$$および$$\lambda$$はConcatenationし、特徴$$p_{t-1}$$を構成する
 
 3. 予測用のRNN(GRU)は特徴$$p_{t-1}$$から位置の平均を直接出力する代わりにベレの方法([wiki](https://en.wikipedia.org/wiki/Verlet_integration))のステップ$$m_{\theta}(\mathbf{S}_{1:t-1}, \phi)$$と位置の標準偏差$$\sigma_{\theta}(\mathbf{S}_{1:t-1}, \phi)$$を出力する
 
@@ -87,7 +87,7 @@ $$\mathbf{S}_{t} = f(\mathbf{Z}_t) = \mu_{\theta}(\mathbf{S}_{1:t-1}, \phi) + \s
 
 ### ゴール尤度関数の設計
 
-ゴール尤度関数の設計は自由度が高く、ゴール内ならば１，ゴール外ならば０を返すという簡単な関数を尤度関数とすることができる。
+ゴール尤度関数の設計は自由度が高くゴール内ならば１，ゴール外ならば０を返すという簡単な関数を尤度関数とすることができる。
 
 ![goal_likelihood](./goal_likelihood.png)
 

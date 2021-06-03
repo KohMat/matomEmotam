@@ -19,9 +19,9 @@ PRECOG(PREdition Conditioned On Goal)は次にエージェントが向かうべ�
 
 ## 先行研究と比べてどこがすごい？何を解決したか？
 
-* ESPによる予測がエージェント間の相互作用を考慮する予測を実行できることを示した。
+* ESPがエージェント間の相互作用を考慮する予測を実行できることを示した。
 * ESPがCALRAおよびnuScenesのデータセットで３つのstate-of-artの方法の性能を上回ることを示した。
-* PRECOGが相互に作用するその他のエージェントの予測性能が改善されることをCALRAおよびnuScenesのデータセットを使い示した。
+* PRECOGが自車両だけでなく相互に作用するその他のエージェントの予測性能が改善されることをCALRAおよびnuScenesのデータセットを使い示した。
 
 ## 手法は？
 
@@ -33,27 +33,27 @@ ESPはマルチエージェントのTステップ先のダイナミクスを確�
 
 $$q(\mathbf{S} \mid \phi)= \prod_{t=1}^T q(\mathbf{S}_t \mid \mathbf{S}_{1:t-1}, \phi)$$
 
-すべてのエージェントの遷移確率および各エージェントの遷移確率を正規分布と仮定するとエージェント$$a$$の状態遷移は次で表せる。
+すべてのエージェントの遷移確率は各エージェントの遷移確率を正規分布と仮定するとエージェント$$a$$の状態遷移は次で表せる。
 
 $$q(\mathbf{S}_t \mid \mathbf{S}_{1:t-1}, \phi)
 = \prod_{a=1}^A
 \mathcal{N}(\mathbf{S}_t^a ; \mu_t^a, \sigma_t^a{\sigma_t^a}^{\top})$$
 
+Reprameterization Trickを用いると状態$$\mathbf{S}_{t}^{a}$$は次のように表せる。
+
 $$\mathbf{S}_{t}^{a} = f(\mathbf{Z}_t^a) = \mu_{\theta}^a(\mathbf{S}_{1:t-1}, \phi) + \sigma_{\theta}^a(\mathbf{S}_{1:t-1}, \phi) \cdot \mathbf{Z}_t^a$$
 
 ここで
 
-* $$f(\cdot)$$は観測$$\phi$$および正規分布に従う潜在変数$$\mathbf{Z}_t^a$$から計画$$\mathbf{S}$$にワープする可逆かつ微分可能な関数
+* $$f(\cdot)$$は観測$$\phi$$および正規分布に従う潜在変数$$\mathbf{Z}_t^a$$から計画$$\mathbf{S}$$にワープする可逆かつ微分可能な関数(invertible generative modelとしても知られる)
 
-  invertible generative modelとしても知られる
-
-* $$\mu_{\theta}^a(\cdot)$$および$$\sigma_{\theta}^a(\cdot)$$は状態$$\mathbf{S}_{t}$$の平均および標準偏差を出力するネットワーク関数
-
-  パラメータ$$\theta$$はエキスパートの軌跡を模倣する確率モデル$$q(S \mid \phi;\mathcal{D})$$ の尤度を最大化して求める
+* $$\mu_{\theta}^a(\cdot)$$および$$\sigma_{\theta}^a(\cdot)$$は状態$$\mathbf{S}_{t}$$の平均および標準偏差を出力するネットワーク関数(パラメータ$$\theta$$はエキスパートの軌跡を模倣する確率モデル$$q(S \mid \phi;\mathcal{D})$$ の尤度を最大化して求める)
 
 * $$\mathbf{Z}_t$$ : 正規分布に従う潜在変数$$\mathbf{Z} \sim q_0 = \mathcal{N}(0, I)$$
 
-である。ワープ関数$$f(\cdot)$$を用いた予測は次の通りである。
+である。
+
+ESPを用いた予測は次の通りである。
 
 1. K個のすべてのエージェントの潜在変数$$^{1:K}\mathbf{z}$$をサンプリングする
 
@@ -65,7 +65,7 @@ $$\mathbf{S}_{t}^{a} = f(\mathbf{Z}_t^a) = \mu_{\theta}^a(\mathbf{S}_{1:t-1}, \p
 
 ### ESPのネットワークアーキテクチャ
 
-エージェントが２個の場合のESPのアーキテクチャを示す。
+具体的なESPのアーキテクチャを示す。
 
 <img src="./EmbeddedImage.png" alt="EmbeddedImage" style="zoom: 50%;" />
 
@@ -74,15 +74,15 @@ $$\mathbf{S}_{t}^{a} = f(\mathbf{Z}_t^a) = \mu_{\theta}^a(\mathbf{S}_{1:t-1}, \p
 * $$\mathbf{s}_{-\tau:0}$$は過去から現在までの位置
 * $$\chi = \mathbb{R}^{200 \times 200 \times 2}$$はLiDARの情報を俯瞰図で表現したもの(各グリッドの面積は$$0.5 m^2$$であり、地面の上と下にあるポイントの2ビンのヒストグラムである)
 
-である。観測$$\mathbf{s}_{-\tau:0}$$と$$\chi$$はそれぞれ空間特徴を抽出するCNNと過去位置をエンコードするRNN(GRU)で処理され、$$\alpha$$と$$\Gamma$$が計算される。その後以下の手順によって時刻$$1:T$$までの予測$$\mathbf{S}_{1:T}^{1:A}$$を行う。
+である。過去位置$$\mathbf{s}_{-\tau:0}$$とLiDAR$$\chi$$はそれぞれ過去位置をエンコードするRNN(GRU)と空間特徴を抽出するCNNで処理され、$$\alpha$$と$$\Gamma$$が計算される。その後以下の手順によって時刻$$1:T$$までの予測$$\mathbf{S}_{1:T}^{1:A}$$を行う。
 
 1. 各エージェントの位置$$\mathbf{s}_{t-1}^a$$に対応した$$\Gamma$$サブピクセルにもどづいてbilinear補間された特徴ベクトルを取り出す
 
    $$\Gamma^{1:A} = \{ \Gamma(\mathbf{s}_{t-1}^1),..., \Gamma(\mathbf{s}_{t-1}^A) \}$$
 
-2. 各エージェントで以下の実行し状態$$\mathbf{s}_{t}^a$$を計算する
+2. 各エージェントの状態$$\mathbf{s}_{t}^a$$を計算する
 
-   1. $$\alpha$$、$$\mathbf{s}_{t}^{1:A}$$、$$\Gamma^{1:A}$$をConcatenationして特徴$$p_{t-1}$$を作る
+   1. $$\alpha$$、$$\mathbf{s}_{t}^{1:A}$$、$$\Gamma^{1:A}$$をConcatenationして特徴$$p_{t-1}$$を構成する
 
    2. 予測用のRNN(GRU)は特徴$$p_{t-1}$$から位置の平均を直接出力する代わりにベレの方法([wiki](https://en.wikipedia.org/wiki/Verlet_integration))のステップ$$m_{\theta}$$と位置の標準偏差$$\sigma_{\theta}$$を出力する
 
@@ -94,13 +94,13 @@ $$\mathbf{S}_{t}^{a} = f(\mathbf{Z}_t^a) = \mu_{\theta}^a(\mathbf{S}_{1:t-1}, \p
 
       $$\mathbf{s}_{t}^a = \mu_{\theta} + \sigma_{\theta} \cdot \mathbf{z}_t^a$$
 
-3. 1.2を時刻Tまで繰り返す。
+3. 1.2を時刻Tまで繰り返す
 
-エージェント数がデータ中に変わるようなデータに対しては、最大エージェント数$$A_{train}$$を決めた上でRNNの入力にマスク$$M \in \{ 0, 1 \} ^{A_{train}}$$を使うことで欠落しているエージェントを表現する。
+エージェント数が時刻$$1:T$$の間で変わるようなデータに対しては最大エージェント数$$A_{train}$$を決めた上でRNNの入力にマスク$$M \in \{ 0, 1 \} ^{A_{train}}$$を使うことで欠落しているエージェントを表現する。
 
 ### PREdiction Conditioned On Goals (PRECOG)
 
-エージェント（自車両）が設定したゴールに止まるような制御変数$$z^{r*}$$を次の最適化問題を解いた(プランニングした)あと、ESPと同様に自車両以外のエージェントの潜在変数をサンプリングし、予測を行う。
+PRECOGはエージェント（自車両）が設定したゴールに止まるような制御変数$$z^{r*}$$を次の最適化問題を解いたあと、ESPと同様に自車両以外のエージェントの潜在変数を$$q_0$$からサンプリングし、予測を行う。
 
 $$\DeclareMathOperator*{\argmin}{arg\,min}
 \DeclareMathOperator*{\argmax}{arg\,max}
@@ -108,13 +108,17 @@ $$\DeclareMathOperator*{\argmin}{arg\,min}
 z^{r *} = \argmax_{z^r} \mathcal{L}(\mathbf{z}^r, \mathcal{G}, \phi)
 \end{equation}$$
 
-ここで$$\mathcal{L}(\mathbf{z}^r, \mathcal{G})$$はマルチエージェントの模倣尤度とゴールの尤度の和の期待値
+ここで目的関数$$\mathcal{L}(\mathbf{z}^r, \mathcal{G})$$はマルチエージェントの模倣尤度とゴールの尤度の和の期待値
 
 $$\mathcal{L}(\mathbf{z}^r, \mathcal{G}, \phi) = \mathbb{E}_{\mathbf{Z}^h} \left[ \log q(f(\mathbf{Z}) \mid \phi) + \log q(\mathcal{G} \mid f(\mathbf{Z}), \phi) \right]$$
 
-である。$$q(\mathcal{G} \mid f(\mathbf{Z}), \phi)$$は例えば自車両が向かうべき位置$$\mathbf{b} \in \mathbb{R}^D$$を使って$$\mathcal{N}(\mathbf{w}; \mathbf{S}_T^r, \epsilon \mathbf{I})$$をとすることができる。
+である。ゴールの尤度$$q(\mathcal{G} \mid f(\mathbf{Z}), \phi)$$は$$\mathcal{N}(\mathbf{w}; \mathbf{S}_T^r, \epsilon \mathbf{I})$$をとする。$$\mathbf{w}$$は自車両からゴールまでのウェイポイントである。
 
-実際にこの最適化問題は解くときは他エージェントの潜在変数$$\mathbf{Z}^h$$を正規分布$$\mathcal{N}(0, \mathbf{I})$$からサンプリングしてゴールの尤度による重み付き平均を行うことで期待値の近似を行う。すなわち、近似された期待値は
+実際には他車両の動きは決定できないので期待値の近似を行いGradient Ascentにより最適な制御変数$$z^{r*}$$を求める。
+
+![multimitativeplanning](./multimitativeplanning.png)
+
+Algorithm1の４および５行目では最適化ステップごとに他エージェントの潜在変数$$\mathbf{Z}^h$$を正規分布$$\mathcal{N}(0, \mathbf{I})$$からサンプリングしてゴールの尤度による重み付き平均を行い期待値を近似する。
 
 $$\hat{\mathcal{L}}(^{1:K}\mathbf{z}, \mathcal{G}, \phi)
 = \frac{1}{K} \sum_{k=1}^{K}
@@ -123,9 +127,7 @@ p(f(^k\mathbf{z}) \mid \phi)
 p(\mathcal{G} \mid f(^k\mathbf{z}), \phi)
 )$$
 
-である。だたし$$^{1:K}\mathbf{z}$$はサンプリングされたK個のすべてのエージェントの潜在変数である。$$^{k}\mathbf{z}$$は最適化問題で求める制御変数$$\mathbf{z}^r$$と$$k$$番目のサンプリング$$^k\mathbf{z}^h$$が含まれている。$$^k\mathbf{z}=[\mathbf{z}^r, ^k\mathbf{z}^h]$$。この近似期待値をつかったGradient Ascentによるアルゴリズムは次のとおりである。
-
-![multimitativeplanning](./multimitativeplanning.png)
+$$^{1:K}\mathbf{z}$$はサンプリングされたK個のすべてのエージェントの潜在変数である。$$^{k}\mathbf{z}$$は最適化問題で求める制御変数$$\mathbf{z}^r$$と$$k$$番目のサンプリング$$^k\mathbf{z}^h$$が含まれている。$$^k\mathbf{z}=[\mathbf{z}^r, ^k\mathbf{z}^h]$$。
 
 またこの制御変数$$z^{r*}$$を使った予測は次のとおりである
 
