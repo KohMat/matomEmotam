@@ -29,7 +29,7 @@ PRECOG(PREdition Conditioned On Goal)は次にエージェントが向かうべ�
 
 ### Estimating Social-forecast Probability (ESP)
 
-ESPはマルチエージェントのTステップ先のダイナミクスを確率的に予測する尤度ベースの生成モデル$$\mathbf{S} \sim q(\mathbf{S} \mid \phi;\mathcal{D})$$である。$$\mathcal{D}$$はデータセットである。複数のエキスパートの軌跡を模倣する確率モデル$$q(\mathbf{S} \mid \phi)$$ は遷移確率の積として表すことができる。
+マルチエージェントのTステップ先のダイナミクスを確率的に予測する尤度ベースの生成モデル$$\mathbf{S} \sim q(\mathbf{S} \mid \phi;\mathcal{D})$$を自己回帰生成モデルとしてモデリングする。$$\mathcal{D}$$は訓練データである。POMDPの仮定より生成モデル$$q(\mathbf{S} \mid \phi)$$ は次の遷移確率の積として表すことができる。
 
 $$q(\mathbf{S} \mid \phi)= \prod_{t=1}^T q(\mathbf{S}_t \mid \mathbf{S}_{1:t-1}, \phi)$$
 
@@ -37,23 +37,18 @@ $$q(\mathbf{S} \mid \phi)= \prod_{t=1}^T q(\mathbf{S}_t \mid \mathbf{S}_{1:t-1},
 
 $$q(\mathbf{S}_t \mid \mathbf{S}_{1:t-1}, \phi)
 = \prod_{a=1}^A
-\mathcal{N}(\mathbf{S}_t^a ; \mu_t^a, \sigma_t^a{\sigma_t^a}^{\top})$$
+\mathcal{N}(\mathbf{S}_t^a ; \mu_{\theta}^a, \sigma_{\theta}^a{\sigma_{\theta}^a}^{\top})$$
 
-Reprameterization Trickを用いると状態$$\mathbf{S}_{t}^{a}$$は次のように表せる。
+ここで$$\mu_{\theta}^a(\cdot)$$および$$\sigma_{\theta}^a(\cdot)$$は状態$$\mathbf{S}_{t}$$の平均および標準偏差を出力するネットワーク関数である。すなわちReprameterization Trickを用いると状態$$\mathbf{S}_{t}^{a}$$は次のように表せる。
 
-$$\mathbf{S}_{t}^{a} = f(\mathbf{Z}_t^a) = \mu_{\theta}^a(\mathbf{S}_{1:t-1}, \phi) + \sigma_{\theta}^a(\mathbf{S}_{1:t-1}, \phi) \cdot \mathbf{Z}_t^a$$
+$$\mathbf{S}_{t}^{a} = f_{\theta}(\mathbf{Z}_t^a) = \mu_{\theta}^a(\mathbf{S}_{1:t-1}, \phi) + \sigma_{\theta}^a(\mathbf{S}_{1:t-1}, \phi) \cdot \mathbf{Z}_t^a$$
 
 ここで
 
-* $$f(\cdot)$$は観測$$\phi$$および正規分布に従う潜在変数$$\mathbf{Z}_t^a$$から計画$$\mathbf{S}$$にワープする可逆かつ微分可能な関数(invertible generative modelとしても知られる)
-
-* $$\mu_{\theta}^a(\cdot)$$および$$\sigma_{\theta}^a(\cdot)$$は状態$$\mathbf{S}_{t}$$の平均および標準偏差を出力するネットワーク関数(パラメータ$$\theta$$はエキスパートの軌跡を模倣する確率モデル$$q(S \mid \phi;\mathcal{D})$$ の尤度を最大化して求める)
-
+* $$f_{\theta}(\cdot)$$は観測$$\phi$$および正規分布に従う潜在変数$$\mathbf{Z}_t^a$$から計画$$\mathbf{S}$$にワープする可逆かつ微分可能な変換関数($${\theta}$$はパラメータ。訓練データ$$\mathcal{D}$$を用いて確率分布（生成モデル）を$$q(\mathbf{S} \mid \phi)$$ の尤度を最大化するように訓練する。)
 * $$\mathbf{Z}_t$$ : 正規分布に従う潜在変数$$\mathbf{Z} \sim q_0 = \mathcal{N}(0, I)$$
 
-である。
-
-ESPを用いた予測は次の通りである。
+である。以上よりマルチエージェントの予測を次のように行う。
 
 1. K個のすべてのエージェントの潜在変数$$^{1:K}\mathbf{z}$$をサンプリングする
 
@@ -100,7 +95,9 @@ ESPを用いた予測は次の通りである。
 
 ### PREdiction Conditioned On Goals (PRECOG)
 
-PRECOGはエージェント（自車両）が設定したゴールに止まるような制御変数$$z^{r*}$$を次の最適化問題を解いたあと、ESPと同様に自車両以外のエージェントの潜在変数を$$q_0$$からサンプリングし、予測を行う。
+PRECOGはエージェント（自車両）が設定したゴールに止まるような制御変数$$z^{r*}$$を最適化問題を解いたあと、ESPと同様に自車両以外のエージェントの潜在変数を$$q_0$$からサンプリングし、予測を行う。
+
+解く最適化問題は次式である。
 
 $$\DeclareMathOperator*{\argmin}{arg\,min}
 \DeclareMathOperator*{\argmax}{arg\,max}

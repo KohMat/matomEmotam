@@ -29,7 +29,7 @@ Nicholas Rhinehart, Rowan McAllister, Sergey Levine
 
 ### エキスパートの軌跡を模倣する確率モデル$$q(\mathbf{S} \mid \phi)$$ のモデリング
 
-連続空間、離散時間、POMDPの仮定の下モデル化を行う。時刻$$t$$におけるすべてのエージェントの状態（位置）を$$\mathbf{s}_t \in \mathbb{R}^{D}$$とする。また観測を$$\phi$$とする。変数をボールド、確率変数を大文字とする。添え付き文字の省略はすべての未来の時刻を含む。$$\mathbf{S}=\mathbf{S}_{1:T}$$とする。エキスパートの軌跡$$\mathbf{S}$$を模倣する確率モデル$$q(\mathbf{S} \mid \phi)$$ は遷移確率の積として表すことができる。
+連続空間、離散時間、POMDPの仮定をおき自己回帰生成モデルとしてモデル化を行う。時刻$$t$$におけるすべてのエージェントの状態（位置）を$$\mathbf{s}_t \in \mathbb{R}^{D}$$とする。また観測を$$\phi$$とする。変数をボールド、確率変数を大文字とする。添え付き文字の省略はすべての未来の時刻を含む。$$\mathbf{S}=\mathbf{S}_{1:T}$$とする。エキスパートの軌跡$$\mathbf{S}$$を模倣する確率モデル$$q(\mathbf{S} \mid \phi)$$ は遷移確率の積として表すことができる。
 
 $$ q(\mathbf{S}_{1:T} \mid \phi) = \prod_{t=1}^T q(\mathbf{S}_t \mid \mathbf{S}_{1:t-1}, \phi) $$
 

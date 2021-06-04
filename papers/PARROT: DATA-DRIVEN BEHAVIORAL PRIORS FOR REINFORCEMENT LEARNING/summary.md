@@ -40,7 +40,7 @@ PARROTではこのような変換を行うための関数$$f(z;s)$$を様々な�
 
 すなわち変換関数$$f(z;s)$$を求めるため、次の最適化問題を解く。
 
-$$\max_a \log p(a \mid s)$$
+in progress
 
 ここで変換関数が可逆であるとするとbehavioral priorはノイズの分布$$p_z$$と変換関数$$f(z;s)$$を用いて表せる。
 
@@ -48,7 +48,7 @@ $$p(a \mid s) = p_z(f^{-1}(a;s)) | \det (\frac{\partial f^{-1}(a;s)}{\partial a}
 
 これを使うと最適化問題は$$f(z;s)$$を用いた式に表せる。式中に表れる$$\frac{\partial f^{-1}(a;s)}{\partial a}$$はヤコビアンである。
 
-$$\max_a \log p_z(f^{-1}(a;s)) | \det (\frac{\partial f^{-1}(a;s)}{\partial a}) |$$
+in progress
 
 一般的にヤコビアンの行列式の計算は次元が大きくなるほど困難になる。このことから、この目的関数を計算するためには変換関数は可逆かつヤコビアンを簡単に計算できるような関数である必要がある。PARROTは変換関数としてフローベース生成モデルの一つであるReal NVP(the real-valued non-volume preserving)([arxiv](https://arxiv.org/abs/1605.08803))を用いる。Real NVPを用いると行列式は対角成分の積となるため、簡単に計算できる。
 

@@ -73,9 +73,7 @@ H(p, q_{\pi}) + H(q_{\pi}, \tilde{p})
 \mathbb{E}_{x \sim q_{\pi}} - \log \tilde{p} (q_0(g_{\pi}^{-1}(z; \phi)))
 \end{eqnarray}$$
 
-高次元のヤコビアン行列式の計算量は多いため、この計算が簡単になるような可逆なシミュレータ$$g_{\pi}(z; \phi)$$を設計する。R2P2では車両の予測問題にあった自己回帰的に計算を行うシミュレータを設計する。
-
-観測を条件とした軌道の確率分布$$q(x \mid \phi)$$はchain ruleにより遷移確率$$q_{\pi}(x_t \mid \psi_t)$$の積として表すことができる。
+高次元のヤコビアン行列式の計算量は多いため、この計算が簡単になるような可逆なシミュレータ$$g_{\pi}(z; \phi)$$が求められる。R2P2では車両の予測問題にあった自己回帰的に計算を行うシミュレータを設計する。観測を条件とした軌道の確率分布$$q(x \mid \phi)$$はchain ruleにより遷移確率$$q_{\pi}(x_t \mid \psi_t)$$の積として表すことができる。
 
 $$q(x \mid \phi) = \prod_{i=1}^{N} q(x_t \mid \psi_t)$$
 
@@ -83,15 +81,15 @@ $$\psi_t = [x_{1:t-1}, \phi]$$は時刻1からt-1までの位置および観測$
 
 $$q_{\pi}(x_t \mid \psi_t) = \mathcal{N}(x_t; \mu = \mu_t^{\pi}(\psi;\theta), \sigma = \sigma_t^{\pi}(\psi;\theta) )$$
 
-ここで$$\mu_t^{\pi}(\psi_t; \theta)$$、$$\sigma_t^{\pi}(\psi_t; \theta)$$は状態$$x_t$$の平均および標準偏差を出力する微分可能な方策(policy)、$$\theta$$は方策のパラメータである。ここでReparameterization Trickを使うと状態$$x_t$$を次のように計算できる。
+ここで$$\mu_t^{\pi}(\psi_t; \theta)$$、$$\sigma_t^{\pi}(\psi_t; \theta)$$は状態$$x_t$$の平均および標準偏差を出力する微分可能な方策(policy)、$$\theta$$は方策のパラメータである。すなわちReparameterization Trickを使うと状態$$x_t$$を次のように計算できる。
 
 $$x_t \triangleq f(z_t; \psi_t, \theta) = \mu_t^{\pi}(\psi_t; \theta) + \sigma_t^{\pi}(\psi_t; \theta)z_t$$
 
-ここで$$z$$は基本分布$$q_0$$に従うノイズ$$z \sim q_0 = \mathcal{N}(0, I)$$である。$$\sigma_t^{\pi} = 0$$を除き、関数$$f(\cdot)$$は可逆かつ微分可能である。ノイズから関数$$f(\cdot)$$を繰り返して適用することでマルチモーダルな軌道を予測することができる。すなわちノイズ$$z \sim q_0$$および観測$$\phi$$から予測軌道$$x$$へマップするような微分可能かつ可逆なシミュレータは次のように表せる。
+関数$$f(\cdot)$$は$$\sigma_t^{\pi} = 0$$を除き可逆かつ微分可能である。潜在変数から関数$$f(\cdot)$$を繰り返して適用することでマルチモーダルな軌道を予測することができる。このことから車両の予測に使うシミュレータは次のように表せる。
 
 $$\left[ g_{\pi}^{-1}(x) \right]_t = z_t = \sigma_t^{\pi}(\psi_t; \theta)^{-1}(x_t - \mu_t^{\pi}(\psi_t; \theta))$$
 
-このシミュレータを使うとヤコビアン行列式は
+このシミュレータのヤコビアン行列式は
 
 $$\log |\det J_{g_{\pi}}(g_{\pi}^{-1}(z; \phi))| = \sum_t \log | \det(\sigma_t^{\pi}(\psi_t; \theta)) |$$
 
