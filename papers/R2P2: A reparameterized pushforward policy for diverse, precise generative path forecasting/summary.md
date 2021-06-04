@@ -90,7 +90,7 @@ H(p, q_{\pi}) &=&  \mathbb{E}_{x \sim p} - \log \frac{q_0(g_{\pi}^{-1}(z; \phi))
 
 具体的な方策のネットワークアーキテクチャを３つ示す。
 
-### R2P2 Linear
+#### R2P2 Linear
 
 R2P2 Linearは１層の線形レイヤで構成されるネットワークである。
 
@@ -102,13 +102,13 @@ $$\newcommand{\expm}{\mathop{\mathrm{expm}}\nolimits}
 
 $$A,B, b_0, b_1$$はパラメータ、$$h_t = [ x_{t-H:t-1} ] \in \mathbb{R}^{2H}$$はH個の過去の位置からなるベクトルである。位置の平均$$\mu_t^{\pi}(\psi_t)$$はベレの方法を用いて計算される。位置の標準偏差$$\sigma_t^t$$は標準偏差が正定行列となるように$$S_t \in \mathbb{R}^{2 \times 2}$$に行列指数関数expmを適用して求める。
 
-### R2P2 Field
+#### R2P2 Field
 
 R2P2 FieldはCNNで構成される。CNNはLIDARおよびセマンティクスセグメンテーションのクラス情報$$M \in \mathbb{R}^{H_{map} \times W_{H_{map}} \times C}$$を受け取り、特徴マップ$$O \in \mathbb{R}^{H_{map} \times W_{H_{map}} \times 6}$$を出力する。特徴マップの各グリッドは$$\hat{\mu}_t^{\pi}(\psi_t)$$および$$S_t$$の６つの値を出力する。この特徴マップから車両の位置に対応する特徴ベクトルをbilinear補間することで位置の平均および標準偏差を求める。
 
 ![field_arch](./field_arch.png)
 
-### R2P2 RNN
+#### R2P2 RNN
 
 R2P2 RNNはLinearとFieldを組み合わせた構造を持つ。LIDARおよびセマンティクスセグメンテーションのクラス情報はCNNとbilnear補間、過去の位置は過去の位置の特徴を求めるGRU-RNNによってそれぞれ処理される。予測用のGRU-RNNは両方の特徴ベクトルを受け取り、位置の平均および標準偏差を出力する。
 
