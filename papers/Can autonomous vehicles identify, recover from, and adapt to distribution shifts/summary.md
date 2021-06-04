@@ -19,23 +19,23 @@
 
 ## 先行研究と比べてどこがすごい？何を解決したか？
 
-DIMの論文の結論に課題として述べられている認識論的不確実性について取り組んだ手法であり、OODシナリオを検出およびいくつかのOODシナリオに対して対応することができる。例えば訓練データに含まれないRoundaboutのシーンに対して走行することができる。これはDIMや[Learning by Cheating](https://arxiv.org/abs/1912.12294)の方法ではできなかったことである。
+Deep Imitative Models([arxiv](https://arxiv.org/pdf/1810.06544.pdf), [summary](https://kohmat.github.io/matomEmotam/papers/DEEP IMITATIVE MODELS FOR FLEXIBLE INFERENCE, PLANNING, AND CONTROL/summary.html))(以下、DIM)の論文の結論に課題として述べられている認識論的不確実性について取り組んだ手法であり、OODシナリオを検出およびいくつかのOODシナリオに対して対応することができる。例えば訓練データに含まれないRoundaboutのシーンに対して走行することができる。これはDIMや[Learning by Cheating](https://arxiv.org/abs/1912.12294)の方法ではできなかったことである。
 
 ## 手法は？
 
 ### Robust Imitative Planning
 
-提案手法のRIPは確率モデルDIMを複数用いて実行時に次式の最適化問題を解くことで、二次元の位置で構成される経路計画$$\mathbf{y}_{RIP}^{\mathcal{G}}$$を求める計画方法である。複数のDIMは例えばエキスパートのデータから分割されたデータおよびランダムな初期パラメータから模倣尤度を最大化するように別々に訓練されている。
+提案手法のRIPはDIM$$p(\mathbf{y} \mid \mathcal{G}, \mathbf{x}; \mathbf{\theta})$$を複数用いて実行時に次式の最適化問題を解くことで、二次元の位置で構成される経路計画$$\mathbf{y}_{RIP}^{\mathcal{G}}$$を求める計画方法である。複数のDIMは例えばエキスパートのデータから分割されたデータおよびランダムな初期パラメータから模倣尤度を最大化するように別々に訓練されている。
 
 <img src="./rip.png" alt="rip" style="zoom: 67%;" />
 
-最適化問題に表れる$$\oplus$$はaggregation operatorである。集約する方法として最小の尤度をとるWorst Case Aggregationと重み付き平均をおこなうModel Averaging Aggregationを提案する。
+最適化問題に表れる$$\oplus$$はaggregation operatorである。集約する方法として最小の尤度をとるWorst Case Aggregation(5)と重み付き平均をおこなうModel Averaging Aggregation(6)を提案する。
 
 ![rip_wca](./rip_wca.png)
 
 ![rip_ma](./rip_ma.png)
 
-この最適化問題はDeep Imitative Planningと同様に次のような最適化計算を行うことで解く。
+この最適化問題は次のような最適化計算を行うことで解く。
 
 ![rip_algorithm](./rip_algorithm.png)
 
