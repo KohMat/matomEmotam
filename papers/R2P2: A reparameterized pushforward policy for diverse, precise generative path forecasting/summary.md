@@ -15,11 +15,11 @@ LIDARや画像などの情報が埋め込まれた俯瞰図から自車両の運
 
 ## 先行研究と比べてどこがすごい？何を解決したか？
 
-これまで車両の軌道$$x$$を予測する生成モデル$$q_{\pi}$$の学習にモデル$$q_{\pi}$$の訓練データ$$p$$に対するクロスエントロピー$$H(p, q_{\pi})$$が使われてきた（図の上の段）。
+これまで車両の軌道$$x$$を予測する生成モデル$$q_{\pi}$$の学習にモデル$$q_{\pi}$$の訓練データ$$p$$に対するクロスエントロピー$$H(p, q_{\pi})$$が多く使われてきた（図の上の段）。
 
 $$H(p, q_{\pi})= \mathbb{E}_{x \sim p} - \log q_{\pi} (x \mid \phi)$$
 
-このクロスエントロピーは訓練データの分布のいくつかのモードを生成モデルがカバーしなかった場合に高い損失を与える（上の段の一番右）。一方で低品質のサンプルの生成には低い損失を与える（上の段の真ん中）。つまり$$H(p, q_{\pi})$$はデータ分布のモードを学習することはできるが、低品質のサンプルを生成してしまう問題がある。そこで逆の性質をもつ訓練データ$$p$$のモデル$$q_{\pi}$$に対するクロスエントロピー$$H(q_{\pi}, p)$$と同時に使うことで低品質のサンプルを生成を抑制することができる。しかし訓練データ$$p$$のモデル$$q_{\pi}$$に対する$$H(q_{\pi}, p)$$は直接評価することでできない。
+このクロスエントロピーは訓練データの分布のいくつかのモードを生成モデルがカバーしなかった場合に高い損失を与える（上の段の一番右）。その一方で低品質のサンプルの生成には低い損失を与える（上の段の真ん中）。つまり$$H(p, q_{\pi})$$はデータ分布のモードを学習することはできるが、低品質のサンプルを生成してしまう問題がある。そこで逆の性質をもつ訓練データ$$p$$のモデル$$q_{\pi}$$に対するクロスエントロピー$$H(q_{\pi}, p)$$と同時に使うことで低品質のサンプルを生成を抑制することができる。しかし訓練データ$$p$$のモデル$$q_{\pi}$$に対する$$H(q_{\pi}, p)$$は直接評価することでできない。
 
 ![symmetrized_cross_entropy](./symmetrized_cross_entropy.png)
 
@@ -31,60 +31,73 @@ $$H(p, q_{\pi})= \mathbb{E}_{x \sim p} - \log q_{\pi} (x \mid \phi)$$
 
 ## 手法は？
 
-自車両の２次元位置で構成された予測する軌道を$$x \in \mathbb{R}^{T \times 2}$$とする。軌道の予測のためLIDARの俯瞰図およびセマンティクスセグメンテーションのクラス情報$$M \in \mathbb{R}^{H_{map} \times W_{H_{map}} \times C}$$が得られるとする。提案するR2P2は予測生成モデルおよび訓練データ分布の近似$$\tilde{p}$$から次の対称クロスエントロピーを最小化することでモデルの学習を行う。
+### 目的
+
+軌道の予測のためにLIDARの俯瞰図およびセマンティクスセグメンテーションのクラス情報$$M \in \mathbb{R}^{H_{map} \times W_{H_{map}} \times C}$$が得られるとする。この観測から自車両の２次元位置で構成された軌道を予測することが目的である。
+
+### Pushforward distribution modeling
+
+観測を条件とした軌道の生成モデル$$q(x \mid \phi)$$を自己回帰生成モデルとしてモデリングする。基本分布$$q_0$$に従う潜在変数$$z \sim q_0 = \mathcal{N}(0, I)$$から軌道に変換する微分可能かつ可逆なシミュレータを$$g_{\pi}(z; \phi)$$とする。
+
+$$g_{\pi}(z; \phi) : \mathbb{R}^{T \times 2} \rightarrow \mathbb{R}^{T \times 2}$$
+
+![simulator](./simulator.png)
+
+このシミュレータ$$g_{\pi}(z; \phi)$$があれば次のように自車両の予測を行うことができる。
+
+1. K個の潜在変数$$^k z$$を基本分布からサンプリングする
+
+   $$^k z \overset{iid}{\sim} q_0$$
+
+2. 潜在変数$$^k z$$をシミュレータ$$g_{\pi}$$を使ってK個の軌道に変換する。
+
+   $$^k x = g_{\pi}(^k z)$$
+
+R2P2はこのシミュレータ$$g_{\pi}$$を車両の軌道を記録したデータを用いて、次の対称クロスエントロピーを最大化することで求める。
 
 $$\displaystyle min_{\pi}
 \underbrace{\mathbb{E}_{x \sim p} - \log q_{\pi} (x \mid \phi)}_{H(p, q_{\pi})} +
 \beta \underbrace{\mathbb{E}_{x \sim q_{\pi}} - \log \tilde{p} (x \mid \phi)}_{H(q_{\pi}, \tilde{p})} \\$$
 
-$$\phi = (x_{-H+1:0}, M)$$は観測であり、$$\beta$$は多様性と精度のトレードオフを調整するための重みである。以下は生成モデルのモデリングと訓練データ分布の近似方法について示す。
-
-### Pushforward distribution modeling
-
-軌道予測モデル$$q(x \mid \phi)$$ はchain ruleにより遷移確率$$q_{\pi}(x_t \mid \psi_t)$$の積として表すことができる。遷移確率を正規分布と仮定すると
-
-$$q_{\pi}(x_t \mid \psi_t) = \mathcal{N}(x_t; \mu = \mu_t^{\pi}(\psi;\theta), \sigma = \sigma_t^{\pi}(\psi;\theta) )$$
-
-と表せる。$$\psi_t = [x_{1:t-1}, \phi]$$は時刻1からt-1までの位置および観測$$\phi$$である。$$\mu_t^{\pi}(\psi_t; \theta)$$、$$\sigma_t^{\pi}(\psi_t; \theta)$$は状態$$x_t$$の平均および標準偏差を出力する微分可能な方策(policy)、$$\theta$$は方策のパラメータである。ここでReparameterization Trickを使うと
-
-$$x_t \triangleq f(z_t; \psi_t, \theta) = \mu_t^{\pi}(\psi_t; \theta) + \sigma_t^{\pi}(\psi_t; \theta)z_t$$
-
-と表せる。$$z$$は基本分布$$q_0$$に従うノイズ$$z \sim q_0 = \mathcal{N}(0, I)$$である。$$\sigma_t^{\pi} = 0$$を除き、関数$$f(\cdot)$$は可逆かつ微分可能である。ノイズから関数$$f(\cdot)$$を繰り返して適用することでマルチモーダルな軌道を予測することができる。
-
-すなわちノイズ$$z \sim q_0$$および観測$$\phi$$から予測軌道$$x$$へマップするような微分可能かつ可逆なシミュレータ
-
-$$g_{\pi}(z; \phi) : \mathbb{R}^{T \times 2} \rightarrow \mathbb{R}^{T \times 2}, \qquad
-\left[ g_{\pi}^{-1}(x) \right]_t = z_t = \sigma_t^{\pi}(\psi_t; \theta)^{-1}(x_t - \mu_t^{\pi}(\psi_t; \theta))$$
-
-を定義することができる。これは$$g_{\pi}$$の$$q_0$$による押し出し(pushforward)として知られる。このシミュレータは可逆なので生成モデルは次のように表せる。
+$$\tilde{p}$$は訓練データ分布の近似である。近似方法については後で述べる（[リンク](#訓練データの分布の近似)）。ここで注目したいのはシミュレータ$$g_{\pi}$$は可逆性である。この可逆性より$$q(x \mid \phi)$$は基本分布$$q_0$$およびシミュレータ$$g_{\pi}(z; \phi)$$を用いて表せる。
 
 $$q_{\pi}(x \mid \phi) = q_0(g_{\pi}^{-1}(z; \phi)) |\det J_{g_{\pi}}(g_{\pi}^{-1}(z; \phi))|^{-1} $$
 
-ここで$$J_{g_{\pi}}(g_{\pi}^{-1}(z; \phi))$$はヤコビアンである。
-
-![simulator](./simulator.png)
-
-#### クロスエントロピーの変形
-
-シミュレータ$$g_{\pi}$$を使って訓練データ$$p$$に対するクロスエントロピーは以下のように変形できる。
+ここで$$J_{g_{\pi}}(g_{\pi}^{-1}(z; \phi))$$はヤコビアンである。これを使うと対称クロスエントロピーはシミュレータ$$g_{\pi}(z; \phi)$$を用いた式に変換できる。
 
 $$\begin{eqnarray}
-H(p, q_{\pi}) &=& \mathbb{E}_{x \sim p} - \log q_{\pi} (x \mid \phi) \\
-  &=& \mathbb{E}_{x \sim p} - \log \frac{q_0(g_{\pi}^{-1}(z; \phi))}{|\det J_{g_{\pi}}(g_{\pi}^{-1}(z; \phi))|}
+H(p, q_{\pi}) + H(q_{\pi}, \tilde{p})
+ &=& \mathbb{E}_{x \sim p} - \log q_{\pi} (x \mid \phi) +
+\beta \mathbb{E}_{x \sim q_{\pi}} - \log \tilde{p} (x \mid \phi) \\
+  &=& \mathbb{E}_{x \sim p} - \log \frac{q_0(g_{\pi}^{-1}(z; \phi))}{|\det J_{g_{\pi}}(g_{\pi}^{-1}(z; \phi))|} +
+\mathbb{E}_{x \sim q_{\pi}} - \log \tilde{p} (q_0(g_{\pi}^{-1}(z; \phi)))
 \end{eqnarray}$$
 
-ここでシミュレータ$$g_{\pi}$$は可逆であるのでヤコビアンは三角行列となる。すなわちヤコビアンの行列式は対角成分の積となるので簡単に計算できる。
+高次元のヤコビアン行列式の計算量は多いため、この計算が簡単になるような可逆なシミュレータ$$g_{\pi}(z; \phi)$$を設計する。R2P2では車両の予測問題にあった自己回帰的に計算を行うシミュレータを設計する。
+
+観測を条件とした軌道の確率分布$$q(x \mid \phi)$$はchain ruleにより遷移確率$$q_{\pi}(x_t \mid \psi_t)$$の積として表すことができる。
+
+$$q(x \mid \phi) = \prod_{i=1}^{N} q(x_t \mid \psi_t)$$
+
+$$\psi_t = [x_{1:t-1}, \phi]$$は時刻1からt-1までの位置および観測$$\phi$$である。遷移確率を正規分布と仮定すると遷移確率は次のように表せる。
+
+$$q_{\pi}(x_t \mid \psi_t) = \mathcal{N}(x_t; \mu = \mu_t^{\pi}(\psi;\theta), \sigma = \sigma_t^{\pi}(\psi;\theta) )$$
+
+ここで$$\mu_t^{\pi}(\psi_t; \theta)$$、$$\sigma_t^{\pi}(\psi_t; \theta)$$は状態$$x_t$$の平均および標準偏差を出力する微分可能な方策(policy)、$$\theta$$は方策のパラメータである。ここでReparameterization Trickを使うと状態$$x_t$$を次のように計算できる。
+
+$$x_t \triangleq f(z_t; \psi_t, \theta) = \mu_t^{\pi}(\psi_t; \theta) + \sigma_t^{\pi}(\psi_t; \theta)z_t$$
+
+ここで$$z$$は基本分布$$q_0$$に従うノイズ$$z \sim q_0 = \mathcal{N}(0, I)$$である。$$\sigma_t^{\pi} = 0$$を除き、関数$$f(\cdot)$$は可逆かつ微分可能である。ノイズから関数$$f(\cdot)$$を繰り返して適用することでマルチモーダルな軌道を予測することができる。すなわちノイズ$$z \sim q_0$$および観測$$\phi$$から予測軌道$$x$$へマップするような微分可能かつ可逆なシミュレータは次のように表せる。
+
+$$\left[ g_{\pi}^{-1}(x) \right]_t = z_t = \sigma_t^{\pi}(\psi_t; \theta)^{-1}(x_t - \mu_t^{\pi}(\psi_t; \theta))$$
+
+このシミュレータを使うとヤコビアン行列式は
 
 $$\log |\det J_{g_{\pi}}(g_{\pi}^{-1}(z; \phi))| = \sum_t \log | \det(\sigma_t^{\pi}(\psi_t; \theta)) |$$
 
-すなわちクロスエントロピーは
+となるので、クロスエントロピー$$H(p, q_{\pi})$$は次のように変形できる。
 
-$$\begin{eqnarray}
-H(p, q_{\pi}) &=&  \mathbb{E}_{x \sim p} - \log \frac{q_0(g_{\pi}^{-1}(z; \phi))}{|\det J_{g_{\pi}}(g_{\pi}^{-1}(z; \phi))|} \\
-  &=& \mathbb{E}_{x \sim p} - \log q_0(g_{\pi}^{-1}(z; \phi)) + \sum_t \log | \det(\sigma_t^{\pi}(\psi_t; \theta)) |
-\end{eqnarray}$$
-
-となる。すなわちシミュレータを設定することである軌跡の生成や軌道の尤度を直接推定すること、そしてその推定した尤度を最大化することで生成モデルの学習が可能になる。
+$$\begin{eqnarray}H(p, q_{\pi}) &=&  \mathbb{E}_{x \sim p} - \log \frac{q_0(g_{\pi}^{-1}(z; \phi))}{|\det J_{g_{\pi}}(g_{\pi}^{-1}(z; \phi))|} \\  &=& \mathbb{E}_{x \sim p} - \log q_0(g_{\pi}^{-1}(z; \phi)) + \sum_t \log | \det(\sigma_t^{\pi}(\psi_t; \theta)) |\end{eqnarray}$$
 
 ### 方策モデリング　ネットワークアーキテクチャ
 
