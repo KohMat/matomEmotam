@@ -33,7 +33,7 @@ PRECOG(PREdition Conditioned On Goal)は次にエージェントが向かうべ�
 
 $$q(\mathbf{S} \mid \phi)= \prod_{t=1}^T q(\mathbf{S}_t \mid \mathbf{S}_{1:t-1}, \phi)$$
 
-すべてのエージェントの遷移確率は各エージェントの遷移確率を正規分布と仮定するとエージェント$$a$$の状態遷移は次で表せる。
+各エージェントの遷移確率を正規分布と仮定すると、すべてのエージェントの遷移確率は次で表せる。
 
 $$q(\mathbf{S}_t \mid \mathbf{S}_{1:t-1}, \phi)
 = \prod_{a=1}^A
