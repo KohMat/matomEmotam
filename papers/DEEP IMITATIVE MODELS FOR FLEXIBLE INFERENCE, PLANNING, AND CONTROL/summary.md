@@ -27,11 +27,19 @@ Nicholas Rhinehart, Rowan McAllister, Sergey Levine
 
 ## 手法は？
 
-連続空間、離散時間、POMDPの仮定とする。時刻$$t$$におけるすべてのエージェントの状態（位置）を$$\mathbf{s}_t \in \mathbb{R}^{D}$$とする。また観測を$$\phi$$とする。変数をボールド、確率変数を大文字とする。添え付き文字の省略はすべての未来の時刻を含む。$$\mathbf{S}=\mathbf{S}_{1:T}$$とする。
+連続空間、離散時間、POMDPの仮定とする。時刻$$t$$におけるすべてのエージェントの状態（2次元位置）を$$\mathbf{s}_t \in \mathbb{R}^{D}$$とする。また観測を$$\phi$$とする。変数をボールド、確率変数を大文字とする。$$\mathbf{s}=\mathbf{s}_{1:T}$$とする。
 
-### エキスパートの軌跡を模倣する確率モデル$$q(\mathbf{S} \mid \phi)$$ のモデリング
+DIMは実行時に次の最適化問題を解くことでゴール$$\mathcal{G}$$に到達するエキスパートらしい計画$$\mathbf{s}^{*}$$を計算する。
 
-自己回帰生成モデルとしてモデル化を行う。エキスパートの軌跡$$\mathbf{S}$$を模倣する確率モデル$$q(\mathbf{S} \mid \phi)$$ は遷移確率の積として表すことができる。
+![imitaive_planning_to_goals](./imitaive_planning_to_goals.png)
+
+$$q(\mathbf{S} \mid \phi)$$は訓練済みのエキスパートの計画$$\mathbf{S}$$を模倣する生成モデルである。第１項はエキスパート尤度であり、$$\mathbf{s}$$がエキスパートらしい計画かどうかの尤度である。$$p(\mathcal{G} \mid \mathbf{s}, \phi)$$はゴールの尤度である。$$\mathbf{s}$$がゴールに到達するかどうかの尤度である。
+
+以下では生成モデルおよびその具体的なアーキテクチャ、ゴールの尤度関数そしてこの最適化問題の具体的な解き方について説明する。
+
+### エキスパートの計画を模倣する生成モデル$$q(\mathbf{S} \mid \phi)$$ 
+
+自己回帰生成モデルを用いる。エキスパートの軌跡$$\mathbf{S}$$を模倣する確率モデル$$q(\mathbf{S} \mid \phi)$$ は遷移確率の積として表すことができる。
 
 $$ q(\mathbf{S}_{1:T} \mid \phi) = \prod_{t=1}^T q(\mathbf{S}_t \mid \mathbf{S}_{1:t-1}, \phi) $$
 
@@ -45,21 +53,25 @@ $$\mathbf{S}_{t} = f(\mathbf{Z}_t) = \mu_{\theta}(\mathbf{S}_{1:t-1}, \phi) + \s
 * $$\mathbf{Z}_t$$ : 正規分布に従う潜在変数$$\mathbf{Z} \sim q_0 = \mathcal{N}(0, I)$$
 * $$\mu_{\theta}(\cdot)$$および$$\sigma_{\theta}(\cdot)$$は状態$$\mathbf{S}_{t}$$の平均および標準偏差を出力するネットワーク関数(パラメータ$$\theta$$はエキスパートの軌道からなるデータセットを用いてエキスパートの軌跡を模倣する確率モデル$$q(S \mid \phi)$$ の尤度を最大化して求める）
 
-である。
+である。以上より次のように計画を計算(生成)することができる。
 
-### ネットワークアーキテクチャ
+1. 潜在変数$$\mathbf{z}$$をサンプリングする
 
-具体的な$$\mu_{\theta}(\cdot)$$および$$\sigma_{\theta}(\cdot)$$のアーキテクチャを示す。このアーキテクチャはR2P2([link](https://people.eecs.berkeley.edu/~nrhinehart/papers/r2p2_cvf.pdf), [summary](../R2P2: A reparameterized pushforward policy for diverse, precise generative path forecasting/summary.md))と同じである（モデリングも）。しかし例えば以下のようなgenerative autoregressive flowを適用することもできる。
+   $$\mathbf{z} \overset{iid}{\sim} q_0 = \mathcal{N}(0, I)$$
 
-* Danilo Rezende and Shakir Mohamed. Variational inference with normalizing flows. In International
-  Conference on Machine Learning (ICML), pp. 1530–1538, 2015.
-* Aaron van den Oord, Yazhe Li, Igor Babuschkin, Karen Simonyan, Oriol Vinyals, Koray Kavukcuoglu,
-  George van den Driessche, Edward Lockhart, Luis C Cobo, Florian Stimberg, et al. Parallel
-  WaveNet: Fast high-fidelity speech synthesis. arXiv preprint arXiv:1711.10433, 2017.
+2. 潜在空間から状態へワープする
+
+   $$\mathbf{s} \leftarrow f(\mathbf{z}; \phi) $$
+
+逆に計画から潜在変数の計算は次のとおりである。
+
+$$ \mathbf{Z}_t =  f^{-1}(\mathbf{S}_t) = \sigma_{\theta}(\mathbf{S}_{1:t-1}, \phi) ^{-1} (\mathbf{S}_{t} - \mu_{\theta}(\mathbf{S}_{1:t-1}, \phi))$$
+
+### 生成モデル$$q(\mathbf{S} \mid \phi)$$ のネットワークアーキテクチャ
+
+具体的な$$\mu_{\theta}(\cdot)$$および$$\sigma_{\theta}(\cdot)$$のアーキテクチャを示す。
 
 ![deep_imitative_model](./deep_imitative_model.png)
-
-<img src="./arch_detail.png" alt="arch_detail"  />
 
 観測$$\phi \doteq \{\mathbf{s}_{-\tau:0}, \chi , \lambda\}$$は
 
@@ -70,35 +82,29 @@ $$\mathbf{S}_{t} = f(\mathbf{Z}_t) = \mu_{\theta}(\mathbf{S}_{1:t-1}, \phi) + \s
 である。時刻$$t$$に得られた観測から特徴量$$\alpha$$と$$\Gamma$$を計算する。
 
 * 過去位置をエンコードするRNN(GRU)：$$\mathbf{s}_{-\tau:0} \rightarrow \alpha$$
-* 空間特徴を抽出するCNN：$$\chi \rightarrow \Gamma$$
+* 空間特徴を抽出するCNN：$$\chi \rightarrow \Gamma \in \mathbb{R}^{200 \times 200 \times S}$$
 
-その後以下の手順によって時刻$$1:T$$の計画$$\mathbf{S}_{1:T}$$を計算する。
+その後以下の手順によって時刻$$1:T$$の計画$$\mathbf{s}_{1:T}$$もしくは$$\mathbf{z}_{1:T}$$を計算する。
 
-1. 位置$$\mathbf{S}_{t-1}$$に対応した空間特徴量$$\Gamma$$のサブピクセル$$\Gamma(\mathbf{S}_{t-1})$$をbilinear補間により取り出す
+1. 位置$$\mathbf{s}_{t-1}$$に対応した空間特徴量$$\Gamma$$のサブピクセル$$\Gamma(\mathbf{s}_{t-1})$$をbilinear補間により取り出す
 
-2. $$\alpha$$、$$\mathbf{s}_t$$、$$\Gamma(\mathbf{S}_{t-1})$$および$$\lambda$$はConcatenationし、特徴$$p_{t-1}$$を構成する
+2. $$\alpha$$、$$\mathbf{s}_t$$、$$\Gamma(\mathbf{s}_{t-1})$$および$$\lambda$$はConcatenationし、特徴$$p_{t-1}$$を構成する
 
-3. 予測用のRNN(GRU)は特徴$$p_{t-1}$$から位置の平均を直接出力する代わりにベレの方法([wiki](https://en.wikipedia.org/wiki/Verlet_integration))のステップ$$m_{\theta}(\mathbf{S}_{1:t-1}, \phi)$$と位置の標準偏差$$\sigma_{\theta}(\mathbf{S}_{1:t-1}, \phi)$$を出力する
+3. 予測用のRNN(GRU)は特徴$$p_{t-1}$$から位置の平均を直接出力する代わりにベレの方法([wiki](https://en.wikipedia.org/wiki/Verlet_integration))のステップ$$m_{\theta}(\mathbf{s}_{1:t-1}, \phi)$$と位置の標準偏差$$\sigma_{\theta}(\mathbf{s}_{1:t-1}, \phi)$$を出力する
 
 4. ベレの方法から位置の平均を計算する
 
-   $$\mu_{\theta}(\mathbf{S}_{1:t-1}, \phi) = 2 \mathbf{S}_{t-1} - \mathbf{S}_{t-2} + m_{\theta}(\mathbf{S}_{1:t-1}, \phi)$$
+   $$\mu_{\theta}(\mathbf{s}_{1:t-1}, \phi) = 2 \mathbf{s}_{t-1} - \mathbf{s}_{t-2} + m_{\theta}(\mathbf{s}_{1:t-1}, \phi)$$
 
-5. 状態$$\mathbf{S}_{t}$$を計算する
+5. (潜在変数$$\mathbf{z}_t$$から計画$$\mathbf{s}$$を求めるとき)状態$$\mathbf{s}_{t}$$を計算する
 
-   $$\mathbf{S}_{t} = \mu_{\theta}(\mathbf{S}_{1:t-1}, \phi) + \sigma_{\theta}(\mathbf{S}_{1:t-1}, \phi) \cdot \mathbf{Z}_t$$
+   $$\mathbf{s}_{t} = \mu_{\theta}(\mathbf{s}_{1:t-1}, \phi) + \sigma_{\theta}(\mathbf{s}_{1:t-1}, \phi) \cdot \mathbf{z}_t$$
 
-6. ステップ$$T$$まで1から5を繰り返す
+6. (計画$$\mathbf{s}$$から潜在変数$$\mathbf{z}_t$$を求めるときのとき)潜在変数$$\mathbf{z}_t$$を計算する
 
-### Imitative Planning
+   $$ \mathbf{z}_t = \sigma_{\theta}(\mathbf{s}_{1:t-1}, \phi) ^{-1} (\mathbf{s}_{t} - \mu_{\theta}(\mathbf{s}_{1:t-1}, \phi))$$
 
-次の最適化問題を解くことでゴールに到達するエキスパートらしい計画を計算する。
-
-![imitaive_planning_to_goals](./imitaive_planning_to_goals.png)
-
-第１項はエキスパートとの尤度、第２項はゴールとの尤度である。この問題はGradient ascentを使って潜在変数を使い最適解を求める。
-
-![imitative_plan](./imitative_plan.png)
+7. ステップ$$T$$まで1から6を繰り返す
 
 ### ゴール尤度関数の設計
 
@@ -111,7 +117,13 @@ $$\mathbf{S}_{t} = f(\mathbf{Z}_t) = \mu_{\theta}(\mathbf{S}_{1:t-1}, \phi) + \s
 * ゴールへ向かうルートとして与えられた各waypointの半径以内にいる場合は１，そうでない場合は０
 * 移動可能領域をポリゴンで表現し、ポリゴン内ならば１、そうでない場合は０
 
-その他にも１，０のバイナリの代わりにゴール内のより良い場所を目指すようにガウシアン関数を用いることが可能である。
+その他にも１，０のバイナリの代わりにゴール内のより良い場所を目指すようにガウシアン関数やエネルギー関数を用いることが可能である。
+
+### 最適化問題の具体的な解き方
+
+DIMで解く最適化問題は潜在変数を使い最適解を求める。
+
+![imitative_plan](./imitative_plan.png)
 
 ## どうやって有効だと検証した？
 
@@ -175,6 +187,16 @@ potholeに対する回避実験を行った。Gaussian Final-State Mixtureおよ
 [A. Filos, P. Tigas, R. McAllister, N. Rhinehart, S. Levine, and Y. Gal, “Can autonomous vehicles identify, recover from, and adapt to distribution shifts?” arXiv preprint arXiv:2006.14911, 2020.](../Can autonomous vehicles identify, recover from, and adapt to distribution shifts/summary.md)
 
 [N. Rhinehart, R. McAllister, K. Kitani, and S. Levine, “PRECOG: prediction conditioned on goals in visual multi-agent settings,” in Proceedings of the IEEE International Conference on Computer Vision, 2019, pp. 2821–2830.](../PRECOG: PREdiction Conditioned On Goals in Visual Multi-Agent Settings/summary.md)
+
+## 補足
+
+DIMで述べられている生成モデルおよびアーキテクチャはR2P2([link](https://people.eecs.berkeley.edu/~nrhinehart/papers/r2p2_cvf.pdf), [summary](../R2P2: A reparameterized pushforward policy for diverse, precise generative path forecasting/summary.md))と同じである。R2P2にこのようなモデリングをする理由が述べられている。R2P2以外にも例えば以下のようなgenerative autoregressive flowを適用することもできる。
+
+* Danilo Rezende and Shakir Mohamed. Variational inference with normalizing flows. In International
+  Conference on Machine Learning (ICML), pp. 1530–1538, 2015.
+* Aaron van den Oord, Yazhe Li, Igor Babuschkin, Karen Simonyan, Oriol Vinyals, Koray Kavukcuoglu,
+  George van den Driessche, Edward Lockhart, Luis C Cobo, Florian Stimberg, et al. Parallel
+  WaveNet: Fast high-fidelity speech synthesis. arXiv preprint arXiv:1711.10433, 2017.
 
 ## 個人的メモ
 
