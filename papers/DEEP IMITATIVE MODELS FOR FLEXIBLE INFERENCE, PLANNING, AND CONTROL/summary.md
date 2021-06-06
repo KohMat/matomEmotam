@@ -59,9 +59,14 @@ $$\mathbf{S}_{t} = f(\mathbf{Z}_t) = \mu_{\theta}(\mathbf{S}_{1:t-1}, \phi) + \s
 * $$\chi = \mathbb{R}^{200 \times 200 \times 2}$$はLiDARの情報を俯瞰図で表現したもの(各グリッドの面積は$$0.5 m^2$$であり、地面の上と下にあるポイントの2ビンのヒストグラムである)
 * $$\lambda$$は低次元の信号機の情報
 
-である。過去の位置$$\mathbf{s}_{-\tau:0}$$とLiDAR$$\chi$$はそれぞ過去位置をエンコードするRNN(GRU)とれ空間特徴を抽出するCNNで処理され、$$\alpha$$と$$\Gamma$$が計算される。その後以下の手順によって時刻$$1:T$$の計画$$\mathbf{S}_{1:T}$$を行う。
+である。時刻$$t$$に得られた観測から特徴量$$\alpha$$と$$\Gamma$$を計算する。
 
-1. 位置$$\mathbf{S}_{t-1}$$に対応した$$\Gamma$$サブピクセルにもどづいてbilinear補間された特徴ベクトル$$\Gamma(\mathbf{S}_{t-1})$$を取り出す
+* 過去位置をエンコードするRNN(GRU)：$$\mathbf{s}_{-\tau:0} \rightarrow \alpha$$
+* 空間特徴を抽出するCNN：$$\chi \rightarrow \Gamma$$
+
+その後以下の手順によって時刻$$1:T$$の計画$$\mathbf{S}_{1:T}$$を行う。
+
+1. 位置$$\mathbf{S}_{t-1}$$に対応した空間特徴量$$\Gamma$$のサブピクセル$$\Gamma(\mathbf{S}_{t-1})$$をbilinear補間により取り出す
 
 2. $$\alpha$$、$$\mathbf{s}_t$$、$$\Gamma(\mathbf{S}_{t-1})$$および$$\lambda$$はConcatenationし、特徴$$p_{t-1}$$を構成する
 

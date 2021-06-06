@@ -69,9 +69,14 @@ $$\mathbf{S}_{t}^{a} = f_{\theta}(\mathbf{Z}_t^a) = \mu_{\theta}^a(\mathbf{S}_{1
 * $$\mathbf{s}_{-\tau:0}$$は過去から現在までの位置
 * $$\chi = \mathbb{R}^{200 \times 200 \times 2}$$はLiDARの情報を俯瞰図で表現したもの(各グリッドの面積は$$0.5 m^2$$であり、地面の上と下にあるポイントの2ビンのヒストグラムである)
 
-である。過去位置$$\mathbf{s}_{-\tau:0}$$とLiDAR$$\chi$$はそれぞれ過去位置をエンコードするRNN(GRU)と空間特徴を抽出するCNNで処理され、$$\alpha$$と$$\Gamma$$が計算される。その後以下の手順によって時刻$$1:T$$までの予測$$\mathbf{S}_{1:T}^{1:A}$$を行う。
+である。時刻$$t$$に得られた観測から特徴量$$\alpha$$と$$\Gamma$$を計算する。
 
-1. 各エージェントの位置$$\mathbf{s}_{t-1}^a$$に対応した$$\Gamma$$サブピクセルにもどづいてbilinear補間された特徴ベクトルを取り出す
+* 過去位置をエンコードするRNN(GRU)：$$\mathbf{s}_{-\tau:0} \rightarrow \alpha$$
+* 空間特徴を抽出するCNN：$$\chi \rightarrow \Gamma$$
+
+その後以下の手順によって時刻$$1:T$$までの予測$$\mathbf{S}_{1:T}^{1:A}$$を行う。
+
+1. 時刻$$t$$の各エージェントの位置$$\mathbf{s}_{t-1}^a$$に対応した空間特徴量$$\Gamma$$のサブピクセル$$\Gamma(\mathbf{s}_{t-1}^a)$$をbilinear補間により取り出す
 
    $$\Gamma^{1:A} = \{ \Gamma(\mathbf{s}_{t-1}^1),..., \Gamma(\mathbf{s}_{t-1}^A) \}$$
 
@@ -109,13 +114,13 @@ z^{r *} = \argmax_{z^r} \mathcal{L}(\mathbf{z}^r, \mathcal{G}, \phi)
 
 $$\mathcal{L}(\mathbf{z}^r, \mathcal{G}, \phi) = \mathbb{E}_{\mathbf{Z}^h} \left[ \log q(f(\mathbf{Z}) \mid \phi) + \log q(\mathcal{G} \mid f(\mathbf{Z}), \phi) \right]$$
 
-である。ゴールの尤度$$q(\mathcal{G} \mid f(\mathbf{Z}), \phi)$$は$$\mathcal{N}(\mathbf{w}; \mathbf{S}_T^r, \epsilon \mathbf{I})$$をとする。$$\mathbf{w}$$は自車両からゴールまでのウェイポイントである。
+である。ゴールの尤度$$q(\mathcal{G} \mid f(\mathbf{Z}), \phi)$$は自車両からゴールに向かうまでのウェイポイント$$\mathbf{w}$$を使った$$\mathcal{N}(\mathbf{w}; \mathbf{S}_T^r, \epsilon \mathbf{I})$$とする。
 
-実際には他車両の動きは決定できないので期待値の近似を行いGradient Ascentにより最適な制御変数$$z^{r*}$$を求める。
+この最適化問題は次のアルゴリズムのようにGradient Ascentにより解く。
 
 ![multimitativeplanning](./multimitativeplanning.png)
 
-Algorithm1の４および５行目では最適化ステップごとに他エージェントの潜在変数$$\mathbf{Z}^h$$を正規分布$$\mathcal{N}(0, \mathbf{I})$$からサンプリングしてゴールの尤度による重み付き平均を行い期待値を近似する。
+Algorithm 1の４、５行目では、他車両の動きは決定できないので他エージェントの潜在変数$$\mathbf{Z}^h$$を正規分布$$\mathcal{N}(0, \mathbf{I})$$からサンプリングしてゴールの尤度による重み付き平均を行い、期待値$$\mathcal{L}(\mathbf{z}^r, \mathcal{G})$$を近似している。
 
 $$\hat{\mathcal{L}}(^{1:K}\mathbf{z}, \mathcal{G}, \phi)
 = \frac{1}{K} \sum_{k=1}^{K}
@@ -134,19 +139,25 @@ $$^{1:K}\mathbf{z}$$はサンプリングされたK個のすべてのエージ�
 
 ### ESPの検証
 
-**Didactic Example**：簡素な交差点でのナビゲーションを使い予測性能を検証した。交差点には人間（オレンジ）およびロボット（青）が存在する。人間は常に4ステップ直進し、その後50％の確率で直進もしくは左折のどちらかの行動を行う。ロボットは交差点を直進しようと試みるが人間が左折した場合には譲歩する。このナビゲーションシミュレーションを行い、データセットを作成し、ESPおよびベースラインR2P2-MAの訓練を行った。学習したそれぞれの方法の予測結果を次に示す。R2P2-MAはエージェント間の相互作用を考慮していないので50％の確率で人間とロボットがぶつかる予測を行った。これに対してESPは人間の決定に対して反応していることを示している。
+**Didactic Example**：簡素な交差点でのナビゲーションを使い予測性能を検証した。交差点には人間（オレンジ）およびロボット（青）が存在する。人間は常に4ステップ直進し、その後50％の確率で直進もしくは左折のどちらかの行動を行う。ロボットは交差点を直進しようと試みるが人間が左折した場合には譲歩する。このナビゲーションシミュレーションを行い、データセットを作成し、ESPおよびベースラインR2P2-MAの訓練を行った。
 
 ![didactic_example](./didactic_example.png)
 
-**CARLAおよびnuScenes**：CALRAおよびnuScenesから10個のデータセットを作成し予測性能を検証した。すべてのデータセットでESPの性能がベースラインを上回った。ESP, no LIDARは観測からLIDARを除いたESPである。ESP, RoadはnuScenesの道路領域をバイナリマスクで表現した入力を追加したESPである。ESP, flexは、可変数のエージェントに対応するESPである。
+R2P2-MAはエージェント間の相互作用を考慮していないので50％の確率で人間とロボットがぶつかる予測を行った。これに対してESPは人間の決定に対して反応していることを示している。
+
+**CARLAおよびnuScenes**：CALRAおよびnuScenesから10個のデータセットを作成し予測性能を検証した。ESP, no LIDARは観測からLIDARを除いたESPである。ESP, RoadはnuScenesの道路領域をバイナリマスクで表現した入力を追加したESPである。ESP, flexは、可変数のエージェントに対応するESPである。
 
 ![esp_performance](./esp_performance.png)
 
+CALRAおよびnuScenesのデータセットでESPの性能が比較手法のの性能を上回った。
+
 ### PRECOGの検証
 
-CALRAおよびnuScenesを使いPRECOGの予測性能を検証した。Planingを行うエージェントは自車両のみとした。各データの最後の位置をゴールとして設定した。ゴールの尤度は正規分布を用いた。[DESIRE](https://arxiv.org/abs/1704.04394)およびESPと比較した結果は次のとおりである。ゴールを設定して予測することにより、自車両$$\hat{m}_K^1$$だけでなくその他の予測が向上することを示している。エージェントは近い順からソーティングされており、一番近い車両$$\hat{m}_K^2$$が最も影響を受けていることを示している。
+CALRAおよびnuScenesを使いPRECOGの予測性能を検証した。Planingを行うエージェントは自車両のみとした。各データの最後の位置をゴールとして設定した。ゴールの尤度は正規分布を用いた。[DESIRE](https://arxiv.org/abs/1704.04394)およびESPと比較した結果は次のとおりである。
 
 ![precog_result](./precog_result.png)
+
+ゴールを設定して予測することにより、自車両$$\hat{m}_K^1$$だけでなくその他の予測が向上することを示している。エージェントは近い順からソーティングされており、一番近い車両$$\hat{m}_K^2$$が最も影響を受けていることを示している。
 
 ## 課題は？議論はある？
 
@@ -158,6 +169,6 @@ CALRAおよびnuScenesを使いPRECOGの予測性能を検証した。Planingを
 
 ## 個人的メモ
 
-* アーキテクチャ詳細はAppendix Cに紹介されており大きなアーキテクチャの構造の変化はないものの、MLPの追加などいくつかの変更点がある。
+* アーキテクチャ詳細はAppendix Cに紹介されており大きなアーキテクチャの構造の変化はないものの、性能を向上させるための空間特徴量の抽出方法など、いくつかの変更点がある。
 * Didactic Exampleの行動パターン数を増やして検証したい。。例えば自車両は人間が左折したとき、人間もしくはロボットが交差点前に止まるパターン
 * 上に書かれているとおり、PRECOGの検証で、自車両だけでなく、観測範囲内の道路の構造上到達しうる点も加えて検証をしたい。
