@@ -11,7 +11,7 @@
 
 ## どんなもの？
 
-認識論的不確実性(epistemic uncertainty)を考慮した自動運転のための安全な経路計画（RIP＝Robust Imitative Planning)を提案する。RIPはテスト時に起きる分布シフトに対応するため、複数のエキスパート軌跡を模倣する確率モデルを使い([Deep Ensembles](https://arxiv.org/abs/1612.01474))、それらの出力を集約し経路を計画する。これにより、いくつかの訓練データ分布外(Out-of-training-distribution, OOD)シナリオに対して、分布シフトを検出し、単一モデルが引き起こす十分な情報に基づいていない自信過剰で壊滅的な決定を防ぐこともしくは軽減することができる。
+認識論的不確実性(epistemic uncertainty)([補足](#認識論的不確実性))を考慮した自動運転のための安全な経路計画(RIP＝Robust Imitative Planning)を提案する。RIPはテスト時に起きる分布シフトに対応するため、複数のエキスパート軌跡を模倣する確率モデルを使い([Deep Ensembles](https://arxiv.org/abs/1612.01474))、それらの出力を集約し経路を計画する。これにより、いくつかの訓練データ分布外(Out-of-training-distribution, OOD)シナリオに対して、分布シフトを検出し、単一モデルが引き起こす十分な情報に基づいていない自信過剰で壊滅的な決定を防ぐこともしくは軽減することができる。
 
 またAdaptive RIP(AdaRIP)を提案する。AdaRIPは分布シフトを検出することで、複数のモデルを使った場合でも不確実性が大きく安全な行動を提示できない場合に、エキスパートドライバーにフィードバックを問い合わせ、ドライバーが取った行動から自身のパラメータを更新するアルゴリズムである。AdaRIPはOODシナリオに対してエキスパートに操作を促すことによって安全性を損なうことなく現実世界で実行できる。
 
@@ -25,7 +25,7 @@ Deep Imitative Models([arxiv](https://arxiv.org/pdf/1810.06544.pdf), [summary](h
 
 ### Robust Imitative Planning
 
-提案手法のRIPはDIM$$p(\mathbf{y} \mid \mathcal{G}, \mathbf{x}; \mathbf{\theta})$$を複数用いて実行時に次式の最適化問題を解くことで、二次元の位置で構成される経路計画$$\mathbf{y}_{RIP}^{\mathcal{G}}$$を求める計画方法である。複数のDIMは例えばエキスパートのデータから分割されたデータおよびランダムな初期パラメータから模倣尤度を最大化するように別々に訓練されている。
+提案手法のRIPは複数のDIM$$p(\mathbf{y} \mid \mathcal{G}, \mathbf{x}; \mathbf{\theta})$$を用いて実行時に次式の最適化問題を解くことで、二次元の位置で構成される経路計画$$\mathbf{y}_{RIP}^{\mathcal{G}}$$を求める計画方法である。複数のDIMは例えばエキスパートのデータから分割されたデータおよびランダムな初期パラメータから模倣尤度を最大化するように別々に訓練されている。
 
 <img src="./rip.png" alt="rip" style="zoom: 67%;" />
 
@@ -45,9 +45,11 @@ Deep Imitative Models([arxiv](https://arxiv.org/pdf/1810.06544.pdf), [summary](h
 
 ![detecting_distribution_shift](./detecting_distribution_shift.png)
 
-この検出方法を用いたAdaRIPは次のアルゴリズムである。RIPにより求めた経路計画の分散を計算し、その分散が一定以上であれば求めた計画の実行をやめ、エキスパートの助けを求める。そして得られたデータを使ってモデルを更新する。
+この検出方法を用いたAdaRIPは次のアルゴリズムである。
 
 ![adarip](./adarip.png)
+
+8~12行目に置いてRIPにより求めた経路計画の分散を計算し、その分散が一定以上であれば求めた計画の実行をやめ、エキスパートの助けを求める。そして得られたデータを使ってモデルを更新する。
 
 ## どうやって有効だと検証した？
 
