@@ -27,9 +27,11 @@ Nicholas Rhinehart, Rowan McAllister, Sergey Levine
 
 ## 手法は？
 
+連続空間、離散時間、POMDPの仮定とする。時刻$$t$$におけるすべてのエージェントの状態（位置）を$$\mathbf{s}_t \in \mathbb{R}^{D}$$とする。また観測を$$\phi$$とする。変数をボールド、確率変数を大文字とする。添え付き文字の省略はすべての未来の時刻を含む。$$\mathbf{S}=\mathbf{S}_{1:T}$$とする。
+
 ### エキスパートの軌跡を模倣する確率モデル$$q(\mathbf{S} \mid \phi)$$ のモデリング
 
-連続空間、離散時間、POMDPの仮定をおき自己回帰生成モデルとしてモデル化を行う。時刻$$t$$におけるすべてのエージェントの状態（位置）を$$\mathbf{s}_t \in \mathbb{R}^{D}$$とする。また観測を$$\phi$$とする。変数をボールド、確率変数を大文字とする。添え付き文字の省略はすべての未来の時刻を含む。$$\mathbf{S}=\mathbf{S}_{1:T}$$とする。エキスパートの軌跡$$\mathbf{S}$$を模倣する確率モデル$$q(\mathbf{S} \mid \phi)$$ は遷移確率の積として表すことができる。
+自己回帰生成モデルとしてモデル化を行う。エキスパートの軌跡$$\mathbf{S}$$を模倣する確率モデル$$q(\mathbf{S} \mid \phi)$$ は遷移確率の積として表すことができる。
 
 $$ q(\mathbf{S}_{1:T} \mid \phi) = \prod_{t=1}^T q(\mathbf{S}_t \mid \mathbf{S}_{1:t-1}, \phi) $$
 
@@ -47,7 +49,13 @@ $$\mathbf{S}_{t} = f(\mathbf{Z}_t) = \mu_{\theta}(\mathbf{S}_{1:t-1}, \phi) + \s
 
 ### ネットワークアーキテクチャ
 
-具体的な$$\mu_{\theta}(\cdot)$$および$$\sigma_{\theta}(\cdot)$$のアーキテクチャを示す。
+具体的な$$\mu_{\theta}(\cdot)$$および$$\sigma_{\theta}(\cdot)$$のアーキテクチャを示す。このアーキテクチャはR2P2([link](https://people.eecs.berkeley.edu/~nrhinehart/papers/r2p2_cvf.pdf), [summary](../R2P2: A reparameterized pushforward policy for diverse, precise generative path forecasting/summary.md))と同じである（モデリングも）。しかし例えば以下のようなgenerative autoregressive flowを適用することもできる。
+
+* Danilo Rezende and Shakir Mohamed. Variational inference with normalizing flows. In International
+  Conference on Machine Learning (ICML), pp. 1530–1538, 2015.
+* Aaron van den Oord, Yazhe Li, Igor Babuschkin, Karen Simonyan, Oriol Vinyals, Koray Kavukcuoglu,
+  George van den Driessche, Edward Lockhart, Luis C Cobo, Florian Stimberg, et al. Parallel
+  WaveNet: Fast high-fidelity speech synthesis. arXiv preprint arXiv:1711.10433, 2017.
 
 ![deep_imitative_model](./deep_imitative_model.png)
 
@@ -64,7 +72,7 @@ $$\mathbf{S}_{t} = f(\mathbf{Z}_t) = \mu_{\theta}(\mathbf{S}_{1:t-1}, \phi) + \s
 * 過去位置をエンコードするRNN(GRU)：$$\mathbf{s}_{-\tau:0} \rightarrow \alpha$$
 * 空間特徴を抽出するCNN：$$\chi \rightarrow \Gamma$$
 
-その後以下の手順によって時刻$$1:T$$の計画$$\mathbf{S}_{1:T}$$を行う。
+その後以下の手順によって時刻$$1:T$$の計画$$\mathbf{S}_{1:T}$$を計算する。
 
 1. 位置$$\mathbf{S}_{t-1}$$に対応した空間特徴量$$\Gamma$$のサブピクセル$$\Gamma(\mathbf{S}_{t-1})$$をbilinear補間により取り出す
 
@@ -84,9 +92,11 @@ $$\mathbf{S}_{t} = f(\mathbf{Z}_t) = \mu_{\theta}(\mathbf{S}_{1:t-1}, \phi) + \s
 
 ### Imitative Planning
 
-実行時にGradient ascentによって式(1)を最適化することでゴールに到達するエキスパートらしい計画を計算する。Algorithm 2で示すように潜在空間$$z$$を通して最適化計算を行う。
+次の最適化問題を解くことでゴールに到達するエキスパートらしい計画を計算する。
 
 ![imitaive_planning_to_goals](./imitaive_planning_to_goals.png)
+
+第１項はエキスパートとの尤度、第２項はゴールとの尤度である。この問題はGradient ascentを使って潜在変数を使い最適解を求める。
 
 ![imitative_plan](./imitative_plan.png)
 
@@ -120,10 +130,12 @@ CARLAを使い以下を検証した。
 
 ### 検証2  ゴールノイズに対するロバスト性
 
-ゴールにノイズを混ぜた状況でナビゲーションするテストを行った。以下のいずれの場合も高い確率でナビゲーションを成功させることができた。このことから質問４に対する回答はYesである。
+ゴールにノイズを混ぜた状況でナビゲーションするテストを行った。
 
 1. waypointsからなるゴールの半分を、大きく変動
 2. ゴールを対向車線に設定
+
+以上のいずれの場合も高い確率でナビゲーションを成功させることができた。このことから質問４に対する回答はYesである。
 
 ### 検証3  potholeの回避
 
@@ -166,11 +178,5 @@ potholeに対する回避実験を行った。Gaussian Final-State Mixtureおよ
 
 ## 個人的メモ
 
-* 実験で用いた模倣モデルの具体的なアーキテクチャはR2P2([link](https://people.eecs.berkeley.edu/~nrhinehart/papers/r2p2_cvf.pdf), [summary](../R2P2: A reparameterized pushforward policy for diverse, precise generative path forecasting/summary.md))と同じである。しかし例えば以下のようなgenerative autoregressive flowを適用することもできる。
-  * Danilo Rezende and Shakir Mohamed. Variational inference with normalizing flows. In International
-    Conference on Machine Learning (ICML), pp. 1530–1538, 2015.
-  * Aaron van den Oord, Yazhe Li, Igor Babuschkin, Karen Simonyan, Oriol Vinyals, Koray Kavukcuoglu,
-    George van den Driessche, Edward Lockhart, Luis C Cobo, Florian Stimberg, et al. Parallel
-    WaveNet: Fast high-fidelity speech synthesis. arXiv preprint arXiv:1711.10433, 2017.
 * 論文中にいくつかのゴール尤度関数が提案されている。
 * ゴール内の尤度とエキスパートの尤度のバランスはどうしたらいいだろうか？
