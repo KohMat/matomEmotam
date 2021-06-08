@@ -10,7 +10,7 @@
 
 ## どんなもの？
 
-人や違う形態を持つロボットのデモンストレーション動画から、エージェントがマニピュレータを操作し同じタスクを解くための方策を強化学習により学ぶ（Cross-embodiment Imitationする）方法を提案する。提案方法はデモンストレーションおよびエージェントが観測するカメラ画像を、マニピュレータに依存しない空間、つまりどんなマニピュレータのどんなタスクにも使える表現（MIR＝Manipulator-Independent Representations）にエンコードすることで、異なるドメインからの情報を同じように扱えるようにする。そしてその空間上でデモンストレーションをエージェントが到達するべきゴールとして設定し、強化学習を行うことでタスクを解く方策を訓練する。
+人や違う形態を持つロボットのデモンストレーション動画から、エージェントがマニピュレータを操作し同じタスクを解くための方策を強化学習により学ぶ（Cross-embodiment Imitationする）方法を提案する。提案方法はデモンストレーション動画およびエージェントが観測するカメラ画像を、マニピュレータに依存しない空間、つまりどんなマニピュレータのどんなタスクにも使える表現（MIR＝Manipulator-Independent Representations）にエンコードすることで、異なるドメインからの情報を同じように扱えるようにする。そしてその空間上でデモンストレーションをエージェントが到達するべきゴールとして設定し、強化学習を行うことでタスクを解く方策を訓練する。
 
 ## 先行研究と比べてどこがすごい？何を解決したか？
 
@@ -24,7 +24,7 @@
 
 ![cross_embodiment_imitation](./cross_embodiment_imitation.png)
 
-環境の報酬関数は次の通りである。
+環境の報酬関数は次のように設定する。
 
 $$\newcommand{\if}{\mathop{\mathrm{if}}\nolimits}
 \newcommand{\otherwise}{\mathop{\mathrm{otherwise}}\nolimits}
@@ -41,7 +41,7 @@ $$w$$はデモンストレーションの隣接するフレーム間のユーク
 
 ### MIR空間の学習
 
-様々なマニピュレータに対応するためマニピュレータに関するドメインランダマイゼーションを行い、MIR空間学習のためのデータを取得する。あるタスクを行う軌跡を次に示す２つの方法で観測し、同一シーンに対する観測のペア$$\mathbf{o} = {o_i}_{i=1}^N$$、$$\bar{\mathbf{o}} = {\bar{o}_i}_{i=1}^N$$、および行動$$\mathbf{a} = {a_i}_{i=1}^N$$を取得する。
+様々なマニピュレータに対応するためマニピュレータに関するドメインランダマイゼーションを行い、MIR空間学習のためのデータを取得する。シミュレーション環境で、あるタスクを行う軌跡を２つの方法で観測し、同一シーンに対する観測のペア$$\mathbf{o} = {o_i}_{i=1}^N$$、$$\bar{\mathbf{o}} = {\bar{o}_i}_{i=1}^N$$、および行動$$\mathbf{a} = {a_i}_{i=1}^N$$を取得する。
 
 ![leraning_mir_space](./leraning_mir_space.gif)
 
@@ -50,7 +50,7 @@ $$w$$はデモンストレーションの隣接するフレーム間のユーク
 1. Temporally-Smooth Contrastive Networks (TSCN)
 2. Cross-Domain Goal-Conditional Policies (CD-GCP)
 
-これにより観測をマニピュレータの動きを捉えたまま以下の特性を持つ埋め込み空間にマッピングすることができる。
+これによりマニピュレータの動きを捉えたまま、観測を以下の特性を持つ埋め込み空間にマッピングすることができる。
 
 1. Cross-Domain Alignment　異なるドメインの同一シーンを同じ場所にマッピングする
 2. Temporal Smoothness　時間的に近いシーンを近くにマッピングする
@@ -58,17 +58,17 @@ $$w$$はデモンストレーションの隣接するフレーム間のユーク
 
 #### Temporally-Smooth Contrastive Networks (TSCN)
 
-TSCN（Temporally-Smooth Contrastive Networks）は収集した同一シーンを示す観測のペア$$(o_i, \bar{o}_i)_{i=1,...,N}$$を使って次のContrastive lossによりの距離学習を行う方法である。
+TSCN（Temporally-Smooth Contrastive Networks）は収集した同一シーンを示す観測のペア$$(o_i, \bar{o}_i)_{i=1,...,N}$$を使って次のContrastive lossによりの距離学習を行うことにより、埋め込み空間を学習する方法である。
 
 $$\min_{\phi} \left( - \sum_i^{N} \sum_k^{N} p_{ik} \log \frac
 {\exp(x_i^{T} \bar{x}_k)}
 {\sum_j^N \exp \left(x_i^T \bar{x}_j \right)} \right)$$
 
-ここで$$x = \phi(o)$$、$$\bar{x} = \phi(\bar{o})$$である。$$p_{ik}$$は比べているフレームのインデックスが近いときは小さく、フレームのインデックスが遠いときには大きくなるような重みである。
+ここで$$x = \phi(o)$$、$$\bar{x} = \phi(\bar{o})$$はエンコードされた観測のペアである。$$p_{ik}$$は比べているフレームのインデックスが近いときは小さく、フレームのインデックスが遠いときには大きくなるような重みである。
 
 $$p_{ik} = \frac{\exp (- |i-k|)}{\sum_u^N \exp(-|i-u|)}$$
 
-重み$$p_{ik}$$を用いることで隣接したペア$$(x_i, \bar{x}_{i+1})$$と離れたペア$$(x_i, \bar{x}_{i+50})$$の違いを表現し、時間的な滑らかさを考慮することができる。SCNはTime-Contrastive Networks: Self-Supervised Learning from Video([arxiv](https://arxiv.org/pdf/1704.06888.pdf))で提案されたTCN（Time-Contrastive Networks）の拡張版である。
+重み$$p_{ik}$$を用いることで隣接したペア$$(x_i, \bar{x}_{i+1})$$と離れたペア$$(x_i, \bar{x}_{i+50})$$の違いを表現し、時間的な滑らかさを考慮することができる。TSCNはTime-Contrastive Networks: Self-Supervised Learning from Video([arxiv](https://arxiv.org/pdf/1704.06888.pdf))で提案されたTCN（Time-Contrastive Networks）の拡張版である。
 
 #### Cross-Domain Goal-Conditional Policies (CD-GCP)
 
@@ -104,7 +104,7 @@ MIR空間を訓練するための標準の環境から以下の変更を加え�
 
 ![variation_environments](./variation_environments.png)
 
-cross-embodiment imitationのためのデモンストレーションを生成する環境は次のとおりである。MIR学習には現れない４つのドメインを用意した。
+cross-embodiment imitationのためのデモンストレーションを生成する環境は次のとおりである。MIR学習には現れない４つのドメインである。
 
 1. **Jaco Hand** : 2-finger Robotiqの代わりに、3-finger Jaco handを使う環境
 2. **Real Robot** : 標準のMuJoCoの環境と同等の現実世界の環境
@@ -117,7 +117,7 @@ cross-embodiment imitationのためのデモンストレーションを生成す
 
 MIR空間の学習のため、時間的に整列したシークエンスが必要である。アームを物体のところまで運ぶ、物体をつかむ、持ち上げる、積み上げるなどのバスケットにある３つの物体を使ったすべての操作（7194個）の軌道タスクに対してシミュレーション環境を使い、同じ軌道のビジュアル的に異なるペア(14, 388個)を作成した。データ収集に当たって標準の環境でMaximum a Posteriori Policy Optimization(MPO)により訓練した方策を用いた。収集したデータの内10792個をMIR空間の訓練に使用し、残りはハイパーパラメータのチューニングに用いた。
 
-Cross-embodiment Imitationのため、Invisible Arm, Jaco Hand, Real Robot, Pick-up StickそしてHuman Handの５つのドメインから各１０回のデモンストレーションを収集した。
+Cross-embodiment Imitationのため、Invisible Arm, Jaco Hand, Real Robot, Pick-up StickそしてHuman Handの５つのドメインから各１０回のデモンストレーションを収集し、方策の訓練に用いた。
 
 ### 結果
 
