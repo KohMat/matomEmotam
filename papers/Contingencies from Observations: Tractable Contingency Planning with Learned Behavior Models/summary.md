@@ -9,7 +9,7 @@
 
 ## どんなもの？
 
-エキスパートの軌道を模倣する行動モデルを使いContingency Planning([補足](#Contingency planningについて)))を行う経路計画方法CfO(Contingencies from Observations)を提案する。CfOはマルチエージェントの相互作用による行動を表す条件付きautoregressive flowモデルを使う。このモデルはマルチエージェントの軌道を模倣するように訓練される。CfOはセンサーの観測からゴールに到達するように、訓練したモデルを使った観測とゴールの条件付き事後分布を最大化するような計画を最適化計算により求める。これにより人間の意図の不確実性のもとで人間との協力が不可欠なシナリオで安全かつ速やかに行動する計画を行うことができる。
+エキスパートの軌道を模倣する行動モデルを使いContingency Planning([補足](#Contingency planningについて)))を行う経路計画方法CfO(Contingencies from Observations)を提案する。CfOはマルチエージェントの相互作用による行動を表す条件付きautoregressive flowモデルを使う。このモデルはマルチエージェントの軌道を模倣するように訓練される。CfOはセンサーの観測から自車両がゴールに到達するように、訓練したモデルを使った観測とゴールの条件付き事後分布を最大化するような計画を最適化計算により求める。これにより人間の意図の不確実性のもと、人間との協力が不可欠なシナリオで安全かつ速やかに行動する計画を行うことができる。
 
 ![flowchart](./flowchart.png)
 
@@ -174,10 +174,11 @@ $$\begin{equation}
 
 * Contingentを訳せなかった。
 * Appendixに最適化問題$$\mathcal{L}_{CfO}$$を解くことで実際にContingency Planningが行えることを示している（離散化している）。
-* マルチエージェントの相互作用を考慮した予測を行う[PRECOG](../PRECOG: PREdiction Conditioned On Goals in Visual Multi-Agent Settings/summary.md)を車両の計画に使用してみた論文。モデル、目的関数自体およびその最適化問題の解き方はこれらの論文で提案されている。
+* **マルチエージェントの相互作用を考慮した予測を行う[PRECOG](../PRECOG: PREdiction Conditioned On Goals in Visual Multi-Agent Settings/summary.md)を車両の計画に使用してみた論文。モデル、目的関数自体およびその最適化問題の解き方はこれらの論文で提案されている。**
 * CfOが目的関数に$$\mathcal{L}^{\mathbf{r}}$$を用いたCfOに比べてRGの成功率が下がっているのが気になる。
 * CfOのRG\*の成功率は高いが、実際どれくらいエキスパートと走行時間が近いのだろうか？
 * 模倣モデルが実際にどれくらい妥当な尤度を出すのか興味がある。[PILOT](../PILOT: Efficient Planning by Imitation Learning and Optimisation for Safe Autonomous Driving/summary.md)で検証されたような自明の拘束条件を満たしているかどうか確認してみたい。
 * 論文の検証でPPOがそこそこの結果を出しているのが気になった。使っているPPOはAppendix Cに詳細が記載されている。PPOは[Stable Baselines repository](https://github.com/hill-a/stable-baselines)に実装されているPPO2である。検証用のシナリオがOpenAI Gymライクに使える [OATomobile](https://github.com/OATML/oatomobile)にContingentタスクを追加したものを使っている。
+* PRECOGで課題として述べられているように自車両以外のエージェントにもゴールを条件付けて計画してみたら面白いと思う。
 * アグレッシブな行動を制御できるようにならないだろうか？どれくらいアグレッシブにするなど。
 * 訳したときはICRA版がまだ出ていなかったので、出たあとで追記したい。
