@@ -63,9 +63,9 @@ $$\mathbf{S}_{t} = f(\mathbf{Z}_t) = \mu_{\theta}(\mathbf{S}_{1:t-1}, \phi) + \s
 
    $$\mathbf{s} \leftarrow f(\mathbf{z}; \phi) $$
 
-逆に計画から潜在変数の計算は次のとおりである。
+逆に計画から潜在変数は次のように計算することができる。
 
-$$ \mathbf{Z}_t =  f^{-1}(\mathbf{S}_t) = \sigma_{\theta}(\mathbf{S}_{1:t-1}, \phi) ^{-1} (\mathbf{S}_{t} - \mu_{\theta}(\mathbf{S}_{1:t-1}, \phi))$$
+$$ \mathbf{z}_t =  f^{-1}(\mathbf{s}_t) = \sigma_{\theta}(\mathbf{s}_{1:t-1}, \phi) ^{-1} (\mathbf{s}_{t} - \mu_{\theta}(\mathbf{s}_{1:t-1}, \phi))$$
 
 ### 生成モデル$$q(\mathbf{S} \mid \phi)$$ のネットワークアーキテクチャ
 
