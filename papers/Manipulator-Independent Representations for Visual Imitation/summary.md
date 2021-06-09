@@ -30,7 +30,7 @@ $$\newcommand{\if}{\mathop{\mathrm{if}}\nolimits}
 \newcommand{\otherwise}{\mathop{\mathrm{otherwise}}\nolimits}
 r(o, \bar{g}) = \left\{
 \begin{array}{ll}
-1, & \if \exp(-w \| \phi(o) - \phi(\bar{g}) \|^2 > \epsilon\\
+1, & \if \exp(-w \| \phi(o) - \phi(\bar{g}) \|^2) > \epsilon\\
 0, & \otherwise
 \end{array}
 \right.$$
@@ -50,7 +50,7 @@ $$w$$はデモンストレーションの隣接するフレーム間のユーク
 1. Temporally-Smooth Contrastive Networks (TSCN)
 2. Cross-Domain Goal-Conditional Policies (CD-GCP)
 
-これによりマニピュレータの動きを捉えたまま、観測を以下の特性を持つ埋め込み空間にマッピングすることができる。
+これによりマニピュレータの動きを捉えたまま、観測を以下の特性を持つ埋め込み空間（MIR空間）にマッピングすることができる。
 
 1. Cross-Domain Alignment　異なるドメインの同一シーンを同じ場所にマッピングする
 2. Temporal Smoothness　時間的に近いシーンを近くにマッピングする
@@ -130,7 +130,7 @@ Cross-embodiment Imitationのため、Invisible Arm, Jaco Hand, Real Robot, Pick
 
 ![compare_with_baselines](./compare_with_baselines.png)
 
-MIRのAblation Studyを行った。MIR、つまりCD-GCPとTSCNの組み合わせが最も良いことを示している。
+MIRのAblation Studyを行った。MIR（CD-GCPとTSCNの組み合わせ）が最も良いことを示している。
 
 ![ablation_study](./ablation_study.png)
 

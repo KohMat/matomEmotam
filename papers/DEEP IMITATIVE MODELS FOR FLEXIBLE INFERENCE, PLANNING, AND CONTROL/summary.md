@@ -1,4 +1,4 @@
-# DEEP IMITATIVE MODELS FOR FLEXIBLE INFERENCE, PLANNING, AND CONTROL
+# Deep Imitative Models for Flexible Inference, Planning, and Control
 
 Nicholas Rhinehart, Rowan McAllister, Sergey Levine
 
@@ -9,7 +9,7 @@ Nicholas Rhinehart, Rowan McAllister, Sergey Levine
 
 ## どんなもの？
 
-自動運転のための模倣学習(Imitation Learning)を用いた経路計画法DIM(Deep Imitative Models)を提案する。DIMは訓練済みのエキスパートの軌跡を模倣する確率モデル（Imitative Model）$$q(\mathbf{S} \mid \phi)$$ を使い、実行時に観測$$\phi$$からゴールに到達するエキスパートらしい経路計画$$s^*$$を、エキスパート軌跡との尤度とゴールとの尤度を最大化することで求める(Imitative Planning)。ゴールの尤度関数に有効な移動間領域を設定することでpotholesを避けるように計画する(Costed planning)ことも可能である。
+自動運転のための模倣学習(Imitation Learning)を用いた経路計画法Deep Imitative Models(DIM)を提案する。DIMは訓練済みのエキスパートの軌跡を模倣する確率モデル（Imitative Model）$$q(\mathbf{S} \mid \phi)$$ を使い、実行時に観測$$\phi$$からゴールに到達するエキスパートらしい経路計画を、軌跡の尤度とゴールの尤度を最大化することで求める。ゴールの尤度関数に車両が移動できる領域を設定することでpotholesを避けるような計画を行うことができる。
 
 ![PathPlanning](./PathPlanning.png)
 
@@ -19,41 +19,45 @@ Nicholas Rhinehart, Rowan McAllister, Sergey Levine
 
 ## 先行研究と比べてどこがすごい？何を解決したか？
 
-今までのImitation Learning（IL)によるPath Planningは訓練時にゴールの設定を必要としていた。またゴールの設定は直進、右左折など簡単なものに限られていた。
-
-* Deep Imitative Models（DIM)はこの問題を解決し、模倣モデルは通常通り単純にエキスパートの軌跡との尤度を最大化することでネットワークを訓練することができる。
-* またゴールの設定を柔軟に行うことができる。
+* 今までの模倣学習による経路計画法は訓練時にゴールの設定を必要としていた。またゴールの設定は直進、右左折など簡単なものに限られていた。DIMはこの問題を解決し、模倣モデルは通常通り単純にエキスパートの軌跡との尤度を最大化することでネットワークを訓練することができる。すなわち実行時にゴールの設定を柔軟に行うことができる。
 * DIMはCARLA上で６つのILとMBRL（モデルベース強化学習）の性能を上回った。
 
 ## 手法は？
 
-連続空間、離散時間、POMDPの仮定とする。時刻$$t$$におけるすべてのエージェントの状態（2次元位置）を$$\mathbf{s}_t \in \mathbb{R}^{D}$$とする。また観測を$$\phi$$とする。変数をボールド、確率変数を大文字とする。$$\mathbf{s}=\mathbf{s}_{1:T}$$とする。
+連続空間、離散時間、POMDPの仮定をおく。時刻$$t$$におけるすべてのエージェントの状態（2次元位置）を$$\mathbf{s}_t \in \mathbb{R}^{D}$$とする。また観測を$$\phi$$とする。変数をボールド、実数値を小文字、確率変数を大文字とする。$$\mathbf{s}=\mathbf{s}_{1:T}$$とする。
 
-DIMは実行時に次の最適化問題を解くことでゴール$$\mathcal{G}$$に到達するエキスパートらしい計画$$\mathbf{s}^{*}$$を計算する。
+DIMは実行時にゴール$$\mathcal{G}$$に到達するエキスパートらしい計画$$\mathbf{s}^{*}$$を次の最適化問題を解くことで求める。
 
 ![imitaive_planning_to_goals](./imitaive_planning_to_goals.png)
 
-$$q(\mathbf{S} \mid \phi)$$は訓練済みのエキスパートの計画$$\mathbf{S}$$を模倣する生成モデルである。つまり第１項は$$\mathbf{s}$$がエキスパートらしい計画かどうかの尤度である。第二項は$$\mathbf{s}$$がゴール$$\mathcal{G}$$に到達するかどうかの尤度である。
+$$q(\mathbf{S} \mid \phi)$$は訓練済みのエキスパートの計画$$\mathbf{S}$$を模倣する生成モデルである。第１項はエキスパートの尤度である。計画$$\mathbf{s}$$がエキスパートに近いほど高い値となる。第二項はゴールの尤度である。計画$$\mathbf{s}$$がゴール$$\mathcal{G}$$に近いほど高い値となる。
 
-以下では生成モデルおよびその具体的なアーキテクチャ、ゴールの尤度関数そしてこの最適化問題の具体的な解き方について説明する。
+以下では
+
+1. 生成モデルおよびその具体的なアーキテクチャ
+2. ゴールの尤度関数
+3. この最適化問題の具体的な解き方
+
+について説明する。
 
 ### エキスパートの計画を模倣する生成モデル$$q(\mathbf{S} \mid \phi)$$ 
 
-自己回帰生成モデルを用いる。エキスパートの軌跡$$\mathbf{S}$$を模倣する確率モデル$$q(\mathbf{S} \mid \phi)$$ は遷移確率の積として表すことができる。
+エキスパートの計画を模倣する生成モデルとして自己回帰生成モデルを用いる。すなわち$$q(\mathbf{S} \mid \phi)$$ は遷移確率の積として表す。
 
 $$ q(\mathbf{S}_{1:T} \mid \phi) = \prod_{t=1}^T q(\mathbf{S}_t \mid \mathbf{S}_{1:t-1}, \phi) $$
 
-遷移確率$$q(\mathbf{S}_t \mid \mathbf{S}_{1:t-1}, \phi)$$は正規分布を仮定し、状態の遷移が次式で表せるとする。
+遷移確率$$q(\mathbf{S}_t \mid \mathbf{S}_{1:t-1}, \phi)$$に正規分布を仮定する。この仮定より状態$$\mathbf{S}_{t}$$はReparametrization trickにより次式で表せる。
 
-$$\mathbf{S}_{t} = f(\mathbf{Z}_t) = \mu_{\theta}(\mathbf{S}_{1:t-1}, \phi) + \sigma_{\theta}(\mathbf{S}_{1:t-1}, \phi) \cdot \mathbf{Z}_t$$
+$$\mathbf{S}_{t} = f_{\theta}(\mathbf{Z}_t) = \mu_{\theta}(\mathbf{S}_{1:t-1}, \phi) + \sigma_{\theta}(\mathbf{S}_{1:t-1}, \phi) \cdot \mathbf{Z}_t$$
 
 ここで
 
-* $$f(\cdot)$$は観測$$\phi$$および正規分布に従う潜在変数$$\mathbf{Z}_t$$から計画$$\mathbf{S}$$にワープする可逆かつ微分可能な関数
+* $$f_{\theta}(\cdot)$$は観測$$\phi$$および正規分布に従う潜在変数$$\mathbf{Z}_t$$から計画$$\mathbf{S}$$にワープする可逆かつ微分可能な関数
+* $$\theta$$は関数$$f$$のパラメータ
 * $$\mathbf{Z}_t$$ : 正規分布に従う潜在変数$$\mathbf{Z} \sim q_0 = \mathcal{N}(0, I)$$
 * $$\mu_{\theta}(\cdot)$$および$$\sigma_{\theta}(\cdot)$$は状態$$\mathbf{S}_{t}$$の平均および標準偏差を出力するネットワーク関数(パラメータ$$\theta$$はエキスパートの軌道からなるデータセットを用いてエキスパートの軌跡を模倣する確率モデル$$q(S \mid \phi)$$ の尤度を最大化して求める）
 
-である。以上より次のように計画を計算(生成)することができる。
+である。したがって次のように計画を計算(生成)することができる。
 
 1. 潜在変数$$\mathbf{z}$$をサンプリングする
 
@@ -67,11 +71,17 @@ $$\mathbf{S}_{t} = f(\mathbf{Z}_t) = \mu_{\theta}(\mathbf{S}_{1:t-1}, \phi) + \s
 
 $$ \mathbf{z}_t =  f^{-1}(\mathbf{s}_t) = \sigma_{\theta}(\mathbf{s}_{1:t-1}, \phi) ^{-1} (\mathbf{s}_{t} - \mu_{\theta}(\mathbf{s}_{1:t-1}, \phi))$$
 
+以上より$$q(\mathbf{S} \mid \phi)$$は正規分布$$q_0$$と関数$$f$$を用いて表せる。すなわち$$q(\mathbf{S} \mid \phi)$$ の尤度を最大化することでパラメータ$$\theta$$を求めることができる。
+
+$$q(\mathbf{S} \mid \phi) = q_0(f^{-1}(z; \phi)) |\det J_{f}(f^{-1}(z; \phi))|^{-1}$$
+
 ### 生成モデル$$q(\mathbf{S} \mid \phi)$$ のネットワークアーキテクチャ
 
-具体的な$$\mu_{\theta}(\cdot)$$および$$\sigma_{\theta}(\cdot)$$のアーキテクチャを示す。
+具体的な$$f_{\theta}(\cdot)$$のアーキテクチャを示す。
 
 ![deep_imitative_model](./deep_imitative_model.png)
+
+処理の流れは次のとおりである。
 
 観測$$\phi \doteq \{\mathbf{s}_{-\tau:0}, \chi , \lambda\}$$は
 
@@ -108,20 +118,20 @@ $$ \mathbf{z}_t =  f^{-1}(\mathbf{s}_t) = \sigma_{\theta}(\mathbf{s}_{1:t-1}, \p
 
 ### ゴール尤度関数の設計
 
-ゴール尤度関数の設計は自由度が高くゴール内ならば１，ゴール外ならば０を返すという簡単な関数を尤度関数とすることができる。
+ゴール尤度関数は自由に設計することができる。例えば移動可能領域内ならば１，移動可能領域外ならば０を返すという簡単な関数を尤度関数とすることができる。
 
 ![goal_likelihood](./goal_likelihood.png)
 
-例えば以下のような尤度関数である。
+その他にも以下のような関数を用いることが可能である。
 
 * ゴールへ向かうルートとして与えられた各waypointの半径以内にいる場合は１，そうでない場合は０
 * 移動可能領域をポリゴンで表現し、ポリゴン内ならば１、そうでない場合は０
-
-その他にも１，０のバイナリの代わりにゴール内のより良い場所を目指すようにガウシアン関数やエネルギー関数を用いることが可能である。
+* ガウシアン関数
+* エネルギー関数
 
 ### 最適化問題の具体的な解き方
 
-DIMで解く最適化問題は潜在変数を使い最適解を求める。
+最適化問題は潜在変数を使い次のようにGradient ascentで最適解を求める。
 
 ![imitative_plan](./imitative_plan.png)
 
