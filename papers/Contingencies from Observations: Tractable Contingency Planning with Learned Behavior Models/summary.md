@@ -6,22 +6,21 @@
 * [arxiv 21 Apr 2021](https://arxiv.org/abs/2104.10558)
 * [project site](https://sites.google.com/view/contingency-planning/home)
 * [github](https://github.com/JeffTheHacker/ContingenciesFromObservations)
+* [youtube](https://www.youtube.com/watch?v=qa80c4x-DQk)
 
 ## どんなもの？
 
-右折、左折、追い越しなどの車両が相互に干渉し合うような運転のシーンで使える自動運転のための経路計画方法CfO (Contingencies from Observations)を提案する。CfOは環境中にいる他の車両の行動の不確実性を考慮した経路計画（Contingency Planning([補足](#Contingency planningについて))）を行う。
+右折、左折、追い越しなどの車両が相互に協力するような運転に使える自動運転のための経路計画方法CfO (Contingencies from Observations)を提案する。CfOは環境中にいる他の車両の行動の不確実性を考慮した経路計画（Contingency Planning([補足](#Contingency planningについて))）を行う。
 
-CfOは生成モデルの一種であるautoregressive flowモデルを使って車両の様々な将来の経路を生成する。例えば自動運転車が交差点を右折するシナリオで以下の予測パターンを生成する（下図の上の段）。
+CfOは行動モデルを使って他の車両の行動の不確実性に対応する。CfOで用いる行動モデルは生成モデルの一種であるautoregressive flowモデルである。このFlowモデルは右折、左折、追い越しの運転データの分布に近くなるように訓練される。学習済みの行動モデルは車両の将来の経路を様々なパターンを生成する。例えば自動運転車が交差点を右折するシナリオで以下の予測パターンを生成する（下図の上の段）。
 
 * 自動運転車と合流先の車線上の車の両方がアグレッシブに運転する
 * 自動運転車と合流先の車線上の車の両方がパッシブに運転する
 * 一つはアグレッシブでもう一つはパッシブに運転する
 
-車両の予測に使うモデルを行動モデル（Behavioral model）と呼ぶ。行動モデルは訓練データの分布に近くなるように訓練される。
+CfOは各予測パターンを自動運転車が安全にゴールへ到達するためのハンドクラフトした関数で評価する。そして評価値の期待値が最大になるような経路を自動運転車に実行する。一つの将来の結果に基づく最適な経路ではなく、複数の将来の結果について評価した経路を選ぶ。つまり、将来の行動がわからない車両の可能性のある行動群に対して、安全に対応できる一つの経路を求める。CfOで求めた経路を実行した結果を下図の下の段で示す。合流先の車線上の車がアグレッシブであれば、自動運転車は道を譲って車が交差点を通過するのを待つ（図の左下）。合流先の車線上の車がパッシブであれば、自動運転車は道を譲られているので、交差点を通過する（図の右下）。
 
 ![cfo_right_v2](./cfo_right_v2.gif)
-
-CfOはそれぞれの生成した予測パターンを自動運転車が安全にゴールへ到達するためのハンドクラフトした評価関数で評価する。そして評価値の期待値が最大になるような経路を実行する。一つの将来の結果に基づく最適な経路ではなく、複数の将来の結果について評価した経路が選ばれる。つまり、将来の行動がわからない車両の可能性のある行動群に対して安全に対応できる経路を選択することができる。合流先の車線上の車がアグレッシブであれば、自動運転車は道を譲って車が交差点を通過するのを待つ（図の左下）。合流先の車線上の車がパッシブであれば、自動運転車は道を譲られているので、交差点を通過する（図の右下）。
 
 ![flowchart](./flowchart.png)
 
@@ -36,7 +35,7 @@ CfOはそれぞれの生成した予測パターンを自動運転車が安全�
 
 ### 前提条件
 
-連続空間、離散時間、車両数$$A$$ が$$2$$個以上の環境とする。時刻$$t$$における制御できる車両の位置を$$\mathbf{x}_{t}^r = \mathbf{x}_{t}^1 \in \mathbb{R}^{A \times d}$$、制御できないすべての車両の位置を$$\mathbf{x}_{t}^h = \mathbf{x}_{t}^{2:A} \in \mathbb{R}^{(A-1) \times d}$$と表す。小文字は実現値、大文字は確率変数とする。
+連続空間、離散時間、車両数$$A$$ が$$2$$個以上の環境とする。時刻$$t$$における制御できる車両の２次元上の位置を$$\mathbf{x}_{t}^r = \mathbf{x}_{t}^1 \in \mathbb{R}^{A \times d}$$、制御できないすべての車両の位置を$$\mathbf{x}_{t}^h = \mathbf{x}_{t}^{2:A} \in \mathbb{R}^{(A-1) \times d}$$と表す。小文字は実現値、大文字は確率変数とする。
 
 CfOは経路計画のため次の情報を使うことできる。
 
@@ -48,7 +47,7 @@ CfOは経路計画のため次の情報を使うことできる。
 
 ### 行動モデル
 
-CfOで用いる行動モデルは行動モデルは現在時刻の観測を条件に潜在変数から将来の経路を出力する。また出力した経路が学習したエキスパートの経路にどれだけ近いかを示す尤度を計算できる。すなわち
+CfOで用いる行動モデルは現在時刻の観測を条件に潜在変数から将来の経路を出力する。また出力した経路が学習したエキスパートの経路にどれだけ近いかを示す尤度を計算できる。すなわち
 
 1. すべての車両の潜在変数$$\mathbf{z}$$を正規分布からサンプリングする
 
@@ -56,7 +55,7 @@ CfOで用いる行動モデルは行動モデルは現在時刻の観測を条�
 
 2. 潜在変数を経路に変換する
 
-   $$\mathbf{x}_{1:T}^{1:A} \leftarrow f_{\theta}^{-1}(\mathbf{z}_{1:T}^{1:A}, \phi) $$
+   $$\mathbf{x}_{1:T}^{1:A} \leftarrow f_{\theta}(\mathbf{z}_{1:T}^{1:A}, \phi) $$
 
 3. 経路の尤度を計算する
 
@@ -64,13 +63,13 @@ CfOで用いる行動モデルは行動モデルは現在時刻の観測を条�
 
 $$f_{\theta}$$はFlowモデルである。また$$q_{\theta}$$は$$f_{\theta}$$を用いて表すことができる。
 
-$$q_{\theta}(\mathbf{X} \mid \mathbf{o}) = \mathcal{N}(f_{\theta}(\mathbf{X} ; \mathbf{o};0, I))
+$$q_{\theta}(\mathbf{X} \mid \mathbf{o}) = \mathcal{N}(f_{\theta}^{-1}(\mathbf{X} ; \mathbf{o};0, I))
 \big| \det
-\frac{\mathbf{d}f_{\theta}^{-1}}{\mathbf{d} \mathbf{Z}}_{\mathbf{Z} = f_{\theta}(\mathbf{X}; \mathbf{o})} \big| $$
+\frac{\mathbf{d}f_{\theta}}{\mathbf{d} \mathbf{Z}}_{\mathbf{Z} = f_{\theta}^{-1}(\mathbf{X}; \mathbf{o})} \big| $$
 
 行動モデルの具体的なネットワークアーキテクチャはマルチエージェントの軌道を予測するautoregressive flowモデル[ESP](../PRECOG: PREdiction Conditioned On Goals in Visual Multi-Agent Settings/summary.md)を使う。ただし観測としてLIDARの点群を用いる場合、点群を上空から見た俯瞰図方式ではなくレンジイメージがCNNに入力される。ESPのアーキテクチャ図を示す。
 
-![EmbeddedImage](../PRECOG: PREdiction Conditioned On Goals in Visual Multi-Agent Settings/EmbeddedImage.png)
+<img src="../PRECOG: PREdiction Conditioned On Goals in Visual Multi-Agent Settings/EmbeddedImage.png" alt="EmbeddedImage" style="zoom:50%;" />
 
 ### 経路計画の目的関数
 
@@ -160,14 +159,14 @@ Coming soon
 
 ### Active Contingency Planning
 
-車両間の共依存性は自車両の行動に対して他車両がどのように反応するか、他車両の行動によって自車両の行動がどう変化するかの２つの依存性がある。例えば左折のシーンにおいて、自車両のウィンカーを点灯し、左折する意思を対向車線から走行してくる車に伝えることで自車両の意図を明らかにすることができる。対向車は自車両を先に行かせるように減速するかもしれないし、そのまま通過や逆に加速する可能性もある。このように積極的に自車両から他車両の行動の不確実性を軽減するように行動することをActive Contingency Planning (前述の４つの論文の内の[13], [14])と呼ぶ。そして自車両が他車両に与える影響を無視した計画方法をPassive Contingency Planning ([11], [12])と呼ぶ。
+[車両間の共依存性](#Contingency planningについて)は自車両の行動に対して他車両がどのように反応するか、他車両の行動によって自車両の行動がどう変化するかの２つの依存性がある。例えば左折のシーンにおいて、自車両のウィンカーを点灯し、左折する意思を対向車線から走行してくる車に伝えることで自車両の意図を明らかにすることができる。対向車は自車両を先に行かせるように減速するかもしれないし、そのまま通過や逆に加速する可能性もある。このように積極的に自車両から他車両の行動の不確実性を軽減するように行動することをActive Contingency Planning (前述の４つの論文の内の[13], [14])と呼ぶ。そして自車両が他車両に与える影響を無視した計画方法をPassive Contingency Planning ([11], [12])と呼ぶ。
 
 ### Co-leader planning
 
 プランニングを以下の要素から論文中で４つに分類する。
 
-* Contingencyの度合い (Noncontingent、Passively Contingent、Actively Contingent)
-* モデル(決定論的もしくは確率論的)
+* Contingencyの度合い：Noncontingent < Passively Contingent < Actively Contingent)
+* モデル：決定論的もしくは確率論的
 
 ![4_planning_types](./4_planning_types.png)
 
@@ -193,11 +192,11 @@ $$\begin{equation}
 
 ## 個人的メモ
 
-* Appendixに最適化問題$$\mathcal{L}_{CfO}$$を解くことで実際にContingency Planningが行えることを示している（離散化している）。
+* Appendixに離散化した最適化問題$$\mathcal{L}_{CfO}$$を解くことで実際にContingency Planningが行えることを示している。
 * **マルチエージェントの相互作用を考慮した予測を行う[PRECOG](../PRECOG: PREdiction Conditioned On Goals in Visual Multi-Agent Settings/summary.md)を車両の計画に使用してみた論文。モデル、目的関数自体およびその最適化問題の解き方はこれらの論文で提案されている。**
 * CfOが目的関数に$$\mathcal{L}^{\mathbf{r}}$$を用いたCfOに比べてRGの成功率が下がっているのが気になる。
 * CfOのRG\*の成功率は高いが、実際どれくらいエキスパートと走行時間が近いのだろうか？
 * 模倣モデルが実際にどれくらい妥当な尤度を出すのか興味がある。[PILOT](../PILOT: Efficient Planning by Imitation Learning and Optimisation for Safe Autonomous Driving/summary.md)で検証されたような自明の拘束条件を満たしているかどうか確認してみたい。
 * 論文の検証でPPOがそこそこの結果を出しているのが気になった。使っているPPOはAppendix Cに詳細が記載されている。PPOは[Stable Baselines repository](https://github.com/hill-a/stable-baselines)に実装されているPPO2である。検証用のシナリオがOpenAI Gymライクに使える [OATomobile](https://github.com/OATML/oatomobile)にContingentタスクを追加したものを使っている。
 * PRECOGで課題として述べられているように自車両以外のエージェントにもゴールを条件付けて計画してみたら面白いと思う。
-* アグレッシブな行動を制御できるようにならないだろうか？どれくらいアグレッシブにするなど。
+* アグレッシブな行動を選択できるようにならないだろうか？どれくらいアグレッシブにするなど。
