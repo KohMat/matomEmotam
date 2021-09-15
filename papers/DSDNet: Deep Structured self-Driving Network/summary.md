@@ -39,13 +39,29 @@ DSDNetは一つのバックボーンと３つのモジュール（物体検出�
 
 ### 予測モジュール
 
+#### モデリング
+
+すべてのアクターの可能な将来の行動$$\{ \mathbf{s}_i, \ldots , \mathbf{s}_N \}$$ の分布を表すDeep Structured Modelを次のように定める。
+
+$$p(\mathbf{s}_i, \ldots , \mathbf{s}_N \mid \mathbf{X}, \mathbf{w}) = \frac{1}{Z} \exp (-E(\mathbf{s}_i, \ldots , \mathbf{s}_N \mid \mathbf{X}, \mathbf{w}))$$
+
+$$\mathbf{X}$$はセンサーデータ、$$\mathbf{w}$$はパラメータ、$$E$$はすべてのエージェントの行動の結合エネルギー、$$Z$$は分配関数である。人は道路を走るとき、道路に沿って滑らかに走ったり、衝突を避ける。人の運転の仕方から着想を得て、結合エネルギーを次の２項に分解する。
+
+$$E(\mathbf{s}_i, \ldots , \mathbf{s}_N \mid \mathbf{X}, \mathbf{w}) =
+\Sigma_{i=1}^{N} E_{traj}(\mathbf{s}_i \mid \mathbf{X}, \mathbf{w_{traj}}) +
+\Sigma_{i=1}^{N} \Sigma_{i \ne j}^{N} E_{coll}(\mathbf{s}_i, \mathbf{s}_j \mid \mathbf{X}, \mathbf{w_{coll}}) $$
+
+$$E_{traj}$$は経路の良さを表すエネルギー、$$E_{coll}$$は衝突エネルギーである。
+
+#### 予測モジュールの処理
+
 予測モジュールは次の処理を行う。
 
 1. Trajectory Samplerにより各アクター$$i$$の将来の$$T$$秒後までの行動（２次元位置で構成される経路）$$\mathbf{s}_i \in \mathbb{R}^{T \times 2}$$を複数サンプルする
 
    $$\{ \hat{s}_i^1, \ldots , \hat{s}_i^k \}$$ 
 
-2. 経路の良さ（値が低いほど良い）を表すエネルギー$$E_{traj}(\mathbf{s}_i \mid \mathbf{X}, \mathbf{w})$$をニューラルネットワークにより計算する
+2. 経路の良さを表すエネルギー$$E_{traj}(\mathbf{s}_i \mid \mathbf{X}, \mathbf{w})$$をニューラルネットワークにより計算する
 
    $$\{ E_{traj}(\mathbf{s}_i=\hat{s}_i^1 \mid \mathbf{X}, \mathbf{w}), \ldots , E_{traj}(\mathbf{s}_i=\hat{s}_i^k \mid \mathbf{X}, \mathbf{w}) \}$$
 
@@ -53,13 +69,11 @@ DSDNetは一つのバックボーンと３つのモジュール（物体検出�
 
    $$\{ p(\mathbf{s}_i=\hat{s}_i^1 \mid \mathbf{X}, \mathbf{w}), \ldots , p(\mathbf{s}_i=\hat{s}_i^k \mid \mathbf{X}, \mathbf{w}) \}$$ 
 
-$$\mathbf{X}$$はセンサーデータ、$$\mathbf{w}$$はパラメータである。
-
 ![prediction_module](./prediction_module.png)
 
 #### Trajectory Sampler
 
-「End-to-end Interpretable Neural Motion Planner([arxiv](https://arxiv.org/abs/2101.06679))」と同様のTrajectory Samplerを使う。Trajectory Samplerはbicycle dynamic modelを使って、アクターの位置、角度、速度に基づき３秒後までの経路を１セット（K個のサンプルを）生成する。１セットの中に、直進、円弧、クロソイド曲線が30%, 20%, 50%の割合で含まれる。
+「End-to-end Interpretable Neural Motion Planner([arxiv](https://arxiv.org/abs/2101.06679))」と同様のTrajectory Samplerを使う。Trajectory Samplerはbicycle dynamic modelを使って、アクターの位置、角度、速度に基づき３秒後までの経路を１セット（K個のサンプルを）生成する。１セットの中に直進、円弧、クロソイド曲線が30%, 20%, 50%の割合で含まれる。
 
 #### 経路の良さを表すエネルギー$$E_{traj}$$
 
@@ -74,7 +88,7 @@ $$\mathbf{X}$$はセンサーデータ、$$\mathbf{w}$$はパラメータであ�
 
 #### Message Passing
 
-アクター$$i$$からアクター$$j$$へのメッセージ$$m_{ij}$$を適当な初期値のもと、次の更新式を収束するまで繰り返す。
+アクター$$i$$からアクター$$j$$へのメッセージ$$m_{ij}$$を適当な値で初期化した後、次の更新式を収束するまで繰り返す。
 
 $$m_{ij}(\mathbf{s}_j) \propto
 \Sigma_{\mathbf{s}_i \in {\mathbf{s}_i^k}}
@@ -85,7 +99,7 @@ $$E_{coll}$$は衝突エネルギーである。
 
 $$E_{coll}(\mathbf{s}_i, \mathbf{s}_j)= 
 \begin{cases}
-    \gamma,& \text{if } \mathbf{s}_i \text{ collides with } \mathbf{s}_j \text{ or touches a lane boundary}\\
+    \gamma,& \text{if } \mathbf{s}_i \text{ collides with } \mathbf{s}_j \text{ or touches/crosses a lane boundary}\\
     0,              & \text{otherwise}
 \end{cases}$$
 
@@ -102,7 +116,7 @@ $$C(\tau \mid p(\mathbf{s}_i, \dots, \mathbf{s}_N), \mathbf{X}, \mathbf{w})
 = C_{traj}(\tau \mid \mathbf{X}, \mathbf{w}) + 
 \Sigma_{i=1}^N \mathbb{E}_{p(\mathbf{s}_i \mid \mathbf{X}, \mathbf{w})} C_{coll}(\tau, \mathbf{s}_i \mid \mathbf{X}, \mathbf{w})$$
 
-$$C_{traj}$$は$$E_{traj}$$と同様の構造を持つニューラルネットワークによって計算されたコストである。$$C_{traj}$$を計算するネットワークは、$$E_{traj}$$を計算するネットワークのMLPヘッダーと違う重みを持つ。
+$$C_{traj}$$は$$E_{traj}$$と同様の構造を持つニューラルネットワークによって計算されたコストである。$$C_{traj}$$を計算するネットワークは$$E_{traj}$$を計算するネットワークのMLPヘッダーと違う重みを持つ。
 
 ### 学習
 
@@ -125,7 +139,7 @@ Prediction Lossはクロスエントロピー損失である。Trajectory Sample
 
 #### Planning Loss
 
-計画の良さを判断するコストを作ることはできないので、代わりにエキスパートの行動$$\tau^{gt}$$をpositive、ランダムに生成した行動をnegativeとして、max-margin損失関数を使う。max-margin損失関数を使うことで、衝突など危険な行動にペナルティをかけることができる。
+計画の良さを表すコストを作ることはできない。エキスパートの行動$$\tau^{gt}$$をpositive、ランダムに生成した行動をnegativeとして、max-margin損失関数を使う。max-margin損失関数を使うことで、衝突など危険な行動にペナルティをかけることができる。
 
 $$\mathcal{L}_{\text{planning}} =
 \Sigma_{data} \max_k
