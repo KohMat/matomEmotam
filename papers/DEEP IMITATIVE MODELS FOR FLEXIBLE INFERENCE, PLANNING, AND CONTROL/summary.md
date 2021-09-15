@@ -9,7 +9,7 @@ Nicholas Rhinehart, Rowan McAllister, Sergey Levine
 
 ## どんなもの？
 
-自動運転のための模倣学習(Imitation Learning)を用いた経路計画法Deep Imitative Models(DIM)を提案する。DIMは訓練済みのエキスパートの軌跡を模倣する確率モデル（Imitative Model）$$q(\mathbf{S} \mid \phi)$$ を使い、実行時に観測$$\phi$$からゴールに到達するエキスパートらしい経路計画を、軌跡の尤度とゴールの尤度を最大化することで求める。ゴールの尤度関数に車両が移動できる領域を設定することでpotholesを避けるような計画を行うことができる。
+自動運転のための模倣学習(Imitation Learning)を用いた経路計画法Deep Imitative Models(DIM)を提案する。DIMは訓練済みのエキスパートの軌跡を模倣する確率モデル（Imitative Model）$$q(\mathbf{S} \mid \phi)$$ を使い、実行時に観測$$\phi$$からゴールに到達するエキスパートらしい経路計画を、軌跡の尤度とゴールの尤度を最大化することで求める。ゴールの尤度関数に車両が移動できる領域を設定することでpotholesなどの特定の物体を避けるような計画を行うことができる。
 
 ![PathPlanning](./PathPlanning.png)
 

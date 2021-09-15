@@ -90,7 +90,9 @@ Panagiotis Tigas, Angelos Filos, Rowan McAllister, Nicholas Rhinehart, Sergey Le
 
 ### 認識論的不確実性
 
-認識論的不確実性とは知識または情報が不足していることに起因する不確実性である。知識や情報を蓄積することでこの不確実性を小さくすることができる。一方で偶然的不確実性とは、時間または空間的な変動、個体間に存在するばらつきなどから生じる不確実性である。この不確実性は小さくすることはできない。認識論的不確実性に対して、ネットワークモデルはあまりにも脆弱である。訓練データ分布外のデータに対する推論は信用できるものではない。これに対して、[Simple and Scalable Predictive Uncertainty Estimation using Deep Ensembles](https://arxiv.org/abs/1612.01474)は、Bayesian Networkに代わって複数のモデルを用いたモデルの不確実性を定量化する方法を提供する。Deep Ensemblesの他に[Dropout as a Bayesian Approximation: Representing Model Uncertainty in Deep Learning](http://proceedings.mlr.press/v48/gal16.html)がある。
+認識論的不確実性とは知識または情報が不足していることに起因する不確実性である。知識や情報を蓄積することでこの不確実性を小さくすることができる。一方で偶然的不確実性とは、時間または空間的な変動、個体間に存在するばらつきなどから生じる不確実性である。この不確実性は小さくすることはできない。
+
+認識論的不確実性に対して、ネットワークモデルはあまりにも脆弱である。訓練データ分布外のデータに対する推論は信用できるものではない。これに対して、[Simple and Scalable Predictive Uncertainty Estimation using Deep Ensembles](https://arxiv.org/abs/1612.01474)は、Bayesian Networkに代わって複数のモデルを用いたモデルの不確実性を定量化する方法を提供する。Deep Ensemblesの他に[Dropout as a Bayesian Approximation: Representing Model Uncertainty in Deep Learning](http://proceedings.mlr.press/v48/gal16.html)がある。
 
 #### 参考
 

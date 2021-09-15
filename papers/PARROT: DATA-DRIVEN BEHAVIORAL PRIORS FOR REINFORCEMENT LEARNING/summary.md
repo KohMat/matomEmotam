@@ -38,7 +38,7 @@ PARROTではこのような変換を行うための関数$$f(z;s)$$を様々な�
 
 すなわち変換関数$$f(z;s)$$を求めるため、次の最適化問題を解く。
 
-$$min_{\theta} KL(p_{\mathcal{D}} \parallel p_{theta})
+$$min_{\theta} KL(p_{\mathcal{D}} \parallel p_{\theta})
 = \mathbb{E}_{(s, a) \sim \mathcal{D}} \log p_{\mathcal{D}} -
 \mathbb{E}_{(s, a) \sim \mathcal{D}} \log p_{\theta}(a \mid s)$$
 

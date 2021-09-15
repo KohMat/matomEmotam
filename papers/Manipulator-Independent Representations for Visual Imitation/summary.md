@@ -20,7 +20,7 @@
 
 ### Cross-embodiment Imitation via RL
 
-ロボットのカメラ画像$$o$$およびデモンストレーション動画内から選ばれた１つのフレーム$$\bar{g}$$をマニピュレータに依存しないMIR空間にそれぞれエンコードする。エージェントはエンコードされたカメラ画像$$\phi(o)$$を状態、デモンストレーション画像$$\phi(\bar{g})$$をゴールとして受け取り、５自由度のロボットを操作しゴールに到達する方策を学習する。方策の学習にはMaximum a Posteriori Policy Optimization (MPO)を使う。
+ロボットのカメラ画像$$o$$およびデモンストレーション動画内から選ばれた１つのフレーム$$\bar{g}$$をマニピュレータに依存しないMIR空間にそれぞれエンコードする。エージェントはエンコードされたカメラ画像$$\phi(o)$$を状態、デモンストレーション画像$$\phi(\bar{g})$$をゴールとして受け取り、５自由度のロボットを操作しゴールに到達する方策を強化学習により学習する。方策の学習にはMaximum a Posteriori Policy Optimization (MPO)を使う。
 
 ![cross_embodiment_imitation](./cross_embodiment_imitation.png)
 
@@ -72,7 +72,7 @@ $$p_{ik} = \frac{\exp (- |i-k|)}{\sum_u^N \exp(-|i-u|)}$$
 
 #### Cross-Domain Goal-Conditional Policies (CD-GCP)
 
-CD-GCPは観測から行動を出力する方策$$\pi_{\times} (\phi(o_i), \phi(\bar{o}_{i+j}))$$を訓練することにより、埋め込み空間を学習する方法である。損失関数は次のものを用いる。
+CD-GCPは観測から行動を出力する方策$$\pi_{\times} (\phi(o_i), \phi(\bar{o}_{i+j}))$$を訓練することにより、行動に関連付けられた埋め込み空間を学習する方法である。損失関数は次のものを用いる。
 
 $$\| \pi_{\times} (x_i, \bar{x}_{i+j}) - a_i \|^2$$
 
