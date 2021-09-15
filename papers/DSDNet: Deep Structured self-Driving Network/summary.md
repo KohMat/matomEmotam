@@ -35,7 +35,7 @@ DSDNetは一つのバックボーンと３つのモジュール（物体検出�
 
 ### 検出モジュール
 
-検出モジュールは２つのSSD（single shot detector）ヘッダーで構成される。検出モジュールは分類と回帰で異なるヘッダーを持つ。分類ヘッダーは物体でアンカーが占有されているかどうかを出力する。回帰ヘッダーは各アンカーに対して位置のオフセット、サイズ、方向、速度を出力する。検出モジュールはNMS（non maximum suppression）を使用して最終的なアクターをバウンディングボックスとして出力する。
+検出モジュールは分類と回帰の２つのSSD（single shot detector）ヘッダーを持つ。分類ヘッダーは物体でアンカーが占有されているかどうかを出力する。回帰ヘッダーは各アンカーに対して位置のオフセット、サイズ、方向、速度を出力する。検出モジュールはNMS（non maximum suppression）を使用して最終的なアクターをバウンディングボックスとして出力する。
 
 ### 予測モジュール
 
@@ -59,13 +59,13 @@ $$\mathbf{X}$$はセンサーデータ、$$\mathbf{w}$$はパラメータであ�
 
 #### Trajectory Sampler
 
-「End-to-end Interpretable Neural Motion Planner([arxiv](https://arxiv.org/abs/2101.06679))」と同様のTrajectory Sampleを使う。Trajectory Samplerはbicycle dynamic modelを使って、アクターの位置、角度、速度に基づき３秒後までの経路を１セット（K個のサンプルを）生成する。１セットの中に、直進、円弧、クロソイド曲線が30%, 20%, 50%の割合で含まれる。
+「End-to-end Interpretable Neural Motion Planner([arxiv](https://arxiv.org/abs/2101.06679))」と同様のTrajectory Samplerを使う。Trajectory Samplerはbicycle dynamic modelを使って、アクターの位置、角度、速度に基づき３秒後までの経路を１セット（K個のサンプルを）生成する。１セットの中に、直進、円弧、クロソイド曲線が30%, 20%, 50%の割合で含まれる。
 
 #### 経路の良さを表すエネルギー$$E_{traj}$$
 
 経路の良さ$$E_{traj}$$をネットワークにより計算する。ネットワークはActor FeatureとTrajectory Featureを次のように作成する。
 
-* Actor Feature： 検出したアクターのボックスの位置に対応する特徴マップを、ROIAlignで抽出する。抽出した特徴マップをCNNで処理してActor Featureを作成する。
+* Actor Feature： 検出したアクターのボックスの位置に対応する特徴マップをROIAlignで抽出する。抽出した特徴マップをCNNで処理してActor Featureを作成する。
 * Trajectory Feature：予測した経路の各位置に対応する特徴ベクトルを双線形補間法で抽出してIndexing Featureを作成する。そして各点の物理的な要素を含む特徴ベクトル$$(x, y, \cos \theta, \sin \theta, \text{distance})$$をIndexing Featureと連結し、Trajectory Featureを作成する。$$x, y$$： 位置、$$\theta$$：アクターの角度、$$\text{distance}$$は現在時刻のアクターの位置から予測経路に沿った予測位置までの距離である。
 
 そしてActor FeatureとTrajectory Featureを連結し、MLPヘッダーで$$E_{traj}$$を計算する。
@@ -96,7 +96,7 @@ $$p(\mathbf{s}_i=\hat{s}_i^k \mid \mathbf{X}, \mathbf{w}) \propto
 
 ### 計画モジュール
 
-計画モジュールは予測モジュールで用いるTrajectory Samplerを使って自車両の経路$$\tau$$を複数サンプルする。そして次のコストが最小になるサンプルを実行する計画として出力する。
+計画モジュールは予測モジュールと同じTrajectory Samplerを使って自車両の経路$$\tau$$を複数サンプルする。そして次のコストが最小になるサンプルを出力する。
 
 $$C(\tau \mid p(\mathbf{s}_i, \dots, \mathbf{s}_N), \mathbf{X}, \mathbf{w})
 = C_{traj}(\tau \mid \mathbf{X}, \mathbf{w}) + 
@@ -117,15 +117,15 @@ $$\mathcal{L} =
 
 #### Detection Loss
 
-Detection Lossに分類と回帰の合計による標準的な損失関数を使う。分類はクロスエントロピーを使う。回帰はsmooth $$l_1$$を使う。
+Detection Lossは分類と回帰の合計による標準的な損失関数である。分類損失はクロスエントロピーである。回帰損失はsmooth $$l_1$$である。「End-to-end Interpretable Neural Motion Planner([arxiv](https://arxiv.org/abs/2101.06679))」と同様の損失関数である。
 
 #### Prediction Loss
 
-Prediction Lossに、Trajectory Samplerで生成するサンプルの内、実際の経路と最も距離が違いサンプルをターゲットとしてクロスエントロピー損失を使う。
+Prediction Lossはクロスエントロピー損失である。Trajectory Samplerで生成するサンプルの内、実際の経路と最も距離が違いサンプルをターゲットとする。
 
 #### Planning Loss
 
-計画の良さを判断するコストを作ることはできないので、エキスパートの行動$$\tau^{gt}$$をpositive、ランダムに生成した行動をnegativeとしてmax-margin損失関数を使う。max-margin損失関数を使うことで、衝突など危険な行動にペナルティを貸すことができる。
+計画の良さを判断するコストを作ることはできないので、代わりにエキスパートの行動$$\tau^{gt}$$をpositive、ランダムに生成した行動をnegativeとして、max-margin損失関数を使う。max-margin損失関数を使うことで、衝突など危険な行動にペナルティをかけることができる。
 
 $$\mathcal{L}_{\text{planning}} =
 \Sigma_{data} \max_k
@@ -141,18 +141,20 @@ C(\tau^{gt} \mid \mathbf{X}) - C(\hat{\tau}^{k} \mid \mathbf{X}) + d^k + \gamma^
 
 ### 予測性能の検証
 
-nuScenesとATG4Dのデータセットを使ってL2 ErrorとCollision Rateの２つのメリックでDSDNetを評価した。L2 Errorは真の経路と最も可能性が高い経路との距離である。Collision Rateは衝突が起きる率である。nuScenesとATG4Dのデータセットの両方で最も良い結果である。またCALRAのデータセットを使ってminMSDのメトリックで評価した。CARLAデータセット上では検出は他の比較手法と同様に真の値を用いた。CARLAのデータセットでも最も良い結果である。
+nuScenesとATG4Dのデータセットを使ってL2 ErrorとCollision Rateの２つのメトリックでDSDNetを評価した。L2 Errorは真の経路と最も可能性が高い経路との距離である。Collision Rateは衝突が起きた割合である。DSDNetはnuScenesとATG4Dのデータセットの両方で最も良い結果となった。
+
+またCALRAのデータセットを使ってminMSDのメトリックで評価した。CARLAデータセット上では検出は他の比較手法と同様に真の値を用いた。CARLAのデータセットでも最も良い結果となった。
 
 ![prediction_performance1](./prediction_performance.png)
 
-いくつかの比較手法は評価メトリックであるL2損失を訓練に使う。DSDNetの予測モジュールはマルチモーダル分布を学習するため、クロスエントロピーを使う。たとえば「Multipath: Multiple probabilistic anchor trajectory hypotheses for behavior prediction（[arxiv](https://arxiv.org/abs/1910.05449)）」で言われているように、マルチモダリティを獲得する方法はL2 Errorを最も抑えることができないと考えられていた。しかし、結果からマルチモダリティと低いL2 Errorの共存が実現できることを示している。またDSDNetは他の手法に比べてCollision Rateが低いことから、マルチエージェントの相互作用をモデリングする有用性を示している。
+いくつかの比較手法は評価メトリックであるL2損失を訓練に使う。一方でDSDNetの予測モジュールはマルチモーダル分布を学習するため、クロスエントロピーを使う。クロスエントロピーを使うことは、「Multipath: Multiple probabilistic anchor trajectory hypotheses for behavior prediction（[arxiv](https://arxiv.org/abs/1910.05449)）」で言われているように、L2 Errorを抑えることができないと考えられていた。しかし、表に示すようにマルチモダリティと低いL2 Errorの共存が実現できることを示している。またDSDNetは他の手法に比べてCollision Rateが低いことから、マルチエージェントの相互作用をモデリングする有用性を示している。
 
 ### 計画性能の検証
 
 ATG4Dを使ってDSDNetを評価した。
 
 1. DSDNetが最も低いCollision RateおよびLane Violation Rateであり、最も安全な計画をお超えることを示している。
-2. Ego-motionおよびILによる方法が最もL2が低い、つまりエキスパートのパスに近いが、Collision RateおよびLane Violation Rateは高い。エキスパートを模倣するだけでは安全な計画の実行を学習するのに不十分なことがわかる。
+2. Ego-motionおよびILによる方法が最もL2が低い。つまりエキスパートのパスに近いが、Collision RateおよびLane Violation Rateは高い。エキスパートを模倣するだけでは安全な計画の実行を学習するのに不十分なことがわかる。
 3. Manual-CostおよびLearnable-PLTは陽に物体回避および交通ルールを考慮に入れる。しかし、最も可能性が高い予測飲みを計画に使うため、DSDNetよりCollision RateおよびLane Violation Rateが高い。
 
 ![planning_performance](./planning_performance.png)
