@@ -168,6 +168,8 @@ $$C_{\theta} = -\log \tilde{p}_c$$はパラメータ$$\theta$$に関する空間
 
 [Nicholas Rhinehart, Rowan McAllister, and Sergey Levine. Deep imitative models for flexible inference, planning, and control. arXiv preprint arXiv:1810.06544, 2018. 2, 4, 13](../DEEP IMITATIVE MODELS FOR FLEXIBLE INFERENCE, PLANNING, AND CONTROL/summary.md)
 
+[Casas, S., Gulino, C., Suo, S., Urtasun, R.: The importance of prior knowledge in precise multimodal prediction. In: IROS (2020)](../The Importance of Prior Knowledge in Precise Multimodal Prediction/summary.md)
+
 ## 補足
 
 なし
