@@ -45,13 +45,11 @@ DSDNetは一つのバックボーンと３つのモジュール（物体検出�
 
 $$p(\mathbf{s}_i, \ldots , \mathbf{s}_N \mid \mathbf{X}, \mathbf{w}) = \frac{1}{Z} \exp (-E(\mathbf{s}_i, \ldots , \mathbf{s}_N \mid \mathbf{X}, \mathbf{w}))$$
 
-$$\mathbf{X}$$はセンサーデータ、$$\mathbf{w}$$はパラメータ、$$E$$はすべてのエージェントの行動の結合エネルギー、$$Z$$は分配関数である。人は道路を走るとき、道路に沿って滑らかに走ったり、衝突を避ける。人の運転の仕方から着想を得て、結合エネルギーを次の２項に分解する。
+$$\mathbf{X}$$はセンサーデータ、$$\mathbf{w}$$はパラメータ、$$E$$はすべてのエージェントの行動の結合エネルギー、$$Z$$は分配関数である。人は道路を走るとき、道路に沿って滑らかに走ったり、衝突を避ける。人の運転の仕方から着想を得て、結合エネルギーをアクターの経路の良さを表すエネルギー$$E_{traj}$$とアクター同士の衝突エネルギー$$E_{coll}$$で構成する（グラフィカルモデルで表す）。
 
 $$E(\mathbf{s}_i, \ldots , \mathbf{s}_N \mid \mathbf{X}, \mathbf{w}) =
 \Sigma_{i=1}^{N} E_{traj}(\mathbf{s}_i \mid \mathbf{X}, \mathbf{w_{traj}}) +
 \Sigma_{i=1}^{N} \Sigma_{i \ne j}^{N} E_{coll}(\mathbf{s}_i, \mathbf{s}_j \mid \mathbf{X}, \mathbf{w_{coll}}) $$
-
-$$E_{traj}$$は経路の良さを表すエネルギー、$$E_{coll}$$は衝突エネルギーである。
 
 #### 予測モジュールの処理
 
@@ -88,25 +86,27 @@ $$E_{traj}$$は経路の良さを表すエネルギー、$$E_{coll}$$は衝突�
 
 #### Message Passing
 
-アクター$$i$$からアクター$$j$$へのメッセージ$$m_{ij}$$を適当な値で初期化した後、次の更新式を収束するまで繰り返す。
+Message Passingにより周辺分布$$p(\mathbf{s}_i \mid \mathbf{X}, \mathbf{w})$$を次にようにして求める。
 
-$$m_{ij}(\mathbf{s}_j) \propto
-\Sigma_{\mathbf{s}_i \in {\mathbf{s}_i^k}}
-\text{e}^{-E_{traj}(\mathbf{s}_i)-E_{traj}(\mathbf{s}_i, \mathbf{s}_j)}
-\prod_{n \ne i,j} m_{ni}(\mathbf{s}_i)$$
+1. アクター$$i$$からアクター$$j$$へのメッセージ$$m_{ij}$$を適当な値で初期化した後、次の更新式を収束するまで繰り返す。
 
-$$E_{coll}$$は衝突エネルギーである。
+   $$m_{ij}(\mathbf{s}_j) \propto
+   \Sigma_{\mathbf{s}_i \in {\mathbf{s}_i^k}}
+   \text{e}^{-E_{traj}(\mathbf{s}_i)-E_{traj}(\mathbf{s}_i, \mathbf{s}_j)}
+   \prod_{n \ne i,j} m_{ni}(\mathbf{s}_i)$$
 
-$$E_{coll}(\mathbf{s}_i, \mathbf{s}_j)= 
-\begin{cases}
-    \gamma,& \text{if } \mathbf{s}_i \text{ collides with } \mathbf{s}_j \text{ or touches/crosses a lane boundary}\\
-    0,              & \text{otherwise}
-\end{cases}$$
+2. $$E_{coll}$$は衝突エネルギーである。
 
-収束後、メッセージから近似周辺分布を計算する。
+   $$E_{coll}(\mathbf{s}_i, \mathbf{s}_j)= 
+   \begin{cases}
+       \gamma,& \text{if } \mathbf{s}_i \text{ collides with } \mathbf{s}_j \text{ or touches/crosses a lane boundary}\\
+       0,              & \text{otherwise}
+   \end{cases}$$
 
-$$p(\mathbf{s}_i=\hat{s}_i^k \mid \mathbf{X}, \mathbf{w}) \propto
-\text{e}^{-E_{traj}(\hat{s}_i^k)} \prod_{j \ne i} m_{ji} (\hat{s}_i^k) $$
+3. 収束後、メッセージから近似周辺分布を計算する。
+
+   $$p(\mathbf{s}_i=\hat{s}_i^k \mid \mathbf{X}, \mathbf{w}) \propto
+   \text{e}^{-E_{traj}(\hat{s}_i^k)} \prod_{j \ne i} m_{ji} (\hat{s}_i^k) $$
 
 ### 計画モジュール
 
@@ -184,6 +184,10 @@ ATG4Dを使ってDSDNetを評価した。
 予測モジュールのアブレーションテストを行った。Multi-modalやInteractionを導入することで性能が向上していることがわかる。また計画モジュールのアブレーションテストを行った。計画時に予測を行うことで性能が向上することが確認できる。
 
 ![ablation_study](./ablation_study.png)
+
+### Trajectory Samplerのサンプル数
+
+
 
 ## 課題は？議論はある？
 
