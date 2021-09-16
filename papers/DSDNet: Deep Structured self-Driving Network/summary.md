@@ -65,7 +65,7 @@ $$E_{traj}$$は経路の良さを表すエネルギー、$$E_{coll}$$は衝突�
 
    $$\{ E_{traj}(\mathbf{s}_i=\hat{s}_i^1 \mid \mathbf{X}, \mathbf{w}), \ldots , E_{traj}(\mathbf{s}_i=\hat{s}_i^k \mid \mathbf{X}, \mathbf{w}) \}$$
 
-3. 確率伝播法（Belief Propagation, BP）詳しく言えばsum-productアルゴリズムによるメッセージ伝達により各アクターの周辺分布$$p(\mathbf{s}_i \mid \mathbf{X}, \mathbf{w})$$を計算する
+3. 確率伝播法（Belief Propagation, BP）詳しく言えばsum-productアルゴリズムによるメッセージ伝達（Message Passing）により各アクターの周辺分布$$p(\mathbf{s}_i \mid \mathbf{X}, \mathbf{w})$$を計算する
 
    $$\{ p(\mathbf{s}_i=\hat{s}_i^1 \mid \mathbf{X}, \mathbf{w}), \ldots , p(\mathbf{s}_i=\hat{s}_i^k \mid \mathbf{X}, \mathbf{w}) \}$$ 
 
@@ -73,16 +73,16 @@ $$E_{traj}$$は経路の良さを表すエネルギー、$$E_{coll}$$は衝突�
 
 #### Trajectory Sampler
 
-「End-to-end Interpretable Neural Motion Planner([arxiv](https://arxiv.org/abs/2101.06679))」と同様のTrajectory Samplerを使う。Trajectory Samplerはbicycle dynamic modelを使って、アクターの位置、角度、速度に基づき３秒後までの経路を１セット（K個のサンプルを）生成する。１セットの中に直進、円弧、クロソイド曲線が30%, 20%, 50%の割合で含まれる。
+「End-to-end Interpretable Neural Motion Planner([arxiv](https://arxiv.org/abs/2101.06679))」と同様のTrajectory Samplerを使う。Trajectory Samplerはアクターの位置、角度、速度に基づき３秒後までの経路を１セット（K個のサンプルを）生成する。１セットの中に直進、円弧、クロソイド曲線が30%, 20%, 50%の割合で含まれる。円弧の半径、クロソイド曲線の曲率、車両の加速度などのパラメータは空間を密かつ多様にサンプリングできるよう、ある範囲から一様に選ばれる。Trajectory Samplerはbicycle dynamic modelを使うことで物理的に走行可能な経路を生成する。
 
 #### 経路の良さを表すエネルギー$$E_{traj}$$
 
-経路の良さ$$E_{traj}$$をネットワークにより計算する。ネットワークはActor FeatureとTrajectory Featureを次のように作成する。
+経路の良さ$$E_{traj}$$を次の手順で計算する。
 
-* Actor Feature： 検出したアクターのボックスの位置に対応する特徴マップをROIAlignで抽出する。抽出した特徴マップをCNNで処理してActor Featureを作成する。
-* Trajectory Feature：予測した経路の各位置に対応する特徴ベクトルを双線形補間法で抽出してIndexing Featureを作成する。そして各点の物理的な要素を含む特徴ベクトル$$(x, y, \cos \theta, \sin \theta, \text{distance})$$をIndexing Featureと連結し、Trajectory Featureを作成する。$$x, y$$： 位置、$$\theta$$：アクターの角度、$$\text{distance}$$は現在時刻のアクターの位置から予測経路に沿った予測位置までの距離である。
-
-そしてActor FeatureとTrajectory Featureを連結し、MLPヘッダーで$$E_{traj}$$を計算する。
+1. Actor FeatureとTrajectory Featureを次のように作成する。
+   1. Actor Feature： 検出したアクターのボックスの位置に対応する特徴マップをROIAlignで抽出する。抽出した特徴マップをCNNで処理してActor Featureを作成する。
+   2. Trajectory Feature：予測した経路の各位置に対応する特徴ベクトルを双線形補間法で抽出してIndexing Featureを作成する。そして各点の物理的な要素を含む特徴ベクトル$$(x, y, \cos \theta, \sin \theta, \text{distance})$$をIndexing Featureと連結し、Trajectory Featureを作成する。$$x, y$$： 位置、$$\theta$$：アクターの角度、$$\text{distance}$$は現在時刻のアクターの位置から予測経路に沿った予測位置までの距離である。
+2. Actor FeatureとTrajectory Featureを連結し、MLPヘッダーで$$E_{traj}$$を計算する。
 
 ![goodness_network](./goodness_network.png)
 
@@ -110,13 +110,13 @@ $$p(\mathbf{s}_i=\hat{s}_i^k \mid \mathbf{X}, \mathbf{w}) \propto
 
 ### 計画モジュール
 
-計画モジュールは予測モジュールと同じTrajectory Samplerを使って自車両の経路$$\tau$$を複数サンプルする。そして次のコストが最小になるサンプルを出力する。
+計画モジュールは予測モジュールと同じTrajectory Samplerを使う。計画モジュールは自車両の経路$$\tau$$を複数サンプルする。そして次のコストが最小になるサンプルを出力する。
 
 $$C(\tau \mid p(\mathbf{s}_i, \dots, \mathbf{s}_N), \mathbf{X}, \mathbf{w})
 = C_{traj}(\tau \mid \mathbf{X}, \mathbf{w}) + 
 \Sigma_{i=1}^N \mathbb{E}_{p(\mathbf{s}_i \mid \mathbf{X}, \mathbf{w})} C_{coll}(\tau, \mathbf{s}_i \mid \mathbf{X}, \mathbf{w})$$
 
-$$C_{traj}$$は$$E_{traj}$$と同様の構造を持つニューラルネットワークによって計算されたコストである。$$C_{traj}$$を計算するネットワークは$$E_{traj}$$を計算するネットワークのMLPヘッダーと違う重みを持つ。
+$$C_{traj}$$は$$E_{traj}$$と同様の構造を持つニューラルネットワークによって計算されたコストである。$$C_{traj}$$を計算するネットワークは$$E_{traj}$$を計算するネットワークのMLPヘッダーと違う重みを持つ。$$C_{coll}$$は$$E_{coll}$$と同じである。
 
 ### 学習
 
@@ -135,7 +135,7 @@ Detection Lossは分類と回帰の合計による標準的な損失関数であ
 
 #### Prediction Loss
 
-Prediction Lossはクロスエントロピー損失である。Trajectory Samplerで生成するサンプルの内、実際の経路と最も距離が違いサンプルをターゲットとする。
+Prediction Lossはクロスエントロピー損失である。Trajectory Samplerで生成するサンプルの内、実際の経路と最も距離が近いサンプルをターゲットとする。
 
 #### Planning Loss
 
@@ -167,9 +167,9 @@ nuScenesとATG4Dのデータセットを使ってL2 ErrorとCollision Rateの２
 
 ATG4Dを使ってDSDNetを評価した。
 
-1. DSDNetが最も低いCollision RateおよびLane Violation Rateであり、最も安全な計画をお超えることを示している。
+1. DSDNetが最も低いCollision RateおよびLane Violation Rateであり、最も安全な計画をおこなえることを示している。
 2. Ego-motionおよびILによる方法が最もL2が低い。つまりエキスパートのパスに近いが、Collision RateおよびLane Violation Rateは高い。エキスパートを模倣するだけでは安全な計画の実行を学習するのに不十分なことがわかる。
-3. Manual-CostおよびLearnable-PLTは陽に物体回避および交通ルールを考慮に入れる。しかし、最も可能性が高い予測飲みを計画に使うため、DSDNetよりCollision RateおよびLane Violation Rateが高い。
+3. Manual-CostおよびLearnable-PLTは陽に物体回避および交通ルールを考慮に入れる。しかし、最も可能性が高い予測のみを計画に使うため、DSDNetよりCollision RateおよびLane Violation Rateが高い。
 
 ![planning_performance](./planning_performance.png)
 
@@ -187,7 +187,7 @@ ATG4Dを使ってDSDNetを評価した。
 
 ## 課題は？議論はある？
 
-$$E_{traj}$$や$$E_{coll}$$の他のエネルギーやコストを検討する必要がある。
+$$E_{traj}$$や$$E_{coll}$$だけでなく他のエネルギーやコストを検討する必要がある。
 
 ## 次に読むべき論文は？
 
