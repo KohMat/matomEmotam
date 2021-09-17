@@ -1,4 +1,4 @@
-# (WIP) Interpretable Goal-based Prediction and Planning for Autonomous Driving
+# [日本語まとめ] Interpretable Goal-based Prediction and Planning for Autonomous Driving
 
 Stefano V. Albrecht, Cillian Brewitt, John Wilhelm, Balint Gyevnar, Francisco Eiras, Mihai Dobre, Subramanian Ramamoorthy
 

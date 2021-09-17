@@ -1,8 +1,9 @@
-# PILOT: Efficient Planning by Imitation Learning and Optimisation for Safe Autonomous Driving
+# [日本語まとめ] PILOT: Efficient Planning by Imitation Learning and Optimisation for Safe Autonomous Driving
 
 Henry Pulver , Francisco Eiras†, Ludovico Carozza, Majd Hawasly , Stefano V. Albrecht and Subramanian Ramamoorthy
 
 * [arxiv 8 Mar 2021](https://arxiv.org/pdf/2011.00509.pdf)
+* [youtube](https://www.youtube.com/watch?v=jK5oUhnJ7xw)
 
 ## どんなもの？
 
@@ -98,4 +99,3 @@ None: 軌道の各位置を(0, 0)にする、ConstVel: 車両のヘディング�
 
 * OODシーン対する明示的な評価（例えば実行時間）がないので、OODシーンに対して実行できるか不明である。[Can autonomous vehicles identify, recover from, and adapt to distribution shifts](../Can autonomous vehicles identify, recover from, and adapt to distribution shifts/summary.md)で提案されたような、OODシーンに明確に含まれているデータを使って評価したほうがいいのではないだろうか？
 * 実行時間は減少したがConvergedの値が下がっていることは、影響がないのだろうか？
-

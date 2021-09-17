@@ -1,4 +1,4 @@
-# DSDNet: Deep Structured self-Driving Network
+# [日本語まとめ] DSDNet: Deep Structured self-Driving Network
 
 Wenyuan Zeng, Shenlong, Renjie Liao, Yun Chen, Bin Yang, and Raquel Urtasun
 
@@ -48,8 +48,8 @@ $$p(\mathbf{s}_i, \ldots , \mathbf{s}_N \mid \mathbf{X}, \mathbf{w}) = \frac{1}{
 $$\mathbf{X}$$はセンサーデータ、$$\mathbf{w}$$はパラメータ、$$E$$はすべてのエージェントの行動の結合エネルギー、$$Z$$は分配関数である。人は道路を走るとき、道路に沿って滑らかに走ったり、衝突を避ける。人の運転の仕方から着想を得て、結合エネルギーをアクターの経路の良さを表すエネルギー$$E_{traj}$$とアクター同士の衝突エネルギー$$E_{coll}$$で構成する（グラフィカルモデルで表す）。
 
 $$E(\mathbf{s}_i, \ldots , \mathbf{s}_N \mid \mathbf{X}, \mathbf{w}) =
-\Sigma_{i=1}^{N} E_{traj}(\mathbf{s}_i \mid \mathbf{X}, \mathbf{w_{traj}}) +
-\Sigma_{i=1}^{N} \Sigma_{i \ne j}^{N} E_{coll}(\mathbf{s}_i, \mathbf{s}_j \mid \mathbf{X}, \mathbf{w_{coll}}) $$
+\sum_{i=1}^{N} E_{traj}(\mathbf{s}_i \mid \mathbf{X}, \mathbf{w_{traj}}) +
+\sum_{i=1}^{N} \sum_{i \ne j}^{N} E_{coll}(\mathbf{s}_i, \mathbf{s}_j \mid \mathbf{X}, \mathbf{w_{coll}}) $$
 
 #### 予測モジュールの処理
 
@@ -91,15 +91,15 @@ Message Passingにより周辺分布$$p(\mathbf{s}_i \mid \mathbf{X}, \mathbf{w}
 1. アクター$$i$$からアクター$$j$$へのメッセージ$$m_{ij}$$を適当な値で初期化した後、次の更新式を収束するまで繰り返す。
 
    $$m_{ij}(\mathbf{s}_j) \propto
-   \Sigma_{\mathbf{s}_i \in {\mathbf{s}_i^k}}
-   \text{e}^{-E_{traj}(\mathbf{s}_i)-E_{traj}(\mathbf{s}_i, \mathbf{s}_j)}
+   \sum_{\mathbf{s}_i \in {\mathbf{s}_i^k}}
+   \text{e}^{-E_{traj}(\mathbf{s}_i)-E_{coll}(\mathbf{s}_i, \mathbf{s}_j)}
    \prod_{n \ne i,j} m_{ni}(\mathbf{s}_i)$$
 
-2. $$E_{coll}$$は衝突エネルギーである。
+   $$E_{coll}$$は衝突エネルギーである。
 
    $$E_{coll}(\mathbf{s}_i, \mathbf{s}_j)= 
    \begin{cases}
-       \gamma,& \text{if } \mathbf{s}_i \text{ collides with } \mathbf{s}_j \text{ or touches/crosses a lane boundary}\\
+       \gamma,& \text{if } \mathbf{s}_i \text{ collides with } \mathbf{s}_j\\
        0,              & \text{otherwise}
    \end{cases}$$
 
@@ -114,7 +114,7 @@ Message Passingにより周辺分布$$p(\mathbf{s}_i \mid \mathbf{X}, \mathbf{w}
 
 $$C(\tau \mid p(\mathbf{s}_i, \dots, \mathbf{s}_N), \mathbf{X}, \mathbf{w})
 = C_{traj}(\tau \mid \mathbf{X}, \mathbf{w}) + 
-\Sigma_{i=1}^N \mathbb{E}_{p(\mathbf{s}_i \mid \mathbf{X}, \mathbf{w})} C_{coll}(\tau, \mathbf{s}_i \mid \mathbf{X}, \mathbf{w})$$
+\sum_{i=1}^N \mathbb{E}_{p(\mathbf{s}_i \mid \mathbf{X}, \mathbf{w})} C_{coll}(\tau, \mathbf{s}_i \mid \mathbf{X}, \mathbf{w})$$
 
 $$C_{traj}$$は$$E_{traj}$$と同様の構造を持つニューラルネットワークによって計算されたコストである。$$C_{traj}$$を計算するネットワークは$$E_{traj}$$を計算するネットワークのMLPヘッダーと違う重みを持つ。$$C_{coll}$$は$$E_{coll}$$と同じである。
 
@@ -142,7 +142,7 @@ Prediction Lossはクロスエントロピー損失である。Trajectory Sample
 計画の良さを表すコストを作ることはできない。エキスパートの行動$$\tau^{gt}$$をpositive、ランダムに生成した行動をnegativeとして、max-margin損失関数を使う。max-margin損失関数を使うことで、衝突など危険な行動にペナルティをかけることができる。
 
 $$\mathcal{L}_{\text{planning}} =
-\Sigma_{data} \max_k
+\sum_{data} \max_k
 ( \left[
 C(\tau^{gt} \mid \mathbf{X}) - C(\hat{\tau}^{k} \mid \mathbf{X}) + d^k + \gamma^k
 \right]_{+})$$
@@ -195,7 +195,8 @@ $$E_{traj}$$や$$E_{coll}$$だけでなく他のエネルギーやコストを�
 
 ## 次に読むべき論文は？
 
-Coming soon
+* [Deep Structured Reactive Planning](../Deep Structured Reactive Planning/summary.md)
+* [Contingencies from Observations: Tractable Contingency Planning with Learned Behavior Models](../Contingencies from Observations: Tractable Contingency Planning with Learned Behavior Models/summary.md)
 
 ## 個人的メモ
 

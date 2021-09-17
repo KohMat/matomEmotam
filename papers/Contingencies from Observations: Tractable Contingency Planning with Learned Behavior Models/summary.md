@@ -1,4 +1,4 @@
-# Contingencies from Observations: Tractable Contingency Planning with Learned Behavior Models
+# [日本語まとめ] Contingencies from Observations: Tractable Contingency Planning with Learned Behavior Models
 
 [Nicholas Rhinehart](https://arxiv.org/search/cs?searchtype=author&query=Rhinehart%2C+N), [Jeff He](https://arxiv.org/search/cs?searchtype=author&query=He%2C+J), [Charles Packer](https://arxiv.org/search/cs?searchtype=author&query=Packer%2C+C), [Matthew A. Wright](https://arxiv.org/search/cs?searchtype=author&query=Wright%2C+M+A), [Rowan McAllister](https://arxiv.org/search/cs?searchtype=author&query=McAllister%2C+R), [Joseph E. Gonzalez](https://arxiv.org/search/cs?searchtype=author&query=Gonzalez%2C+J+E), [Sergey Levine](https://arxiv.org/search/cs?searchtype=author&query=Levine%2C+S)
 
@@ -131,7 +131,7 @@ CfOおよび比較手法でゴールの到達率の比較結果を次に示す�
 
 ## 次に読むべき論文は？
 
-Coming soon
+* [Deep Structured Reactive Planning](../Deep Structured Reactive Planning/summary.md)
 
 ## 補足
 
