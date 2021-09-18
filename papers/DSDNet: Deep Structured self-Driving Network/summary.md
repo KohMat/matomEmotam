@@ -196,6 +196,7 @@ $$E_{traj}$$や$$E_{coll}$$だけでなく他のエネルギーやコストを�
 ## 次に読むべき論文は？
 
 * [Deep Structured Reactive Planning](../Deep Structured Reactive Planning/summary.md)
+* [PRECOG: PREdiction Conditioned On Goals in Visual Multi-Agent Settings](../PRECOG: PREdiction Conditioned On Goals in Visual Multi-Agent Settings/summary.md)
 * [Contingencies from Observations: Tractable Contingency Planning with Learned Behavior Models](../Contingencies from Observations: Tractable Contingency Planning with Learned Behavior Models/summary.md)
 
 ## 個人的メモ
