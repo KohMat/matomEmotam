@@ -1,4 +1,4 @@
-# Can Autonomous Vehicles Identify, Recover From, and Adapt to Distribution Shifts?
+# [日本語まとめ] Can Autonomous Vehicles Identify, Recover From, and Adapt to Distribution Shifts?
 
 ### [**Angelos Filos**](https://www.google.com/url?q=https%3A%2F%2Ffilangel.github.io%2Fwebsite%2F&sa=D&sntz=1&usg=AFQjCNEpRldXpFVLSuxASMAMfggGVZzTDw)**,** [**Panagiotis Tigas**](https://www.google.com/url?q=https%3A%2F%2Fptigas.com%2F&sa=D&sntz=1&usg=AFQjCNFaQ_oMey80fnB2fhzSdpWXzcJoqQ), [**Rowan McAllister**](https://www.google.com/url?q=https%3A%2F%2Fpeople.eecs.berkeley.edu%2F~rmcallister%2F&sa=D&sntz=1&usg=AFQjCNEmxmIvabKpgXb9oBHN8bAT8lAJ6g)**,** [**Nicholas Rhinehart**](https://www.google.com/url?q=https%3A%2F%2Fpeople.eecs.berkeley.edu%2F~nrhinehart%2F&sa=D&sntz=1&usg=AFQjCNFlqLaQnyyyofeXIlelBfSWCmyAgw)**,** [**Sergey Levine**](https://www.google.com/url?q=https%3A%2F%2Fpeople.eecs.berkeley.edu%2F~svlevine%2F&sa=D&sntz=1&usg=AFQjCNHgPN9in8gN47cvORDE9LTiGxpF7w), [**Yarin Gal**](https://www.google.com/url?q=https%3A%2F%2Fwww.cs.ox.ac.uk%2Fpeople%2Fyarin.gal%2F&sa=D&sntz=1&usg=AFQjCNEGSJhbtELz_NiaNu3IARl6FEErKg)
 

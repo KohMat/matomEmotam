@@ -1,4 +1,4 @@
-# Manipulator-Independent Representations for Visual Imitation
+# [日本語まとめ] Manipulator-Independent Representations for Visual Imitation
 
 [Yuxiang Zhou](https://arxiv.org/search/cs?searchtype=author&query=Zhou%2C+Y), [Yusuf Aytar](https://arxiv.org/search/cs?searchtype=author&query=Aytar%2C+Y), [Konstantinos Bousmalis](https://arxiv.org/search/cs?searchtype=author&query=Bousmalis%2C+K)
 

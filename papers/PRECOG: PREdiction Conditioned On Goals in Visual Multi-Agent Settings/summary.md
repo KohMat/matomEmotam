@@ -1,4 +1,4 @@
-# PRECOG: PREdiction Conditioned On Goals in Visual Multi-Agent Settings
+# [日本語まとめ] PRECOG: PREdiction Conditioned On Goals in Visual Multi-Agent Settings
 
 [Nicholas Rhinehart](https://arxiv.org/search/cs?searchtype=author&query=Rhinehart%2C+N), [Rowan McAllister](https://arxiv.org/search/cs?searchtype=author&query=McAllister%2C+R), [Kris Kitani](https://arxiv.org/search/cs?searchtype=author&query=Kitani%2C+K), [Sergey Levine](https://arxiv.org/search/cs?searchtype=author&query=Levine%2C+S)
 

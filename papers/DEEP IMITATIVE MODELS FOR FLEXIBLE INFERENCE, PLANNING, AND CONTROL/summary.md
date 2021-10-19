@@ -1,4 +1,4 @@
-# Deep Imitative Models for Flexible Inference, Planning, and Control
+# [日本語まとめ] Deep Imitative Models for Flexible Inference, Planning, and Control
 
 Nicholas Rhinehart, Rowan McAllister, Sergey Levine
 

@@ -1,4 +1,4 @@
-# R2P2: A reparameterized pushforward policy for diverse, precise generative path forecasting
+# [日本語まとめ] R2P2: A reparameterized pushforward policy for diverse, precise generative path forecasting
 
 [Nicholas Rhinehart](https://people.eecs.berkeley.edu/~nrhinehart/), Kris M. Kitani, and Paul Vernaza
 
