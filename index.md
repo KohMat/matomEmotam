@@ -1,12 +1,10 @@
 
 # 読んだ論文のリストとまとめ
 
+* [VectorNet: Encoding HD Maps and Agent Dynamics from Vectorized Representation](papers/VectorNet: Encoding HD Maps and Agent Dynamics from Vectorized Representation/summary.md)
 * [PILOT: Efficient Planning by Imitation Learning and Optimisation for Safe Autonomous Driving](papers/PILOT: Efficient Planning by Imitation Learning and Optimisation for Safe Autonomous Driving/summary.md)
 * [DEEP IMITATIVE MODELS FOR FLEXIBLE INFERENCE, PLANNING, AND CONTROL](papers/DEEP IMITATIVE MODELS FOR FLEXIBLE INFERENCE, PLANNING, AND CONTROL/summary.md)
 * [Interpretable Goal-based Prediction and Planning for Autonomous Driving](papers/Interpretable Goal-based Prediction and Planning for Autonomous Driving/summary.md)
-* [VectorNet: Encoding HD Maps and Agent Dynamics from
-Vectorized Representation](papers/VectorNet: Encoding HD Maps and Agent Dynamics from
-Vectorized Representation/summary.md)
 * [Manipulator-Independent Representations for Visual Imitation](papers/Manipulator-Independent Representations for Visual Imitation/summary.md)
 * [DSDNet: Deep Structured self-Driving Network](papers/DSDNet: Deep Structured self-Driving Network/summary.md)
 * [PARROT: DATA-DRIVEN BEHAVIORAL PRIORS FOR REINFORCEMENT LEARNING](papers/PARROT: DATA-DRIVEN BEHAVIORAL PRIORS FOR REINFORCEMENT LEARNING/summary.md)
