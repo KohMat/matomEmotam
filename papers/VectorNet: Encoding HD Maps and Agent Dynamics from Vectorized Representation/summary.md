@@ -39,9 +39,17 @@ VectorNetは従来の方法と比べて計算量が低く、また精度が高�
 
 ## 手法は？
 
+VectorNetのパイプラインは次のとおりである。
+
+1. 各道路の利用者および各道路構造物は一つのpolylineで表現する
+2. 各polylineに対してPolyline Subgraphs Networkを使い、polylineの局所的な特徴量を計算する
+3. polylineの局所的な特徴量をノードとしてGlobal Interaction Graphを使いpolyline間の大域的な特徴量を計算する
+4. 経路を予測するターゲットのpolyline特徴量から経路をデコードする
+5. 訓練時のみ、Global Interaction Graphのマスクされていないノードからマスクされたノードを推定する
+
 ### Polyline表現
 
-各道路の利用者および各道路構造物は一つのpolylineで表される。Polyline $$\mathcal{P}_j$$はベクトル$$\{ \mathbf{v}_1, \mathbf{v}_2, \dots \}$$で構成される。Polylineに含まれるベクトル$$\mathbf{v}_i$$は次の情報を持つ。
+各道路の利用者および各道路構造物を一つのpolylineで表現する。Polyline $$\mathcal{P}_j$$はベクトル$$\{ \mathbf{v}_1, \mathbf{v}_2, \dots \}$$で構成される。Polylineに含まれるベクトル$$\mathbf{v}_i$$は次の情報を持つ。
 
 $$\mathbf{v}_i = [\mathbf{d}_i^s, \mathbf{d}_i^e, \mathbf{a}_i, j ]$$
 
