@@ -11,7 +11,7 @@ Coming soon
 
 ## 先行研究と比べてどこがすごい？何を解決したか？
 
-Write a content that can be read within 30~1 minute.
+Coming soon
 
 ## 手法は？
 
@@ -31,4 +31,4 @@ Coming soon
 
 ## 個人的メモ
 
-なし
+
