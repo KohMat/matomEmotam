@@ -9,7 +9,7 @@
 
 ## どんなもの？
 
-道路上では車がレーンチェンジして、走行している前のスペースに入ってきたり、目の前に走っている自転車が突然曲がり、目の前のスペースを横切るようなシーンで溢れている。車や自転車、歩行者などの道路の利用者の意図を理解することが、Waymo Driverが安全な運転を行うために必要である。しかしながら道路の利用者の行動を予測することは難しい。精度の高い予測を行うためには道路の幅や形状、信号、標識など様々な道路の情報、交通ルールを理解する必要があるからである。加えて、他の利用者はいつも交通ルールを守るとは限らないことも要因のひとつである。
+道路上では車がレーンチェンジして、走行している前のスペースに入ってきたり、目の前に走っている自転車が突然曲がり、目の前のスペースを横切るようなシーンで溢れている。車や自転車、人などの道路の利用者の意図を理解することが、Waymo Driverが安全な運転を行うために必要である。しかしながら道路の利用者の行動を予測することは難しい。精度の高い予測を行うためには道路の幅や形状、信号、標識など様々な道路の情報、交通ルールを理解する必要があるからである。加えて、他の利用者はいつも交通ルールを守るとは限らないことも要因のひとつである。
 
 車や人などの道路上の利用者の行動を経路として予測するVectorNetを提案する。VecotrNetは利用者の過去の経路や道路情報をpolylineで表現する。Polylineは始点と終点、その属性を持つベクトルの集まりである。各利用者および各道路構造物は一つのpolylineで表される。
 
@@ -41,7 +41,7 @@ VectorNetは従来の方法と比べて計算量が低く、また精度が高�
 
 VectorNetのパイプラインは次のとおりである。
 
-1. 各道路の利用者および各道路構造物は一つのpolylineで表現する
+1. 各道路の利用者および各道路構造物を一つのpolylineで表現する
 2. 各polylineに対してPolyline Subgraphs Networkを使い、polylineの局所的な特徴量を計算する
 3. polylineの局所的な特徴量をノードとしてGlobal Interaction Graphを使いpolyline間の大域的な特徴量を計算する
 4. 経路を予測するターゲットのpolyline特徴量から経路をデコードする
@@ -91,7 +91,7 @@ Global Interaction Graphはpolylineの特徴量をノードとして、グラフ
 
 $$\{ \mathbf{p}_i^{(l+1)} \} = \text{GNN} \left( \{ \mathbf{p}_i^{(l)} \}, \mathcal{A} \right)$$
 
-$$\{ \mathbf{p}_i^{(l)} \}$$は$$l$$層のノード特徴量のセットである。$$\mathcal{A}$$はノード動詞の接続を示す隣接行列である。隣接行列$$\mathcal{A}$$は設定可能な行列である。例えば”Social LSTM: Human Trajectory Prediction in Crowded Space”では空間上の距離をつかったheuristicにより隣接行列を計算している。VectorNetでは簡単のため全結合グラフを使う。またGNNをself-attentionを使って実装する。
+$$\{ \mathbf{p}_i^{(l)} \}$$は$$l$$層のノード特徴量のセットである。$$\mathcal{A}$$はノード同士の接続を示す隣接行列である。隣接行列$$\mathcal{A}$$は設定可能な行列である。例えば”Social LSTM: Human Trajectory Prediction in Crowded Space”では空間上の距離をつかったheuristicにより隣接行列を計算している。VectorNetでは簡単のため全結合グラフを使う。またGNNをself-attentionを使って実装する。
 
 $$\text{GNN}(\mathbf{P}) = \text{softmax} (\mathbf{P}_Q \mathbf{P}_K^{T}) \mathbf{P}_V$$
 
@@ -123,7 +123,7 @@ $$\mathbf{p}_i^{(0)} = [\mathbf{p}_i ; \mathbf{p}_i^{id} ]$$
 
 $$\mathcal{L} = \mathcal{L}_{\text{traj}} + \alpha \mathcal{L}_{\text{node}}$$
 
-$$\mathcal{L}_{\text{traj}}$$は真の経路に対する負のガウシアン対数尤度である。$$\mathcal{L}_{\text{node}}$$はマスクされた特徴量と推定した特徴量とのHuber損失である。$$\alpha$$は2つの損失のバランスを取るための係数である。$$\mathcal{L}_{\text{node}}$$を低くする自明な解法として特徴量の大きさを小さくする方法がある。ネットワークがこの自明な解法に陥るのを回避するため、Global Interaction Graphに入力する前に特徴量を正規化する。
+$$\mathcal{L}_{\text{traj}}$$は真の経路に対する負のガウシアン対数尤度である。$$\mathcal{L}_{\text{node}}$$はマスクされた特徴量と推定した特徴量とのHuber損失である。$$\alpha$$は2つの損失のバランスを取るための係数である。ネットワークは特徴量の大きさを小さくすることで損失$$\mathcal{L}_{\text{node}}$$を低くすることができる。特徴量の大きさによるグリッチを回避するため、Global Interaction Graphに入力する前に特徴量を正規化する。
 
 ## どうやって有効だと検証した？
 
