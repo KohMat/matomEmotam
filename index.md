@@ -7,6 +7,7 @@
 * [Interpretable Goal-based Prediction and Planning for Autonomous Driving](papers/Interpretable Goal-based Prediction and Planning for Autonomous Driving/summary.md)
 * [Manipulator-Independent Representations for Visual Imitation](papers/Manipulator-Independent Representations for Visual Imitation/summary.md)
 * [DSDNet: Deep Structured self-Driving Network](papers/DSDNet: Deep Structured self-Driving Network/summary.md)
+* [SPAGNN Spatially-Aware Graph Neural Networks for Relational Behavior Forecasting from Sensor Data](papers/SPAGNN Spatially-Aware Graph Neural Networks for Relational Behavior Forecasting from Sensor Data/summary.md)
 * [PARROT: DATA-DRIVEN BEHAVIORAL PRIORS FOR REINFORCEMENT LEARNING](papers/PARROT: DATA-DRIVEN BEHAVIORAL PRIORS FOR REINFORCEMENT LEARNING/summary.md)
 * [Contingencies from Observations: Tractable Contingency Planning with Learned Behavior Models](papers/Contingencies from Observations: Tractable Contingency Planning with Learned Behavior Models/summary.md)
 * [R2P2: A reparameterized pushforward policy for diverse, precise generative path forecasting](papers/R2P2: A reparameterized pushforward policy for diverse, precise generative path forecasting/summary.md)
