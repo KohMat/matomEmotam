@@ -44,9 +44,13 @@ Transformerを経路予測に使う方法として過去の経路やレーンの
 
 ![detr_transformer](./transformer.png)
 
-DETRのTransformerはエンコーダとデコーダで構成される。エンコーダはコンテキストの特徴を処理し、デコーダは処理された特徴量とクエリを集約し、新たな特徴量を計算する。Stacked Transformersで使用されるクエリは提案経路（Trajectory proposals）である。K個のランダムに初期化された提案経路を３つのTransformerを通して、様々な情報と一緒に集約し、予測経路を計算するための特徴量proposal featuresに変換する。
+DETRのTransformerはエンコーダとデコーダで構成される。エンコーダはコンテキストの特徴を処理し、デコーダは処理された特徴量とクエリを集約し、新たな特徴量を計算する。Stacked Transformersで使用されるクエリは提案経路（Trajectory proposals）である。K個のランダムに初期化された提案経路を３つのTransformerを通して、様々な情報と一緒に集約し、予測経路を計算するための特徴量proposal featuresに変換する。Stacked Transformerで集約する情報、つまりエンコーダへの入力はそれぞれのモジュールごとに異なる。また各デコーダへの入力はポジションエンコーディングが追加される。
 
-Stacked Transformerで集約する情報、つまりエンコーダへの入力はそれぞれのモジュールごとに異なる。また各デコーダへの入力はポジションエンコーディングが追加されるMotion Extractorは過去の車両の経路とクエリから新しい特徴量を出力する。Transformerのエンコーダの入力はすべての車の過去$$T_{obs}$$秒間の2次元位置である。Map Aggregatorは道路情報とMotion Extractorで抽出された特徴をまとめ、新たな特徴量を計算する。”VectorNet: Encoding HD Maps and Agent Dynamics from Vectorized Representation([arxiv](https://arxiv.org/abs/2005.04259))”と同じ方法で使ってエンコードした道路情報をTransformerのエンコーダに入力する。つまり道路の構造物の中心線をベクター表現で表し、各ベクター表現をpolyline subgraphで処理して同じ形状の潜在特徴量を計算する。Stacked TransformersはMotion ExtractorおよびMap Aggregatorをすべての車両に対して行う。K個のproposal featuresを車両ごとに計算する。
+Motion Extractorは過去の車両の経路とクエリから新しい特徴量を出力する。Transformerのエンコーダの入力はすべての車の過去$$T_{obs}$$秒間の2次元位置である。
+
+Map Aggregatorは道路情報とMotion Extractorで抽出された特徴をまとめ、新たな特徴量を計算する。”VectorNet: Encoding HD Maps and Agent Dynamics from Vectorized Representation([arxiv](https://arxiv.org/abs/2005.04259))”と同じ方法で使ってエンコードした道路情報をTransformerのエンコーダに入力する。つまり道路の構造物の中心線をベクター表現で表し、各ベクター表現をpolyline subgraphで処理して同じ形状の潜在特徴量を計算する。
+
+Stacked TransformersはMotion ExtractorおよびMap Aggregatorをすべての車両に対して行う。K個のproposal featuresを車両ごとに計算する。
 
 Social Constructorは車両間の相互作用を捉えることを目的とする。Social Constructorは対象の車の特徴量を周囲の車の特徴量を使って更新する。まず対象以外のすべての車両間の特徴量からMLPを使い新たな特徴量を計算する。この特徴量は非対象の車両の将来の運動の分布を表していると考える。この計算された特徴量をTransformerのエンコーダに入力する。一方でデコーダには対象の車両の特徴量を入力する。デコーダはエンコーダで処理された特徴量と対象の車両の特徴量を集約し、新しい対象の車の特徴量を出力する。
 
@@ -162,7 +166,11 @@ mmTransformerおよびmmTransformer+RTSの定性的な結果を示す。様々�
 
 ## 次に読むべき論文は？
 
-Coming soon
+[SPAGNN: Spatially-Aware Graph Neural Networks for Relational Behavior Forecasting from Sensor Data](../SPAGNN Spatially-Aware Graph Neural Networks for Relational Behavior Forecasting from Sensor Data/summary.md)
+
+[VectorNet: Encoding HD Maps and Agent Dynamics from Vectorized Representation](../VectorNet: Encoding HD Maps and Agent Dynamics from Vectorized Representation/summary.md)
+
+[DSDNet: Deep Structured self-Driving Network](../DSDNet: Deep Structured self-Driving Network/summary.md)
 
 ## 個人的メモ
 

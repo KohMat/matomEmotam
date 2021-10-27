@@ -152,6 +152,8 @@ Polyline表現においてターゲットの利用者の位置に対してネッ
 
 [Multimodal Motion Prediction with Stacked Transformers](../Multimodal Motion Prediction with Stacked Transformers/summary.md)
 
+[SPAGNN: Spatially-Aware Graph Neural Networks for Relational Behavior Forecasting from Sensor Data](../SPAGNN Spatially-Aware Graph Neural Networks for Relational Behavior Forecasting from Sensor Data/summary.md)
+
 ## 個人的メモ
 
 なし
