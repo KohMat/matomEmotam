@@ -41,19 +41,21 @@ DSDNetは一つのバックボーンと３つのモジュール（物体検出�
 
 #### モデリング
 
-すべてのアクターの可能な将来の行動$$\{ \mathbf{s}_i, \ldots , \mathbf{s}_N \}$$ の分布を表すDeep Structured Modelを次のように定める。
+すべてのアクターの可能な将来の行動$$\{ \mathbf{s}_1, \ldots , \mathbf{s}_N \}$$ の同時分布をDeep Structured Modelでモデル化する。同時確率分布を次のようにエネルギーで表す。
 
-$$p(\mathbf{s}_i, \ldots , \mathbf{s}_N \mid \mathbf{X}, \mathbf{w}) = \frac{1}{Z} \exp (-E(\mathbf{s}_i, \ldots , \mathbf{s}_N \mid \mathbf{X}, \mathbf{w}))$$
+$$p(\mathbf{s}_i, \ldots , \mathbf{s}_N \mid \mathbf{X}, \mathbf{w}) = \frac{1}{Z} \exp (-E(\mathbf{s}_1, \ldots , \mathbf{s}_N \mid \mathbf{X}, \mathbf{w}))$$
 
-$$\mathbf{X}$$はセンサーデータ、$$\mathbf{w}$$はパラメータ、$$E$$はすべてのエージェントの行動の結合エネルギー、$$Z$$は分配関数である。人は道路を走るとき、道路に沿って滑らかに走ったり、衝突を避ける。人の運転の仕方から着想を得て、結合エネルギーをアクターの経路の良さを表すエネルギー$$E_{traj}$$とアクター同士の衝突エネルギー$$E_{coll}$$で構成する（グラフィカルモデルで表す）。
+$$\mathbf{X}$$はセンサーデータ、$$\mathbf{w}$$はパラメータ、$$E$$はすべてのエージェントの行動の結合エネルギー、$$Z$$は分配関数である。
 
-$$E(\mathbf{s}_i, \ldots , \mathbf{s}_N \mid \mathbf{X}, \mathbf{w}) =
+人は道路を走るとき、道路に沿って滑らかに走ったり、衝突を避ける。人の運転の仕方から着想を得て結合エネルギーをアクターの経路の良さを表すエネルギー$$E_{traj}$$とアクター同士の衝突エネルギー$$E_{coll}$$に分解する。つまりアクターの経路をノードとしてノード単体のエネルギーを$$E_{traj}$$、ノード間のエッジのエネルギーを$$E_{coll}$$とするグラフでモデル化する。
+
+$$E(\mathbf{s}_1, \ldots , \mathbf{s}_N \mid \mathbf{X}, \mathbf{w}) =
 \sum_{i=1}^{N} E_{traj}(\mathbf{s}_i \mid \mathbf{X}, \mathbf{w_{traj}}) +
 \sum_{i=1}^{N} \sum_{i \ne j}^{N} E_{coll}(\mathbf{s}_i, \mathbf{s}_j \mid \mathbf{X}, \mathbf{w_{coll}}) $$
 
 #### 予測モジュールの処理
 
-予測モジュールは次の処理を行う。
+予測モジュールは大きく次の３ステップの処理を行う。
 
 1. Trajectory Samplerにより各アクター$$i$$の将来の$$T$$秒後までの行動（２次元位置で構成される経路）$$\mathbf{s}_i \in \mathbb{R}^{T \times 2}$$を複数サンプルする
 
@@ -66,6 +68,8 @@ $$E(\mathbf{s}_i, \ldots , \mathbf{s}_N \mid \mathbf{X}, \mathbf{w}) =
 3. 確率伝播法（Belief Propagation, BP）詳しく言えばsum-productアルゴリズムによるメッセージ伝達（Message Passing）により各アクターの周辺分布$$p(\mathbf{s}_i \mid \mathbf{X}, \mathbf{w})$$を計算する
 
    $$\{ p(\mathbf{s}_i=\hat{s}_i^1 \mid \mathbf{X}, \mathbf{w}), \ldots , p(\mathbf{s}_i=\hat{s}_i^k \mid \mathbf{X}, \mathbf{w}) \}$$ 
+   
+   $$p(\mathbf{s}_i \mid \mathbf{X}, \mathbf{w})$$はアクターが経路$$s_i$$を実際に行う確率である
 
 ![prediction_module](./prediction_module.png)
 
