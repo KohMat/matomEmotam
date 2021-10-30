@@ -9,13 +9,15 @@
 
 ## どんなもの？
 
-可変数のエージェント（車両）の確率予測モデルを使った２つの予測方法ESP, PRECOGを提案する。
+自動運転車が人間とともに道路上で動作するためには、他のドライバーの行動を予測することが必要である。特に自動運転の条件判断や経路計画に必要とされる予測はただ漠然とした単純な予測ではない。自動運転車が目的を達成する意図に応じて他のエージェントが何をする可能性が高いかを示す予測が必要とされる。
 
-ESP(Estimating Social-forecast Probabilities)は単一エージェントを予測するR2P2([link](https://people.eecs.berkeley.edu/~nrhinehart/papers/r2p2_cvf.pdf), [summary](../R2P2: A reparameterized pushforward policy for diverse, precise generative path forecasting/summary.md))をマルチエージェント間の相互作用を考慮して一般化したもので、エージェント間の尤もらしい将来の相互作用を確率的に説明する。ESPでは各エージェントの状態をfactorized潜在変数によって表現する。マルチエージェントと時間にまたがる分解により、任意の時間における任意エージェントの状態を独立に変えたときの効果（確率）を調べることができる。つまり潜在変数をサンプリングすることで、マルチエージェントの相互作用を考慮した予測を行うことができる。
-
-PRECOG(PREdition Conditioned On Goal)は次にエージェントが向かうべきゴールを条件に予測を行う初の生成型のマルチエージェント予測法である。PRECOGは自車両のエージェントにゴールを条件付け、マルチエージェント環境でのImitative Planning([arxiv](https://arxiv.org/pdf/1810.06544.pdf), [summary](../DEEP IMITATIVE MODELS FOR FLEXIBLE INFERENCE, PLANNING, AND CONTROL/summary.md))を行うことで、自車両がゴールに到達するようなエキスパートらしい軌道を求める。そして求めた軌道を使ってESP同様に他車両の予測を行う。これにより自車両だけでなく相互に作用する他のエージェントの軌道の予測精度を高めることができる。
+この論文は条件判断のために複数の車（マルチエージェント）の行動を予測する方法ESPおよびPRECOGを提案する。ESPおよびPRECOGともに自車両も含めたマルチエージェントの相互作用を考慮した予測を行う。行動は２次元位置で構成される経路として出力される。
 
 ![EmbeddedImage](./EmbeddedImage.gif)
+
+ESP(Estimating Social-forecast Probabilities)は単一エージェントの経路を予測するR2P2([link](https://people.eecs.berkeley.edu/~nrhinehart/papers/r2p2_cvf.pdf), [summary](../R2P2: A reparameterized pushforward policy for diverse, precise generative path forecasting/summary.md))にマルチエージェント間の相互作用を捉えるように変更を加えたフローベース生成モデルである。ESPは潜在変数からすべてのエージェントの経路を生成する。また経路を生成するだけでなく、エージェントの行動を確率的に説明する。各時刻の各エージェントの状態を表すFactorized潜在変数により、任意の時間における任意エージェントの状態を独立に変えたときの効果を確率で出力する。
+
+PRECOG (PREdition Conditioned On Goal)はESPを使った条件付き予測を行う方法である。PRECOGは自動運転車の目的地などの有り得そうな将来の状態をゴールとみなす。そして自動運転車がゴールへ向かうような経路を計画する。計画により予測経路とともにその経路を表す潜在変数が得られる。得られた自動運転車の潜在変数と正規分布からサンプリングした他のエージェントの潜在変数をESPで予測経路に変換する。このように計算された他のエージェント経路は自動運転車の経路に条件付けられた経路となる。自動運転車が目的地へ向かう場合に集中して予測するので予測する経路の可能性を絞ることができる。結果として自車両だけでなく相互に作用する他のエージェントの軌道の予測精度を高めることができる。
 
 ## 先行研究と比べてどこがすごい？何を解決したか？
 
@@ -25,102 +27,91 @@ PRECOG(PREdition Conditioned On Goal)は次にエージェントが向かうべ�
 
 ## 手法は？
 
-連続空間、離散時間、POMDPのマルチエージェントシステムを扱う。時刻$$t$$におけるすべてのエージェントの状態（位置）を$$\mathbf{S}_t \in \mathbb{R}^{A \times D}$$とする。$$A$$はエージェント個数、$$D=2$$である。変数を関数と区別するためにボールドで表す。大文字は確率変数であることを示す。$$\mathbf{S}_t^a$$は時刻$$t$$におけるエージェント$$a$$の2次元位置$$x,y$$を示す。$$t=0$$は現在時刻、$$a$$が$$r$$もしくは$$1$$の場合は自車両、$$h$$もしくは$$2\sim$$の場合は他車両を示す。添字を省略した$$\mathbf{S}$$は$$\mathbf{S}_{1:T}^{1:A} \in \mathbb{R}^{T \times A \times D}$$を示す。すなわちすべてのエージェントの予測である。$$\chi$$はLIDARや道路などの高次元の観測である。実験した例ではLIDARの情報を俯瞰図で表現した観測$$\chi= \mathbb{R}^{200 \times 200 \times 2}$$を使った。各グリッドの面積は$$0.5 m^2$$であり、地面の上と下にあるポイントの2ビンのヒストグラムである。各エージェントは$$\phi \doteq \{\mathbf{s}_{-\tau:0}, \chi \}$$にアクセスできる。
-
 ### Estimating Social-forecast Probability (ESP)
 
-マルチエージェントのTステップ先のダイナミクスを確率的に予測する尤度ベースの生成モデル$$\mathbf{S} \sim q(\mathbf{S} \mid \phi;\mathcal{D})$$を自己回帰生成モデルとしてモデリングする。$$\mathcal{D}$$は訓練データである。POMDPの仮定より生成モデル$$q(\mathbf{S} \mid \phi)$$ は次の遷移確率の積として表すことができる。
+ESPは観測$$\phi \doteq \{\mathbf{s}_{-\tau:0}, \chi \}$$を予測に使う。
 
-$$q(\mathbf{S} \mid \phi)= \prod_{t=1}^T q(\mathbf{S}_t \mid \mathbf{S}_{1:t-1}, \phi)$$
+* 過去から現在までのすべてエージェントの位置$$\mathbf{s}_{-\tau:0}$$
+* LiDARの点群もしくは道路の構造物を俯瞰図で表現したボクセル$$\chi = \mathbb{R}^{200 \times 200 \times 2}$$
 
-各エージェントの遷移確率を正規分布と仮定すると、すべてのエージェントの遷移確率は次で表せる。
+ESPはフローベースの生成モデル$$\mathbf{S} \sim q(\mathbf{S} \mid \phi)$$である。逆変換可能な関数$$f_{\theta}(\cdot)$$を使い現在時刻から$$T$$ステップ先までのすべてのエージェントの経路$$\mathbf{S} \in \mathbb{R}^{T \times A \times D}$$を生成する。
 
-$$q(\mathbf{S}_t \mid \mathbf{S}_{1:t-1}, \phi)
-= \prod_{a=1}^A
-\mathcal{N}(\mathbf{S}_t^a ; \mu_{\theta}^a, \sigma_{\theta}^a{\sigma_{\theta}^a}^{\top})$$
+$$\mathbf{Z} \sim \mathcal{N}(0, I); \mathbf{S} = f_{\theta}(\mathbf{Z}; \phi)$$
 
-ここで$$\mu_{\theta}^a(\cdot)$$および$$\sigma_{\theta}^a(\cdot)$$は状態$$\mathbf{S}_{t}$$の平均および標準偏差を出力するネットワーク関数である。すなわちReprameterization Trickを用いると状態$$\mathbf{S}_{t}^{a}$$は次のように表せる。
+関数$$f_{\theta}(\cdot)$$は各エージェント$$a$$の１ステップ先の更新式で構成される。
 
-$$\mathbf{S}_{t}^{a} = f_{\theta}(\mathbf{Z}_t^a) = \mu_{\theta}^a(\mathbf{S}_{1:t-1}, \phi) + \sigma_{\theta}^a(\mathbf{S}_{1:t-1}, \phi) \cdot \mathbf{Z}_t^a$$
+$$\mathbf{S}_{t}^{a} = f_{\theta}(\mathbf{Z}_t^a) = \mu_{\theta}^a(\mathbf{S}_{1:t-1}, \phi) + \sigma_{\theta}^a(\mathbf{S}_{1:t-1}, \phi) \cdot \mathbf{Z}_t^a \in \mathbb{R}^{D}$$
 
-ここで
+$$\mathbf{S}_{t}^{a}$$および$$\mathbf{Z}_{t}^{a}$$は時刻$$t$$におけるエージェント$$a$$の位置と潜在変数である。パラメータ$$\mu_{\theta}^a(\cdot) \in \mathbb{R}^{D}$$および$$\sigma_{\theta}^a(\cdot)\in \mathbb{R}^{D \times D}$$は状態$$\mathbf{S}_{t}$$の平均および標準偏差を出力するネットワーク関数である。この更新式を繰り返し適用することで現在時刻からTステップ先までの経路を計算する。
 
-* $$f_{\theta}(\cdot)$$は観測$$\phi$$および正規分布に従う潜在変数$$\mathbf{Z}_t^a$$から計画$$\mathbf{S}$$にワープする可逆かつ微分可能な変換関数($${\theta}$$はパラメータ。訓練データ$$\mathcal{D}$$を用いて確率分布（生成モデル）を$$q(\mathbf{S} \mid \phi)$$ の尤度を最大化するように訓練する。)
-* $$\mathbf{Z}_t$$ : 正規分布に従う潜在変数$$\mathbf{Z} \sim q_0 = \mathcal{N}(0, I)$$
+> 各遷移確率は正規分布と仮定している。ESPは次式で表すこともできる。$$q(\mathbf{S} \mid \phi)= \prod_{t=1}^T q(\mathbf{S}_t \mid \mathbf{S}_{1:t-1}, \phi)$$
+>
+> $$q(\mathbf{S}_t \mid \mathbf{S}_{1:t-1}, \phi)
+> = \prod_{a=1}^A
+> \mathcal{N}(\mathbf{S}_t^a ; \mu_{\theta}^a, \sigma_{\theta}^a{\sigma_{\theta}^a}^{\top})$$
 
-である。以上よりマルチエージェントの予測を次のように行う。
-
-1. K個のすべてのエージェントの潜在変数$$^{1:K}\mathbf{z}$$をサンプリングする
-
-    $$^{1:K}\mathbf{z}_{1:T}^{1:A} \overset{iid}{\sim} \mathcal{N}(0, I)$$
-
-2. 潜在空間から状態へワープする
-
-   $$^{1:K}\mathbf{s}_{1:T}^{1:A} \leftarrow f(^{1:K}\mathbf{z}_{1:T}^{1:A}, \phi) $$
-
-### ESPのネットワークアーキテクチャ
-
-具体的なESPのアーキテクチャを示す。
+ネットワーク関数の具体的なアーキテクチャは図で示すように観測マップ$$\chi$$から特徴マップ$$\Gamma$$を計算するCNN、過去のエージェントの経路から特徴を個々に計算するRNN、そして将来の経路を計算するRNNで構成される。
 
 <img src="./EmbeddedImage.png" alt="EmbeddedImage" style="zoom: 50%;" />
 
-観測$$\phi \doteq \{\mathbf{s}_{-\tau:0}, \chi \}$$は
+このモデルは次の手順で動作する。
 
-* $$\mathbf{s}_{-\tau:0}$$は過去から現在までの位置
-* $$\chi = \mathbb{R}^{200 \times 200 \times 2}$$はLiDARの情報を俯瞰図で表現したもの(各グリッドの面積は$$0.5 m^2$$であり、地面の上と下にあるポイントの2ビンのヒストグラムである)
+1. 時刻$$t$$に得られた観測からRNN(GRU)とCNNで、それぞれ特徴量$$\alpha$$と特徴マップ$$\Gamma$$を計算する
 
-である。時刻$$t$$に得られた観測から特徴量$$\alpha$$と$$\Gamma$$を計算する。
+2. 時刻$$1:T$$までの以下のステップを繰り返す
 
-* 過去位置をエンコードするRNN(GRU)：$$\mathbf{s}_{-\tau:0} \rightarrow \alpha$$
-* 空間特徴を抽出するCNN：$$\chi \rightarrow \Gamma$$
+   1. 時刻$$t$$の各エージェントの位置$$\mathbf{s}_{t-1}^a$$に対応した特徴マップ$$\Gamma$$の空間特徴量$$\Gamma(\mathbf{s}_{t-1}^a)$$をbilinear補間により取り出す
 
-その後以下の手順によって時刻$$1:T$$までの予測$$\mathbf{S}_{1:T}^{1:A}$$を行う。
+      $$\Gamma^{1:A} = \{ \Gamma(\mathbf{s}_{t-1}^1),..., \Gamma(\mathbf{s}_{t-1}^A) \}$$
 
-1. 時刻$$t$$の各エージェントの位置$$\mathbf{s}_{t-1}^a$$に対応した空間特徴量$$\Gamma$$のサブピクセル$$\Gamma(\mathbf{s}_{t-1}^a)$$をbilinear補間により取り出す
+   2. 各特徴量$$\alpha$$、$$\mathbf{s}_{t}^{1:A}$$、$$\Gamma^{1:A}$$をConcatenationして特徴$$p_{t-1}$$を構成する
 
-   $$\Gamma^{1:A} = \{ \Gamma(\mathbf{s}_{t-1}^1),..., \Gamma(\mathbf{s}_{t-1}^A) \}$$
+   3. 特徴$$p_{t-1}$$から予測用のRNN(GRU)を使い、ベレの方法([wiki](https://en.wikipedia.org/wiki/Verlet_integration))のステップ$$m_{\theta}$$と位置の標準偏差$$\sigma_{\theta}$$を計算する
 
-2. 各エージェントの状態$$\mathbf{s}_{t}^a$$を計算する
-
-   1. $$\alpha$$、$$\mathbf{s}_{t}^{1:A}$$、$$\Gamma^{1:A}$$をConcatenationして特徴$$p_{t-1}$$を構成する
-
-   2. 予測用のRNN(GRU)は特徴$$p_{t-1}$$から位置の平均を直接出力する代わりにベレの方法([wiki](https://en.wikipedia.org/wiki/Verlet_integration))のステップ$$m_{\theta}$$と位置の標準偏差$$\sigma_{\theta}$$を出力する
-
-   3. ベレの方法から位置の平均を計算する
+   4. ベレの方法から位置の平均を求める
 
       $$\mu = 2 \mathbf{s}_{t-1}^a - \mathbf{s}_{t-2}^a + m_{\theta}$$
 
-   4. 状態$$\mathbf{s}_{t}^a$$を計算する
+   5. Reparametrization Trickを使い状態$$\mathbf{s}_{t}^a$$を計算する
 
       $$\mathbf{s}_{t}^a = \mu_{\theta} + \sigma_{\theta} \cdot \mathbf{z}_t^a$$
 
-3. 1.2を時刻Tまで繰り返す
 
-エージェント数が時刻$$1:T$$の間で変わるようなデータに対しては最大エージェント数$$A_{train}$$を決めた上でRNNの入力にマスク$$M \in \{ 0, 1 \} ^{A_{train}}$$を使うことで欠落しているエージェントを表現する。
+このモデルは訓練データ$$\mathcal{D}$$を使って対数尤度を最大化するように訓練される。
+
+$$\max_{\theta} \mathbb{E}_{(s, \phi) \sim \mathcal{D}} \log p_{\theta}(\mathbf{S} \mid \phi)$$
 
 ### PREdiction Conditioned On Goals (PRECOG)
 
-PRECOGはエージェント（自車両）が設定したゴールに止まるような制御変数$$z^{r*}$$を最適化問題を解いたあと、ESPと同様に自車両以外のエージェントの潜在変数を$$q_0$$からサンプリングし、予測を行う。
+PRECOGのアルゴリズムは次の通りである。
 
-解く最適化問題は次式である。
+1. Imitative planningにより自動運転車がゴールに止まるような潜在変数$$\mathbf{z}_{1:T}^0$$を求める
+
+2. その他のエージェントの潜在変数$$^{1:K}\mathbf{z}$$を正規分布から$$K$$回サンプリングする
+
+   $$^{1:K}\mathbf{z}_{1:T}^{1:A-1} \overset{iid}{\sim} \mathcal{N}(0, I)$$
+
+   そして自動運転車の潜在変数と連結する。
+
+   $$^{1:K}\mathbf{z}_{1:T}^{1:A} = [\mathbf{z}_{1:T}^{0}, ^k\mathbf{z}_{1:T}^{1:A-1}]$$
+
+3. 関数$$f_{\theta}(\cdot)$$を使い、潜在変数を予測経路に変換する
+
+   $$^{1:K}\mathbf{s}_{1:T}^{1:A} \leftarrow f(^{1:K}\mathbf{z}_{1:T}^{1:A}, \phi) $$
+
+Imitative planningは"Deep Imitative Models for Flexible Inference, Planning, and Control"([arxiv](https://arxiv.org/pdf/1810.06544.pdf), [summary](../DEEP IMITATIVE MODELS FOR FLEXIBLE INFERENCE, PLANNING, AND CONTROL/summary.md))で提案された経路計画法である。Imitative planningはESPを使って次の最適化問題を解く。
 
 $$\DeclareMathOperator*{\argmin}{arg\,min}
 \DeclareMathOperator*{\argmax}{arg\,max}
 \begin{equation}
-z^{r *} = \argmax_{z^r} \mathcal{L}(\mathbf{z}^r, \mathcal{G}, \phi)
+z^{0 *} = \argmax_{z^r} \mathcal{L}(\mathbf{z}^0, \mathcal{G}, \phi)
 \end{equation}$$
 
-ここで目的関数$$\mathcal{L}(\mathbf{z}^r, \mathcal{G})$$はマルチエージェントの模倣尤度とゴールの尤度の和の期待値
+目的関数$$\mathcal{L}(\mathbf{z}^r, \mathcal{G})$$はマルチエージェントの模倣尤度とゴールの尤度の和の期待値である。
 
-$$\mathcal{L}(\mathbf{z}^r, \mathcal{G}, \phi) = \mathbb{E}_{\mathbf{Z}^h} \left[ \log q(f(\mathbf{Z}) \mid \phi) + \log q(\mathcal{G} \mid f(\mathbf{Z}), \phi) \right]$$
+$$\mathcal{L}(\mathbf{z}^0, \mathcal{G}, \phi) = \mathbb{E}_{\mathbf{Z}^{1:A}} \left[ \log q(f(\mathbf{Z}) \mid \phi) + \log q(\mathcal{G} \mid f(\mathbf{Z}), \phi) \right]$$
 
-である。ゴールの尤度$$q(\mathcal{G} \mid f(\mathbf{Z}), \phi)$$は自車両からゴールに向かうまでのウェイポイント$$\mathbf{w}$$を使った$$\mathcal{N}(\mathbf{w}; \mathbf{S}_T^r, \epsilon \mathbf{I})$$とする。
-
-この最適化問題は次のアルゴリズムのようにGradient Ascentにより解く。
-
-![multimitativeplanning](./multimitativeplanning.png)
-
-Algorithm 1の４、５行目では、他車両の動きは決定できないので他エージェントの潜在変数$$\mathbf{Z}^h$$を正規分布$$\mathcal{N}(0, \mathbf{I})$$からサンプリングしてゴールの尤度による重み付き平均を行い、期待値$$\mathcal{L}(\mathbf{z}^r, \mathcal{G})$$を近似している。
+ゴールの尤度$$q(\mathcal{G} \mid f(\mathbf{Z}), \phi)$$は自車両からゴールに向かうまでのウェイポイント$$\mathbf{w}$$を使った$$\mathcal{N}(\mathbf{w}; \mathbf{S}_T^r, \epsilon \mathbf{I})$$である。また期待値$$\mathcal{L}(\mathbf{z}^r, \mathcal{G})$$は次で示すようにゴールの尤度による重み付き平均を行い近似する。
 
 $$\hat{\mathcal{L}}(^{1:K}\mathbf{z}, \mathcal{G}, \phi)
 = \frac{1}{K} \sum_{k=1}^{K}
@@ -129,23 +120,21 @@ p(f(^k\mathbf{z}) \mid \phi)
 p(\mathcal{G} \mid f(^k\mathbf{z}), \phi)
 )$$
 
-$$^{1:K}\mathbf{z}$$はサンプリングされたK個のすべてのエージェントの潜在変数である。$$^{k}\mathbf{z}$$は最適化問題で求める制御変数$$\mathbf{z}^r$$と$$k$$番目のサンプリング$$^k\mathbf{z}^h$$が含まれている。$$^k\mathbf{z}=[\mathbf{z}^r, ^k\mathbf{z}^h]$$。
+Imitative planningはこの最適化問題をGradient Ascentで求める。
 
-またこの制御変数$$z^{r*}$$を使った予測は次のとおりである
-
-![precog_algorithm](./precog_algorithm.png)
+![multimitativeplanning](./multimitativeplanning.png)
 
 ## どうやって有効だと検証した？
 
 ### ESPの検証
 
-**Didactic Example**：簡素な交差点でのナビゲーションを使い予測性能を検証した。交差点には人間（オレンジ）およびロボット（青）が存在する。人間は常に4ステップ直進し、その後50％の確率で直進もしくは左折のどちらかの行動を行う。ロボットは交差点を直進しようと試みるが人間が左折した場合には譲歩する。このナビゲーションシミュレーションを行い、データセットを作成し、ESPおよびベースラインR2P2-MAの訓練を行った。
+**Didactic Example**：簡素な交差点でのナビゲーションを使い予測性能を検証した。交差点には人間（オレンジ）およびロボット（青）が存在する。人間は常に4ステップ直進し、その後50％の確率で直進もしくは左折のどちらかの行動を行う。ロボットは交差点を直進しようと試みるが人間が左折した場合には譲歩する。このナビゲーションシミュレーションを行い、データセットを作成し、ESPおよびベースラインR2P2-MAの訓練を行った。R2P2-MAは相互作用を考慮しないESPである。予測用のRNNはすべてのエージェントではなく個々の特徴量のみを用いて次の状態を計算する。
 
 ![didactic_example](./didactic_example.png)
 
 R2P2-MAはエージェント間の相互作用を考慮していないので50％の確率で人間とロボットがぶつかる予測を行った。これに対してESPは人間の決定に対して反応していることを示している。
 
-**CARLAおよびnuScenes**：CALRAおよびnuScenesから10個のデータセットを作成し予測性能を検証した。ESP, no LIDARは観測からLIDARを除いたESPである。ESP, RoadはnuScenesの道路領域をバイナリマスクで表現した入力を追加したESPである。ESP, flexは、可変数のエージェントに対応するESPである。
+**CARLAおよびnuScenes**：CALRAおよびnuScenesから10個のデータセットを作成し予測性能を検証した。ESP, no LIDARは観測からLIDARを除いたESPである。ESP, RoadはnuScenesの道路領域をバイナリマスクで表現した入力を追加したESPである。ESP, flexは可変数のエージェントに対応するESPである。
 
 ![esp_performance](./esp_performance.png)
 
@@ -161,11 +150,25 @@ CALRAおよびnuScenesを使いPRECOGの予測性能を検証した。Planingを
 
 ## 課題は？議論はある？
 
-将来の方向としては、自車両だけでなく他車両のゴールを条件付けた予測がある。
+さらなる精度向上のため、自動運転車だけでなく他のエージェントにもゴールや事前知識を使って条件付けることが考えられる。
 
 ## 次に読むべき論文は？
 
 [Contingencies from Observations: Tractable Contingency Planning with Learned Behavior Models](../Contingencies from Observations: Tractable Contingency Planning with Learned Behavior Models/summary.md)
+
+[Deep Imitative Models for Flexible Inference, Planning, and Control](../DEEP IMITATIVE MODELS FOR FLEXIBLE INFERENCE, PLANNING, AND CONTROL/summary.md)
+
+[Deep Structured Reactive Planning](../Deep Structured Reactive Planning/summary.md)
+
+## 補足
+
+### 仮定及び各変数の詳細
+
+連続空間、離散時間、POMDPのマルチエージェントシステムを扱う。時刻$$t$$におけるすべてのエージェントの状態（位置）を$$\mathbf{S}_t \in \mathbb{R}^{A \times D}$$とする。$$A$$はエージェント個数、$$D=2$$である。変数を関数と区別するためにボールドで表す。大文字は確率変数であることを示す。$$\mathbf{S}_t^a$$は時刻$$t$$におけるエージェント$$a$$の2次元位置$$x,y$$を示す。$$t=0$$は現在時刻、$$a$$が$$r$$もしくは$$1$$の場合は自車両、$$h$$もしくは$$2\sim$$の場合は他車両を示す。添字を省略した$$\mathbf{S}$$は$$\mathbf{S}_{1:T}^{1:A} \in \mathbb{R}^{T \times A \times D}$$を示す。すなわちすべてのエージェントの予測である。$$\chi$$はLIDARや道路などの高次元の観測である。実験した例ではLIDARの情報を俯瞰図で表現した観測$$\chi= \mathbb{R}^{200 \times 200 \times 2}$$を使った。各グリッドの面積は$$0.5 m^2$$であり、地面の上と下にあるポイントの2ビンのヒストグラムである。各エージェントは$$\phi \doteq \{\mathbf{s}_{-\tau:0}, \chi \}$$にアクセスできる。
+
+### 可変数のエージェントに対応するESP
+
+エージェント数が時刻$$1:T$$の間で変わるようなデータに対しては予め最大エージェント数$$A_{train}$$を決めた上でネットワークを設計する。そして予測経路を出力するRNNにマスク$$M \in \{ 0, 1 \} ^{A_{train}}$$を使うことで欠落しているエージェントを表現することで対応できる。
 
 ## 個人的メモ
 
