@@ -10,6 +10,7 @@
 * [SPAGNN Spatially-Aware Graph Neural Networks for Relational Behavior Forecasting from Sensor Data](papers/SPAGNN Spatially-Aware Graph Neural Networks for Relational Behavior Forecasting from Sensor Data/summary.md)
 * [PARROT: DATA-DRIVEN BEHAVIORAL PRIORS FOR REINFORCEMENT LEARNING](papers/PARROT: DATA-DRIVEN BEHAVIORAL PRIORS FOR REINFORCEMENT LEARNING/summary.md)
 * [Contingencies from Observations: Tractable Contingency Planning with Learned Behavior Models](papers/Contingencies from Observations: Tractable Contingency Planning with Learned Behavior Models/summary.md)
+* [Deep Structured Reactive Planning](papers/Deep Structured Reactive Planning/summary.md)
 * [R2P2: A reparameterized pushforward policy for diverse, precise generative path forecasting](papers/R2P2: A reparameterized pushforward policy for diverse, precise generative path forecasting/summary.md)
 * [Can autonomous vehicles identify, recover from, and adapt to distribution shifts](papers/Can autonomous vehicles identify, recover from, and adapt to distribution shifts/summary.md)
 * [Multimodal Motion Prediction with Stacked Transformers](papers/Multimodal Motion Prediction with Stacked Transformers/summary.md)
