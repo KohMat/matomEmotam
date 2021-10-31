@@ -169,15 +169,34 @@ $$\Delta (\mathbf{y}_i^{*})$$は正解の経路と距離が近いが正解でな
 
 この経路群の損失を計算しないことで正解に近い経路に間違いとしない。
 
-
-
-
-
 ## どうやって有効だと検証した？
 
-CARLAおよびUber ATGのSimbaでテストした。
+CARLAおよびUber ATGのSimbaのシミュレーターで走行性能、予測性能、Ablation Studyの検証を行った。テストするシミュレーターごとのデータセットで検証に使われる各モデルを訓練した。訓練に使用したCARLAのデータセットはPRECOGで使われたオープンなデータセットである。データセットは60000個の6秒間のシークエンスを含む。LIDARの点群をラスタライズした図と最初の2秒間の経路をモデルへの入力データ、その後4秒間の経路を予測する経路とする。Simbaのデータセットは1000回以上の自動運転車の走行からなる6500個のシークエンスを含む。各シークエンスの長さは25秒である。
 
-Deep strucutred reactive planningの他に、Reactive planningすることの重要性を明確にするために、non-reactiveなプランナーを用意した。Non-reactiveなプランナーは自動運転車の経路に条件付けられないコストを使う。
+### 走行テスト
+
+Deep structured reactive planningの走行性能を検証するため、CARLAおよびSimbaのシミュレーターでテストした。テストシナリオは次の２つである。
+
+* レーンチェンジ
+* 信号のない交差点で左折を行う
+
+いずれのシナリオも次の条件で終了する。
+
+* 自動運転車がゴールに到達した
+* シミュレーションの制限時間になった
+* 自動運転車が衝突した
+
+#### Simbaの具体的な設定
+
+レーンチェンジおよび左折のシナリオをさらに細かく分類した12個のテンプレートシナリオを用意した。12個のテンプレートシナリオはアクター間の相互作用が高いシナリオである。シナリオ内のアクターはヒューリスティックによるカーフォロイングモデルに従い行動する。シミュレーションは10Hzで動作する。シミュレーション内のLIDARにより自動運転車の周囲の点群を記録する。各テンプレートシナリオごとに初期位置や速度を変化させ、25個のシナリオを作成した。計300個のシナリオのうち、50個をValidationデータに、250個をテストデータとした。
+
+#### CARLAの具体的な設定
+
+Simbaと異なりテンプレートシナリオの数は6個である。またシナリオ内のアクターはCARLAのAPIで提供されているBasicAgentを元にしたモデルに従い動作する。各テンプレートシナリオごとに初期位置や速度を変化させ、25個のシナリオを作成した。計150個のシナリオのうち、50個をValidationデータに、100個をテストデータとした。
+
+#### 比較手法
+
+Deep strucutred reactive planningの他にPRECOG ([summary](../PRECOG: PREdiction Conditioned On Goals in Visual Multi-Agent Settings/summary.md))とReactive planningすることの重要性を明確にするためのnon-reactiveなプランナーを用意した。Non-reactiveなプランナーは自動運転車の経路に条件付けられないコストを使う。
 
 $$\begin{align}
 f_{\text{nonreactive}} &=
@@ -192,53 +211,43 @@ p(\mathcal{Y}_r \mid \mathcal{X}; \mathbf{w})
 \right]
 \end{align}$$
 
-CARLA LIDARの点群をラスタライズした図と過去2秒間の経路から4秒先までの経路を予測する。
+#### 走行テスト結果
 
-Simbaのシミュレーション設定
+CARLAおよびSimbaのシミュレーターでテストした結果は次のとおりである。
 
-テストするシナリオは大きく分けて２つある。
+![simulation_test](./simulation_test.png)
 
-* レーンチェンジ
-* 信号のない交差点で左折を行う
+Succ (%)はSucess Rateである。自動運転車がシナリオを完走した割合である。TTC (s)はtime to completionである。シナリオの完走にかかった時間である。Goalはゴールまでの距離である。CR (%)はCollision Rateである。Brakeはブレーキした回数である。CARLAのみ有効である。
 
-具体的にはレーンチェンジおよび左折のシナリオをさらに細かく分類し12個のアクター間の相互作用が高いテンプレートシナリオを用意した。
+提案手法であるReactive PlannerがSuccess Rate、TTC、ゴールまでの距離のメトリックで他の手法より良い結果である。またCollision RateはNon−Reactiveと違いがない。Reactive Plannerがその目的関数通り、他のアクターの反応を考慮していることを示している。さらに事故する割合が上がるようなアグレッシブな動作をすることなく、他のアクターがいる中でより効果的にゴールへのナビゲーションが行えていることを示している。またReactiveおよぼNon−Reactiveの方法がPRECOGよりも良い結果である。
 
-またシナリオ内のアクターはヒューリスティックによるカーフォロイングモデルに従い行動する。
+PRECOGは生成モデルであるESPを使って観測を条件としてアクターの経路を生成する。そして生成した経路を使って経路計画を行う。PRECOGの性能の性能が悪い原因として2つの仮設が考えられる。1つめはout-of-distributionである。訓練データにない状況で経路を効果的に予測できない。２つめは評価するべき経路の生成を保証しないことである。潜在変数を通して生成を行うため、経路計画に必要とする経路を生成するまでひじょうに多くの試行回数を必要とする可能性がある。
 
-各テンプレートシナリオごとに初期位置や速度を変化させ、25個のシナリオを作成した。計300個のシナリオのうち、250個をValidationデータに、50個をテストデータとした。
+#### レーンチェンジの走行結果
 
-CARLAのシミュレーション設定
+次の図はターゲットのレーンへ合流するシナリオを走行した結果である。Reactive Plannerはターゲットレーンに合流することができた。Non−Reactive Plannerはできなかった。Reactive Plannerの結果ではターゲットレーンにいる車が自動運転車を入れさせるために減速している。その一方でNon−Reactive Plannerは時間の経過とともにレーンの左側にゆっくりとよっている。
 
+![lane_merge_result](./lane_merge_result.png)
 
+### 予測テスト
 
+PRECOGのデータセットおよびNuScenesで予測性能をテストした。使用した評価メトリックはminMSDである。提案手法は比較手法比べて同等もしくは上回っていることがわかる。DSDNet ([summary](../DSDNet: Deep Structured self-Driving Network/summary.md))と同様に、アクターごとの離散経路のサンプルをエネルギーベースのモデルで評価することが効果的であることを示す。
 
+![prediction_result_carla](./prediction_result_carla.png)
 
-CARLAとSimbaそれぞれの環境で訓練データセットを使ってモデルを訓練した。各データセットは25秒間の経路で構成される。CARLAのデータセットはPRECOGで使われたオープンなデータセットである。
+![prediction_result_nuscenes](./prediction_result_nuscenes.png)
 
-| タイプ/データの個数 | Train | Validation | Test |
-| ------------------- | ----- | ---------- | ---- |
-| Simba               | 6500  | 50         | 250  |
-| CARLA               | 60000 | 50         | 100  |
+### Ablation Study
 
-Validationデータは50個、テストデータは250個作成した。
+訓練に用いる損失関数を変えたときの走行性能をテストした。Cross-entropyはグランドトルースと近い経路も損失に加える純粋なCross-entorpyを使った結果である。提案手法が最も良い結果である。
 
-
-
-
-
-CARLAのデータセットはPRECOGと同様のものである。
-
-
-
-
-
-
-
-
+![ablation_study](./ablation_study.png)
 
 ## 課題は？議論はある？
 
 他のアクター同士の相互作用のエネルギー$$C_{\text{inter}}(\mathbf{y}_i, \mathbf{y}_j)$$を無視することで、自動運転車の行動が原因となって隣接する他のアクター同士が衝突するシチュエーションを考慮できない。完全に無視するのではなく、近くのアクターに関しては相互作用のエネルギーを計算するなどの工夫が考えられる。
+
+
 
 ## 次に読むべき論文は？
 
@@ -248,7 +257,7 @@ CARLAのデータセットはPRECOGと同様のものである。
 
 ## 補足
 
-### Reactive plannerとNon Reactive plannerの中間（Interpolation）
+### Reactive plannerとNon Reactive plannerの補間（Interpolation）
 
 reactive plannerの目的関数で使われる自動運転車の経路で条件付けられるアクターの経路の確率に関して。
 
