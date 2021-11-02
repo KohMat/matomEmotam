@@ -9,142 +9,119 @@ Nicholas Rhinehart, Rowan McAllister, Sergey Levine
 
 ## どんなもの？
 
-自動運転のための模倣学習(Imitation Learning)を用いた経路計画法Deep Imitative Models(DIM)を提案する。DIMは訓練済みのエキスパートの軌跡を模倣する確率モデル（Imitative Model）$$q(\mathbf{S} \mid \phi)$$ を使い、実行時に観測$$\phi$$からゴールに到達するエキスパートらしい経路計画を、軌跡の尤度とゴールの尤度を最大化することで求める。ゴールの尤度関数に車両が移動できる領域を設定することでpotholesなどの特定の物体を避けるような計画を行うことができる。
+模倣学習は行動を模倣するモデルを訓練するフレームワークである。訓練された模倣モデルはテスト時に望ましい最良の推測を行う。しかし、目標を達成するようにモデルに指示することはできない。一方でダイナミクスモデルを使い、目的を達成するように目的関数を最小化するアプローチMBRL (Model Based Reinforcement Learning)は自由に目標を達成できる。しかし目的関数の設計が難しい。特に目標の達成よりも望ましい行動の設計に試行錯誤を必要とする。複雑な行動であればあるほどその設計難易度は高い。
 
-![PathPlanning](./PathPlanning.png)
+この論文は模倣学習とMBRLの利点を組み合わせた方法Deep Imitative Models(DIM)を提案する。DIMは模倣モデルによる望ましい行動の生成と、目的関数を使用して任意の目標の設定ができる。DIMは模倣モデル $$q(\mathbf{S} \mid \phi)$$ を通常通りエキスパートの軌跡を模倣するように訓練する。そしてMBRLの目的関数内のダイナミクスモデルの代わりに訓練した模倣モデルを使う。DIMの目的関数は探索している行動がどれだけエキスパートに近いかを示す尤度と、目標への近さを示すゴール尤度で構成される。目的関数を最大化することで、実行時にゴールを達成しつつエキスパートらしい行動を求めることができる。
 
-![imitaive_planning_to_goals](./imitaive_planning_to_goals.png)
-
-![goalsettings](./goalsettings.png)
+$$\mathbf{s}^{*} \doteq \underset{\mathbf{s}}{\text{argmax}}\ \underbrace{\log q(\mathbf{s} \mid \phi)}_\textrm{imitation prior} + \underbrace{\log p(\mathcal{G} \mid \mathbf{s}, \phi)}_\textrm{goal likelihood}$$
 
 ## 先行研究と比べてどこがすごい？何を解決したか？
 
-* 今までの模倣学習による経路計画法は訓練時にゴールの設定を必要としていた。またゴールの設定は直進、右左折など簡単なものに限られていた。DIMはこの問題を解決し、模倣モデルは通常通り単純にエキスパートの軌跡との尤度を最大化することでネットワークを訓練することができる。すなわち実行時にゴールの設定を柔軟に行うことができる。
-* DIMはCARLA上で６つのILとMBRL（モデルベース強化学習）の性能を上回った。
+* 今までの模倣学習による方法は訓練時に目標の設定を必要としていた。そしてその目標の設定は直進、右左折など簡単なものに限られていた。DIMはこの問題を解決した。実行時に新しいゴールの設定を柔軟に行うことができる。
+
+* MBRLで目的関数の設計が複雑となっていた原因である、望ましい行動を行うための目的関数の設計を省くことができる。DIMでは目標を達成するための目的関数の設計だけで良いため、設計の難易度が下がる。
+* 目標がノイズを持つ場合でもロバストに機能することができる。
+
+* 自動運転車シミュレーターであるCARLA上で自動運転を行い、性能を検証した。DIMは６つのILとMBRL（モデルベース強化学習）の性能を上回った。またゴール尤度に車両が移動できる領域を設定することでpotholesなどの特定の物体を避けるような計画を行うことができた。
+
+  ![goalsettings](./goalsettings.png)
 
 ## 手法は？
 
-連続空間、離散時間、POMDPの仮定をおく。時刻$$t$$におけるすべてのエージェントの状態（2次元位置）を$$\mathbf{s}_t \in \mathbb{R}^{D}$$とする。また観測を$$\phi$$とする。変数をボールド、実数値を小文字、確率変数を大文字とする。$$\mathbf{s}=\mathbf{s}_{1:T}$$とする。
+連続空間、離散時間、POMDPの仮定をおく。時刻$$t$$におけるエージェントの状態（2次元位置）を$$\mathbf{s}_t \in \mathbb{R}^{D}$$とする。また観測を$$\phi$$とする。変数をボールド、実数値を小文字、確率変数を大文字とする。$$\mathbf{s}=\mathbf{s}_{1:T}$$とする。
 
-DIMは実行時にゴール$$\mathcal{G}$$に到達するエキスパートらしい計画$$\mathbf{s}^{*}$$を次の最適化問題を解くことで求める方法である。
+DIMは訓練済みのエキスパートの行動を模倣する生成モデル$$q(\mathbf{S} \mid \phi)$$を使い、実行時に目標$$\mathcal{G}$$に到達するエキスパートらしい行動$$\mathbf{s}^{*}$$を次の最適化問題を解くことで求める。
 
 ![imitaive_planning_to_goals](./imitaive_planning_to_goals.png)
 
-第１項はエキスパートの尤度である。計画$$\mathbf{s}$$がエキスパートに近いほど高い値となる。$$q(\mathbf{S} \mid \phi)$$は訓練済みのエキスパートの計画$$\mathbf{S}$$を模倣する生成モデルである。第二項はゴールの尤度である。計画$$\mathbf{s}$$がゴール$$\mathcal{G}$$に近いほど高い値となる。
+第１項はエージェントの行動$$\mathbf{s}$$がエキスパートに近いほど高い値となる模倣尤度である。第二項は行動$$\mathbf{s}$$がゴール$$\mathcal{G}$$に近いほど高い値となるゴールの尤度である。この最適化問題はGradient ascentで解くことできる。
 
-以下では
+![imitative_plan](./imitative_plan.png)
 
-1. 生成モデルおよびその具体的なアーキテクチャ
-2. ゴールの尤度関数
-3. この最適化問題の具体的な解き方
+変数$$\mathbf{z}$$は生成モデルの潜在変数である。関数$$f(\cdot)$$は観測$$\phi$$と潜在変数$$\mathbf{z}_t$$から行動$$\mathbf{s}$$に変換する生成モデルの関数である。
 
-について説明する。
+$$\mathbf{Z} \sim q_0; \mathbf{S} = f(\mathbf{Z}; \phi)$$
 
-### エキスパートの計画を模倣する生成モデル$$q(\mathbf{S} \mid \phi)$$ 
+関数$$f(\cdot)$$は可逆かつ微分可能である。アルゴリズムに示すように正規分布からサンプリングした潜在変数を使って経路を生成し、目的関数の値を評価する。そして評価した値から勾配を計算し、潜在変数を更新する。
 
-エキスパートの計画を模倣する生成モデルとして自己回帰生成モデルを用いる。すなわち$$q(\mathbf{S} \mid \phi)$$ は遷移確率の積として表すことができる。
+## 生成モデル
 
-$$ q(\mathbf{S}_{1:T} \mid \phi) = \prod_{t=1}^T q(\mathbf{S}_t \mid \mathbf{S}_{1:t-1}, \phi) $$
+DIMで使うモデルは次の条件を満たしている必要がある。
 
-遷移確率$$q(\mathbf{S}_t \mid \mathbf{S}_{1:t-1}, \phi)$$に正規分布を仮定する。この仮定より状態$$\mathbf{S}_{t}$$はReparametrization trickにより次式で表せる。
+* 将来の行動を予測する
+* エキスパートとの尤度$$q(\mathbf{S} \mid \phi)$$を計算する
+
+例えば次のようなモデルである。
+
+* Danilo Rezende and Shakir Mohamed. Variational inference with normalizing flows. In International
+  Conference on Machine Learning (ICML), pp. 1530–1538, 2015.
+* Aaron van den Oord, Yazhe Li, Igor Babuschkin, Karen Simonyan, Oriol Vinyals, Koray Kavukcuoglu,
+  George van den Driessche, Edward Lockhart, Luis C Cobo, Florian Stimberg, et al. Parallel
+  WaveNet: Fast high-fidelity speech synthesis. arXiv preprint arXiv:1711.10433, 2017.
+
+論文内ではR2P2([summary](../R2P2: A reparameterized pushforward policy for diverse, precise generative path forecasting/summary.md))を使う。R2P2はフローベースの生成モデルである。自動運転のためにLIDARの点群を観測としてドライバーの行動$$\mathbf{S}$$を2次元点からなる経路として予測する。R2P2は時刻$$t-1$$から$$t$$への車の位置の遷移確率を正規分布で表現する。R2P2の関数$$f(\cdot)$$はドライバーの１ステップ先の更新式で構成される。
 
 $$\mathbf{S}_{t} = f_{\theta}(\mathbf{Z}_t) = \mu_{\theta}(\mathbf{S}_{1:t-1}, \phi) + \sigma_{\theta}(\mathbf{S}_{1:t-1}, \phi) \cdot \mathbf{Z}_t$$
 
-ここで
-
-* $$f_{\theta}(\cdot)$$は観測$$\phi$$および正規分布に従う潜在変数$$\mathbf{Z}_t$$から計画$$\mathbf{S}$$にワープする可逆かつ微分可能な関数
-* $$\theta$$は関数$$f$$のパラメータ
-* $$\mathbf{Z}_t$$ : 正規分布に従う潜在変数$$\mathbf{Z} \sim q_0 = \mathcal{N}(0, I)$$
-* $$\mu_{\theta}(\cdot)$$および$$\sigma_{\theta}(\cdot)$$は状態$$\mathbf{S}_{t}$$の平均および標準偏差を出力するネットワーク関数(パラメータ$$\theta$$はエキスパートの軌道からなるデータセットを用いてエキスパートの軌跡を模倣する確率モデル$$q(S \mid \phi)$$ の尤度を最大化して求める）
-
-である。したがって関数$$f_{\theta}(\cdot)$$を使うことで次のように計画を計算(生成)することができる。
-
-1. 潜在変数$$\mathbf{z}$$をサンプリングする
-
-   $$\mathbf{z} \overset{iid}{\sim} q_0 = \mathcal{N}(0, I)$$
-
-2. 潜在空間から状態へワープする
-
-   $$\mathbf{s} \leftarrow f(\mathbf{z}; \phi) $$
-
-逆に計画から潜在変数は次のように計算することができる。
-
-$$ \mathbf{z}_t =  f^{-1}(\mathbf{s}_t) = \sigma_{\theta}(\mathbf{s}_{1:t-1}, \phi) ^{-1} (\mathbf{s}_{t} - \mu_{\theta}(\mathbf{s}_{1:t-1}, \phi))$$
-
-以上より$$q(\mathbf{S} \mid \phi)$$は正規分布$$q_0$$と関数$$f$$を用いて表せる。すなわち$$q(\mathbf{S} \mid \phi)$$ の尤度を最大化することでパラメータ$$\theta$$を求めることができる。
-
-$$q(\mathbf{S} \mid \phi) = q_0(f^{-1}(z; \phi)) |\det J_{f}(f^{-1}(z; \phi))|^{-1}$$
-
-### 生成モデル$$q(\mathbf{S} \mid \phi)$$ のネットワークアーキテクチャ
-
-具体的な$$f_{\theta}(\cdot)$$のアーキテクチャを示す。
+時刻1からTまで繰り返すことで将来の行動を出力する。関数$$\mu_{\theta}(\cdot)$$および$$\sigma_{\theta}(\cdot)$$は状態$$\mathbf{S}_{t}$$の平均および標準偏差を出力するネットワーク関数である。次の図は$$\mu_{\theta}(\cdot)$$および$$\sigma_{\theta}(\cdot)$$の具体的なアーキテクチャである。
 
 ![deep_imitative_model](./deep_imitative_model.png)
 
-観測$$\phi \doteq \{\mathbf{s}_{-\tau:0}, \chi , \lambda\}$$は
+具体的な観測$$\phi \doteq \{\mathbf{s}_{-\tau:0}, \chi , \lambda\}$$は次のとおりである。
 
 * $$\mathbf{s}_{-\tau:0}$$は過去から現在までの位置
 * $$\chi = \mathbb{R}^{200 \times 200 \times 2}$$はLiDARの情報を俯瞰図で表現したもの(各グリッドの面積は$$0.5 m^2$$であり、地面の上と下にあるポイントの2ビンのヒストグラムである)
 * $$\lambda$$は低次元の信号機の情報
 
-である。
+モデルは次の手順で動作して計画$$\mathbf{s}_{1:T}$$もしくは$$\mathbf{z}_{1:T}$$を計算する。
 
-処理の流れは次のとおりである。
+1. 現在時刻で得られた観測からRNN(GRU)とCNNを使って特徴量$$\alpha$$と特徴マップ$$\Gamma$$を計算する
 
-時刻$$t$$に得られた観測から特徴量$$\alpha$$と$$\Gamma$$を計算する。
+2. 時刻1からTまで以下のステップを繰り返す
 
-* 過去位置をエンコードするRNN(GRU)：$$\mathbf{s}_{-\tau:0} \rightarrow \alpha$$
-* 空間特徴を抽出するCNN：$$\chi \rightarrow \Gamma \in \mathbb{R}^{200 \times 200 \times S}$$
+   1. エージェントの位置$$\mathbf{s}_{t-1}$$に対応した空間特徴量$$\Gamma(\mathbf{s}_{t-1})$$をbilinear補間により特徴マップ$$\Gamma$$から取り出す
 
-その後以下の手順によって時刻$$1:T$$の計画$$\mathbf{s}_{1:T}$$もしくは$$\mathbf{z}_{1:T}$$を計算する。
+   2. 各特徴量$$\alpha$$、$$\mathbf{s}_t$$、$$\Gamma(\mathbf{s}_{t-1})$$および$$\lambda$$はConcatenationして特徴$$p_{t-1}$$を作成する
 
-1. 位置$$\mathbf{s}_{t-1}$$に対応した空間特徴量$$\Gamma$$のサブピクセル$$\Gamma(\mathbf{s}_{t-1})$$をbilinear補間により取り出す
+   3. 特徴$$p_{t-1}$$から予測用のRNN(GRU)を使い、ベレの方法([wiki](https://en.wikipedia.org/wiki/Verlet_integration))のステップ$$m_{\theta}$$と位置の標準偏差$$\sigma_{\theta}$$を計算する
 
-2. $$\alpha$$、$$\mathbf{s}_t$$、$$\Gamma(\mathbf{s}_{t-1})$$および$$\lambda$$はConcatenationし、特徴$$p_{t-1}$$を構成する
+   4. ベレの方法から位置の平均を計算する
 
-3. 予測用のRNN(GRU)は特徴$$p_{t-1}$$から位置の平均を直接出力する代わりにベレの方法([wiki](https://en.wikipedia.org/wiki/Verlet_integration))のステップ$$m_{\theta}(\mathbf{s}_{1:t-1}, \phi)$$と位置の標準偏差$$\sigma_{\theta}(\mathbf{s}_{1:t-1}, \phi)$$を出力する
+      $$\mu_{\theta}(\mathbf{s}_{1:t-1}, \phi) = 2 \mathbf{s}_{t-1} - \mathbf{s}_{t-2} + m_{\theta}(\mathbf{s}_{1:t-1}, \phi)$$
 
-4. ベレの方法から位置の平均を計算する
+   5. 潜在変数$$\mathbf{z}_t$$から状態$$\mathbf{s}_{t}$$を計算する。もしくは訓練時は状態$$\mathbf{s}_{t}$$から潜在変数$$\mathbf{z}_t$$を計算する。
 
-   $$\mu_{\theta}(\mathbf{s}_{1:t-1}, \phi) = 2 \mathbf{s}_{t-1} - \mathbf{s}_{t-2} + m_{\theta}(\mathbf{s}_{1:t-1}, \phi)$$
+      $$\mathbf{s}_{t} = \mu_{\theta}(\mathbf{s}_{1:t-1}, \phi) + \sigma_{\theta}(\mathbf{s}_{1:t-1}, \phi) \cdot \mathbf{z}_t$$
 
-5. (潜在変数$$\mathbf{z}_t$$から計画$$\mathbf{s}$$を求めるとき)状態$$\mathbf{s}_{t}$$を計算する
+      $$ \mathbf{z}_t = \sigma_{\theta}(\mathbf{s}_{1:t-1}, \phi) ^{-1} (\mathbf{s}_{t} - \mu_{\theta}(\mathbf{s}_{1:t-1}, \phi))$$
 
-   $$\mathbf{s}_{t} = \mu_{\theta}(\mathbf{s}_{1:t-1}, \phi) + \sigma_{\theta}(\mathbf{s}_{1:t-1}, \phi) \cdot \mathbf{z}_t$$
+### ゴール尤度の設計
 
-6. (計画$$\mathbf{s}$$から潜在変数$$\mathbf{z}_t$$を求めるときのとき)潜在変数$$\mathbf{z}_t$$を計算する
+MBRLのようにゴール尤度は自由に設計できる。例えばエージェントの目標がエージェントが達成するべき最終状態のセット$$\mathbb{G}$$で定義できるとき、ゴール尤度関数はディラックのデルタ分布を使って表現することができる。
 
-   $$ \mathbf{z}_t = \sigma_{\theta}(\mathbf{s}_{1:t-1}, \phi) ^{-1} (\mathbf{s}_{t} - \mu_{\theta}(\mathbf{s}_{1:t-1}, \phi))$$
+$$p(\mathcal{G} \mid \mathbf{s}, \phi) \leftarrow \delta_{\mathbf{s}_T} (\mathbb{G}),\
+\delta_{\mathbf{s}_T} = 1 \text{ if } \mathbf{s}_T \in \mathbb{G}, \
+\delta_{\mathbf{s}_T} = 0 \text{ if } \mathbf{s}_T \notin \mathbb{G}$$
 
-7. ステップ$$T$$まで1から6を繰り返す
+$$\mathbb{G}$$はエージェントが達成するべき最終状態のセットである。自動運転の場合、目的の道路を示すwaypointsやline segment、もしくは走行可能領域を$$\mathbb{G}$$とすることができる。またディラックのデルタ分布の代わりにガウシアン関数を使うこともできる。この場合、目標は必ず達成しなければならないものから奨励するべきものになる。その他には以下の2つの論文で提案されたエネルギーベースの尤度を使う方法がある。
 
-### ゴール尤度関数の設計
+* Emanuel Todorov. Linearly-solvable Markov decision problems. In Neural Information Processing Systems (NeurIPS), pp. 1369–1376, 2007
+* Sergey Levine. Reinforcement learning and control as probabilistic inference: Tutorial and review. arXiv preprint arXiv:1805.00909, 2018.
 
-ゴール尤度関数は自由に設計することができる。例えば移動可能領域内ならば１，移動可能領域外ならば０を返すという簡単な関数を尤度関数とすることができる。
+エネルギーベースの尤度を使う方法は尤度を単純に乗算することにより、様々な尤度を組み合わせることができる。
 
-![goal_likelihood](./goal_likelihood.png)
-
-その他にも以下のような関数を用いることが可能である。
-
-* ゴールへ向かうルートとして与えられた各waypointの半径以内にいる場合は１，そうでない場合は０
-* 移動可能領域をポリゴンで表現し、ポリゴン内ならば１、そうでない場合は０
-* ガウシアン関数
-* エネルギー関数
-
-### 最適化問題の具体的な解き方
-
-最適化問題は潜在変数を使い次のようにGradient ascentで最適解を求める。
-
-![imitative_plan](./imitative_plan.png)
+$$p(\mathcal{G} \mid \mathbf{s}, \phi) \propto \prod_{t=1}^{T} e^{-c(\mathbf{s} \mid \phi)}$$
 
 ## どうやって有効だと検証した？
 
-CARLAを使い以下を検証した。
+DIMを自動運転システムに適用し、CARLA上で性能を検証した。特に次の点について調べた。
 
 1. 最低限の報酬関数の設計とオフライン学習によって解釈可能なエキスパートのような計画を生成できるか？この手法が有効であるか？
 2. 実際の車両の設定のもとでstate-of-the-artの性能を達成できるか？
 3. 新しいタスクに対してどれだけ柔軟であるか？
 4. ゴール設定へのロバスト性はどれだけあるか？
+
+![PathPlanning](./PathPlanning.png)
 
 ### 検証1  性能
 
@@ -200,17 +177,10 @@ potholeに対する回避実験を行った。Gaussian Final-State Mixtureおよ
 
 [N. Rhinehart, R. McAllister, K. Kitani, and S. Levine, “PRECOG: prediction conditioned on goals in visual multi-agent settings,” in Proceedings of the IEEE International Conference on Computer Vision, 2019, pp. 2821–2830.](../PRECOG: PREdiction Conditioned On Goals in Visual Multi-Agent Settings/summary.md)
 
-## 補足
-
-DIMで述べられている生成モデルおよびアーキテクチャはR2P2([link](https://people.eecs.berkeley.edu/~nrhinehart/papers/r2p2_cvf.pdf), [summary](../R2P2: A reparameterized pushforward policy for diverse, precise generative path forecasting/summary.md))と同じである。R2P2にこのようなモデリングをする理由が述べられている。R2P2以外にも例えば以下のようなgenerative autoregressive flowを適用することもできる。
-
-* Danilo Rezende and Shakir Mohamed. Variational inference with normalizing flows. In International
-  Conference on Machine Learning (ICML), pp. 1530–1538, 2015.
-* Aaron van den Oord, Yazhe Li, Igor Babuschkin, Karen Simonyan, Oriol Vinyals, Koray Kavukcuoglu,
-  George van den Driessche, Edward Lockhart, Luis C Cobo, Florian Stimberg, et al. Parallel
-  WaveNet: Fast high-fidelity speech synthesis. arXiv preprint arXiv:1711.10433, 2017.
-
 ## 個人的メモ
 
 * 論文中にいくつかのゴール尤度関数が提案されている。
 * ゴール内の尤度とエキスパートの尤度のバランスはどうしたらいいだろうか？
+
+
+
