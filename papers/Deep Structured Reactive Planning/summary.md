@@ -15,11 +15,11 @@ Reactive planningは予測と計画を同時に行う経路計画法である。
 
 ![reactive_vs_non_reactive](./reactive_vs_non_reactive.png)
 
-この論文はDeep Structured Reactive Planningを提案する。Deep Structured Reactive Planningはサンプルベースのプランニングである。サンプラーを使って経路を生成する。そして生成した経路の評価を行い、最も良い経路を選択する。
+この論文はDeep Structured Reactive Planningを提案する。Deep Structured Reactive Planningはサンプルベースのプランニングである。Trajectory Samplerを使って経路を生成する。そして生成した経路の評価を行い、最も良い経路を選択する。
 
-サンプルの生成にはTrajectory Samplerを使う。Trajectory Samplerは環境中にいる車（アクターと呼ぶ）の将来の経路を走行空間を効率よくサンプリングするジオメトリックなサンプラーである。
+Trajectory Samplerは走行空間を効率よくサンプリングするジオメトリックなサンプラーである。環境中にいる車（アクターと呼ぶ）に対して直線や円弧、クロソイド曲線など様々な経路の離散的なセットを出力する。
 
-経路の評価にはDeep Structured Modelsを使う。Deep Structured Modelsは深層モデルを使ったMRF (マルコフ確率場)である。各アクターの予測経路をノードとして構成される。アクター間の相互作用を捉えたグラフである。Deep Structured Modelsは深層モデルにより２つのエネルギーを計算する。１つは予測経路単体の良さを示すエネルギーである。もう１つは２つの予測経路の衝突に関するエネルギーである。計算したエネルギーはMRFを伝播するために使われる。伝播を行うことで、自動運転車両がある経路を選択するとき、他の車の予測経路がどれだけ起こりやすいかを示す周辺確率を計算する。
+経路の評価にはDeep Structured Modelsを使う。Deep Structured Modelsは深層モデルを使ったMRF (マルコフ確率場)である。各アクターの予測経路をノードとして構成する。アクター間の相互作用を捉えたグラフである。Deep Structured Modelsは深層モデルにより２つのエネルギーを計算する。１つは予測経路単体の良さを示すエネルギーである。もう１つは２つの予測経路の衝突に関するエネルギーである。計算したエネルギーはMRFを伝播するために使われる。伝播を行うことで、自動運転車両がある経路を選択するとき、他の車の予測経路がどれだけ起こりやすいかを示す周辺確率を計算する。
 
 Deep Structured Reactive Planningは経路を選択するとき、Deep Structured Modelsが計算したエネルギーで構成されたコストを、同じく計算した周辺確率で重み付けすることでコストの期待値を計算する。一つの自動運転車の計画経路に対して各アクターにつき複数の候補を考慮する。こうすることで他のアクターの行動の不確実性を考慮することができる。安全性を犠牲にすることなくターゲットレーンへの合流や右左折などの複雑な操作をより効果的かつ効率的に完了することができる。
 
@@ -45,7 +45,9 @@ $$C(\mathcal{Y}, \mathcal{X}; \mathbf{w}) =
 \sum_{i=0}^{N} C_{\text{traj}}(\mathbf{y}_i \mid \mathcal{X}; \mathbf{w_{traj}}) +
 \sum_{i,j} C_{\text{inter}}(\mathbf{y}_i, \mathbf{y}_j)$$
 
-アクターの固有のエネルギー$$C_{\text{traj}}$$はアクターの経路の良さをコストとして示す。アクターの固有のエネルギー$$C_{\text{traj}}$$はニューラルネットワークにより計算する。用いるネットワークはDSDNet ([summary](../DSDNet: Deep Structured self-Driving Network/summary.md))で使われたネットワークと同じである。また自動運転車の固有エネルギーと他のアクターの固有エネルギーの計算は違う重みを用いる。アクター間の相互作用のエネルギー$$C_{\text{inter}}$$は衝突によるエネルギー$$C_{\text{collision}}$$と安全な距離によるエネルギー$$C_{\text{safety distance}}$$で構成される。安全な距離を4mである。
+アクターの固有のエネルギー$$C_{\text{traj}}$$はアクターの経路の良さをコストとして示す。アクターの固有のエネルギー$$C_{\text{traj}}$$はニューラルネットワークにより計算する。用いるネットワークはDSDNet ([summary](../DSDNet: Deep Structured self-Driving Network/summary.md))で使われたネットワークと同じである。計算の際には自動運転車の固有エネルギーと他のアクターの固有エネルギーの計算は違う ネットワークの重みを用いる。
+
+アクター間の相互作用のエネルギー$$C_{\text{inter}}$$は衝突によるエネルギー$$C_{\text{collision}}$$と安全な距離によるエネルギー$$C_{\text{safety distance}}$$で構成される。安全な距離を4mである。
 
 ![interaction_energy](/home/x/Workspace/matomEmotam/papers/Deep Structured Reactive Planning/interaction_energy.png)
 
@@ -53,7 +55,11 @@ Deep Structured Modelを使ってグラフを伝播することで様々な周�
 
 ### Trajectory Sampler
 
-連続空間で表現されるアクターの経路のエネルギーを推論することは非常に困難である。エネルギーの推論を簡単にするためにDSDNet ([summary](../DSDNet: Deep Structured self-Driving Network/summary.md))と同様に、走行空間を効率よくサンプルするTrajectory Samplerを用いる。Trajecotry Samplerは将来の経路を直線や円弧で出力する。
+連続空間で表現されるアクターの経路のエネルギーを推論することは非常に困難である。エネルギーの推論を簡単にするためにDSDNet ([summary](../DSDNet: Deep Structured self-Driving Network/summary.md))と同様に、走行空間を効率よくサンプルするTrajectory Samplerを用いる。Trajecotry Samplerは直線や円弧、クロソイド曲線をさまざまなパラメータで出力する。出力される経路群は常に一定である。
+
+![trajectory sampler](./trajectory_sampler.png)
+
+(*)この図はDSDNetのECCV 2020 long talks([link](https://www.youtube.com/watch?v=hop6FBJnM-c))のものである。
 
 ### Reactive Inference objective
 
@@ -76,7 +82,7 @@ f(\mathcal{Y}, \mathcal{X}; \mathbf{w}) &=
 \right]\
 \end{align} $$
 
-実装では計算量を削減するため、他のアクター同士の相互作用のエネルギー$$C_{\text{inter}}(\mathbf{y}_i, \mathbf{y}_j)$$は無視する。そしてTrajectory Samplerで生成されるサンプルをつかって直接期待値を計算する。つまり次の計算を行う。
+実装では計算量を削減するため、他のアクター同士の相互作用のエネルギー$$C_{\text{inter}}(\mathbf{y}_i, \mathbf{y}_j)$$は無視する。そしてTrajectory Samplerで生成されるサンプルをつかって直接期待値を計算する。したがって次の計算を行う。
 
 $$C_{\text{traj}}(\mathbf{y}_0, \mathcal{X}; \mathbf{w}) +
 \sum_{i=1}^{N} p(\mathbf{y}_i \mid \mathbf{y}_0, \mathcal{X}; \mathbf{w}) C_{\text{traj}} (\mathbf{y}_i \mid \mathcal{X}; \mathbf{w}) +
@@ -125,7 +131,7 @@ Deep structured reactive planningの走行性能を検証するため、CARLAお
 
 #### CARLAの具体的な設定
 
-Simbaと異なりテンプレートシナリオの数を6個とした。またシナリオ内のアクターはCARLAのAPIで提供されているBasicAgentを元にしたモデルに従い動作する。初期位置や速度を変化させ、各テンプレートシナリオごとに25回シミュレーションを行った。作成された計150個のエピソードのうち、50個をValidationデータに、100個をテストデータとした。
+Simbaと異なりテンプレートシナリオの数を6個とした。またシナリオ内のアクターはCARLAのAPIで提供されているBasicAgentクラスを元にしたモデルに従い動作する。初期位置や速度を変化させ、各テンプレートシナリオごとに25回シミュレーションを行った。作成された計150個のエピソードのうち、50個をValidationデータに、100個をテストデータとした。
 
 #### 比較手法
 
@@ -156,7 +162,7 @@ Succ (%)はSucess Rateである。自動運転車がレーンチェンジや左�
 
 #### レーンチェンジの走行結果
 
-次の図はターゲットのレーンへ合流するシナリオを走行した結果である。Reactive Plannerはターゲットレーンに合流することができた。Non−Reactive Plannerはできなかった。Reactive Plannerの結果ではターゲットレーンにいる車が自動運転車を入れさせるために減速している。その一方でNon−Reactive Plannerは時間の経過とともにレーンの左側にゆっくりとよっている。
+次の図はターゲットのレーンへ合流するシナリオを走行した結果である。Reactive Plannerは制限時間内ターゲットレーンに合流することができた。Non−Reactive Plannerはできなかった。Reactive Plannerの結果ではターゲットレーンにいる車が自動運転車を入れさせるために減速している。その一方でNon−Reactive Plannerは時間の経過とともにレーンの左側にゆっくりとよっている。
 
 ![lane_merge_result](./lane_merge_result.png)
 
