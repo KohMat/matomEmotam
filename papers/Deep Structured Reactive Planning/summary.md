@@ -49,7 +49,7 @@ $$C(\mathcal{Y}, \mathcal{X}; \mathbf{w}) =
 
 アクター間の相互作用のエネルギー$$C_{\text{inter}}$$は衝突によるエネルギー$$C_{\text{collision}}$$と安全な距離によるエネルギー$$C_{\text{safety distance}}$$で構成される。安全な距離を4mである。
 
-![interaction_energy](/home/x/Workspace/matomEmotam/papers/Deep Structured Reactive Planning/interaction_energy.png)
+![interaction_energy](./interaction_energy.png)
 
 Deep Structured Modelを使ってグラフを伝播することで様々な周辺確率を計算できる。推論時は$$p(\mathbf{y}_i \mid \mathbf{y}_0, \mathcal{X}; \mathbf{w}) $$、訓練時は$$p(\mathbf{y}_i, \mathcal{X}; \mathbf{w})$$および$$p(\mathbf{y}_i,\mathbf{y}_j, \mathcal{X}; \mathbf{w})$$を計算する。周辺確率はLoopy Belief Propagation (LBP)を使うことで効率的に計算できる。LBPはリカレントニューラルネットワークの特殊系として解釈することができる。つまりLBPによって計算した周辺分布は勾配の計算が可能である。
 
