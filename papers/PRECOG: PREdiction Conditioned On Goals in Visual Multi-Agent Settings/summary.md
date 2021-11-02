@@ -56,15 +56,15 @@ $$q(\mathbf{S}_t \mid \mathbf{S}_{1:t-1}, \phi)
 
 このモデルは次の手順で動作する。
 
-1. 時刻$$t$$に得られた観測からRNN(GRU)とCNNで、それぞれ特徴量$$\alpha$$と特徴マップ$$\Gamma$$を計算する
+1. 現在時刻で得られた観測からRNN(GRU)とCNNを使って特徴量$$\alpha$$と特徴マップ$$\Gamma$$を計算する
 
 2. 時刻$$1:T$$までの以下のステップを繰り返す
 
-   1. 時刻$$t$$の各エージェントの位置$$\mathbf{s}_{t-1}^a$$に対応した特徴マップ$$\Gamma$$の空間特徴量$$\Gamma(\mathbf{s}_{t-1}^a)$$をbilinear補間により取り出す
+   1. 時刻$$t$$の各エージェントの位置$$\mathbf{s}_{t-1}^a$$に対応した空間特徴量$$\Gamma(\mathbf{s}_{t-1}^a)$$をbilinear補間により特徴マップ$$\Gamma$$から取り出す
 
       $$\Gamma^{1:A} = \{ \Gamma(\mathbf{s}_{t-1}^1),..., \Gamma(\mathbf{s}_{t-1}^A) \}$$
 
-   2. 各特徴量$$\alpha$$、$$\mathbf{s}_{t}^{1:A}$$、$$\Gamma^{1:A}$$をConcatenationして特徴$$p_{t-1}$$を構成する
+   2. 各特徴量$$\alpha$$、$$\mathbf{s}_{t}^{1:A}$$、$$\Gamma^{1:A}$$をConcatenationして特徴$$p_{t-1}$$を作成する
 
    3. 特徴$$p_{t-1}$$から予測用のRNN(GRU)を使い、ベレの方法([wiki](https://en.wikipedia.org/wiki/Verlet_integration))のステップ$$m_{\theta}$$と位置の標準偏差$$\sigma_{\theta}$$を計算する
 
