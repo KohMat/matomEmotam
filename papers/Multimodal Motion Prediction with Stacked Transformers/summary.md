@@ -8,7 +8,17 @@
 
 ## どんなもの？
 
-自動運転車が安全に運転するためには周辺にいる車の複数の可能性のある将来の経路を予測することが非常に重要である。この論文は経路予測を行うモデルmmTransformer（MultiModal Transformer）とマルチモーダルな予測を保証する訓練方法RTS（Region Based Strategy）を提案する。mmTransformerはシークエンスデータのモデル化に有効なTransformerを使ったモデルである。Transformerによって道路情報や車両の経路間の関係を階層的に集約し、対象の車の経路を複数予測する。RTSはモデルの予測した経路のマルチモーダリティを陽に保証する訓練方法である。RTSは自動運転車の走行領域を分割し、各予測経路がどの領域への予測を行うか事前に割り当てる。そして学習するときにすべての予測経路の内、真の経路が属する領域にに割り当てられた経路のみを損失の計算に使用する。
+自動運転車が安全に運転するためには周辺にいる車の複数の可能性のある将来の経路を予測することが非常に重要である。この論文は経路予測を行うモデルmmTransformer（MultiModal Transformer）とマルチモーダルな予測を保証する訓練方法RTS（Region Based Strategy）を提案する。
+
+mmTransformerはシークエンスデータのモデル化に有効なTransformerを使ったモデルである。Transformerによって道路情報や車両の経路間の関係を階層的に集約し、対象の単一の車の経路を複数予測する。Transformerを経路予測に使う方法として過去の経路やレーンの情報などすべての情報をある埋め込み表現に変換し、シークエンスとして連結して、Transformerに入力する方法が考えられる。この方法は次の2つの懸念がある。
+
+* Transformerは固定長の入力を必要とするため、この形式は多くのリソースを消費する。
+
+* 様々な情報がアテンション層で集約されるため、潜在的な特徴の品質が下がる恐れがある。
+
+この懸念からmmTransformerはMotion Extractor、Map Aggregator、そしてSocial Constructorの3つのTransformerを内部に持つ。各Transformerは運動、道路、相互作用をそれぞれ集約する。
+
+RTSはモデルの予測した経路のマルチモーダリティを陽に保証する訓練方法である。RTSは自動運転車の走行領域を分割し、各予測経路がどの領域への予測を行うか事前に割り当てる。そして学習するときにすべての予測経路の内、真の経路が属する領域にに割り当てられた経路のみを損失の計算に使用する。
 
 ## 先行研究と比べてどこがすごい？何を解決したか？
 
@@ -20,13 +30,13 @@
 
 ### mmTransformer
 
-mmTransformerは過去の経路と道路や交通情報から対象の車の将来の経路を予測する。処理はStacked TransformersとProposal Feature Decoderの２段構成である。
+mmTransformerは過去の経路と道路や交通情報から対象の車の将来の経路を予測する。処理はStacked TransformersとProposal Feature Decoderで構成される。
 
-1. Stacked Transformersは過去の経路と道路や交通情報で構成されるシーンの情報$$x$$から対象の車の提案特徴量proposal features $$y$$を$$K$$個計算する。
+1. Stacked Transformersは過去の経路と道路や交通情報で構成されるシーンの情報$$x$$を集約し、対象の車の提案特徴量proposal features $$y$$を$$K$$個計算する。
 
    $$\mathbf{Y} = \{y_0, y_1, \dots , y_K \}$$
 
-2. Proposal Feature Decoderは提案特徴量$$y$$から予測経路$$s \in \mathbb{R}^{\mathbf{T} \times 2}$$と経路のスコア$$c$$を計算する。
+2. Proposal Feature Decoderは提案特徴量$$y$$から予測経路$$s \in \mathbb{R}^{\mathbf{T} \times 2}$$と経路のConfidenceスコア$$c$$を計算する。
 
    $$\mathbf{S} = \{s_0, s_1, \dots , s_K \}, \mathbf{C} = \{c_0, c_1, \dots , c_K \}$$
 
@@ -34,25 +44,13 @@ mmTransformerは過去の経路と道路や交通情報から対象の車の将�
 
 #### Stacked Transformers
 
-Transformerを経路予測に使う方法として過去の経路やレーンの情報などすべての情報をある埋め込み表現に変換し、シークエンスとして連結して、Transformerに入力する方法が考えられる。この方法は次の2つの懸念がある。
+Stacked transformersはMotion Extractor、Map Aggregator、そしてSocial Constructorの3つのTransformerを持つ。いずれのTransformerもDETR（[arxiv](https://arxiv.org/abs/2005.12872)）で使われるTransformerと同じである。つまりTransformerはエンコーダとデコーダで構成される。エンコーダはコンテキストの特徴を処理し、デコーダに渡す。デコーダは渡された特徴量とクエリを集約し、新たな特徴量を計算する。
 
-* Transformerは固定長の入力を必要とするため、この形式は多くのリソースを消費する。
-
-* 様々な情報がアテンション層で集約されるため、潜在的な特徴の品質が下がる恐れがある。
-
-以上から、一度に集約するのではなく情報をコンテストごとに集約するように設計する。設計したStacked transformersはMotion Extractor、Map Aggregator、そしてSocial Constructorの3つのTransformerで構成される。いずれのTransformerもDETR（[arxiv](https://arxiv.org/abs/2005.12872)）で使われるTransformerである。Transformerが順序不変という特徴を持つので、異なるモードからなる複数の軌道を生成すると考えている。
+Stacked Transformersで使用されるクエリは提案経路（Trajectory proposals）である。K個のランダムに初期化された提案経路を３つのTransformerを通して、様々な情報と一緒に集約し、予測経路を計算するための特徴量proposal featuresに変換する。また各デコーダへの入力はポジションエンコーディングが追加される。
 
 ![detr_transformer](./transformer.png)
 
-DETRのTransformerはエンコーダとデコーダで構成される。エンコーダはコンテキストの特徴を処理し、デコーダは処理された特徴量とクエリを集約し、新たな特徴量を計算する。Stacked Transformersで使用されるクエリは提案経路（Trajectory proposals）である。K個のランダムに初期化された提案経路を３つのTransformerを通して、様々な情報と一緒に集約し、予測経路を計算するための特徴量proposal featuresに変換する。Stacked Transformerで集約する情報、つまりエンコーダへの入力はそれぞれのモジュールごとに異なる。また各デコーダへの入力はポジションエンコーディングが追加される。
-
-Motion Extractorは過去の車両の経路とクエリから新しい特徴量を出力する。Transformerのエンコーダの入力はすべての車の過去$$T_{obs}$$秒間の2次元位置である。
-
-Map Aggregatorは道路情報とMotion Extractorで抽出された特徴をまとめ、新たな特徴量を計算する。”VectorNet: Encoding HD Maps and Agent Dynamics from Vectorized Representation([arxiv](https://arxiv.org/abs/2005.04259))”と同じ方法で使ってエンコードした道路情報をTransformerのエンコーダに入力する。つまり道路の構造物の中心線をベクター表現で表し、各ベクター表現をpolyline subgraphで処理して同じ形状の潜在特徴量を計算する。
-
-Stacked TransformersはMotion ExtractorおよびMap Aggregatorをすべての車両に対して行う。K個のproposal featuresを車両ごとに計算する。
-
-Social Constructorは車両間の相互作用を捉えることを目的とする。Social Constructorは対象の車の特徴量を周囲の車の特徴量を使って更新する。まず対象以外のすべての車両間の特徴量からMLPを使い新たな特徴量を計算する。この特徴量は非対象の車両の将来の運動の分布を表していると考える。この計算された特徴量をTransformerのエンコーダに入力する。一方でデコーダには対象の車両の特徴量を入力する。デコーダはエンコーダで処理された特徴量と対象の車両の特徴量を集約し、新しい対象の車の特徴量を出力する。
+Stacked Transformerで集約する情報、つまりエンコーダへの入力はそれぞれのモジュールごとに異なる。Motion Extractorのエンコーダの入力はすべての車の過去$$T_{obs}$$秒間の2次元位置である。過去の経路とクエリから新しい特徴量を出力する。Map Aggregatorのエンコーダの入力は道路構造物の特徴量である。道路構造物の特徴量は”VectorNet: Encoding HD Maps and Agent Dynamics from Vectorized Representation”([summary](../VectorNet: Encoding HD Maps and Agent Dynamics from Vectorized Representation/summary.md))で提案された方法と同じ方法を使って計算される。つまり道路の構造物の中心線をベクター表現で表したあと、各ベクター表現をpolyline subgraphで処理する。Social Constructorのエンコーダの入力は他の車のproposal featuresである。Motion ExtractorおよびMap Aggregatorを使って経路を予測する対象の車と同じように他の車に対しても特徴量を計算する。他の車のproposal featuresはフィートフォワードネットワークを使って処理された後、エンコーダに入力される。
 
 #### Proposal Feature Decoder
 
@@ -62,9 +60,9 @@ Proposal Feature Decoderは２つの３層MLPで構成される。Stacked Transf
 
 車の経路を予測する問題を単純に回帰問題として見なしてモデルを訓練する方法がある。この方法の問題点は複数のモードがある場合にモデルがモードの平均を出力することである。この問題をmode average problemと呼ぶ。学習データ内に2つのモード、車が交差点を直進する経路が90％、左折する経路が10％含まれているとする。このデータでモデルを学習すると、モデルは直進と左折の中間を車両が進むような非現実的な経路を出力する。
 
-mode average problemに対処する方法としてモデルが出力した複数の経路の内、最も近い提案経路と真の経路との誤差のみを使う方法がある。しかしこの方法はデータに最も頻発する一つのモードへモデルの提案経路が偏るという別の問題を持つ。この問題をunimodal effectsと呼ぶ。上述の例ではモデルは殆どの場合直進の経路のみを出力する。
+mode average problemに対処する方法としてモデルが出力した複数の経路の内、最も近い提案経路のみを真の経路との損失計算を使う方法がある。しかしこの方法はデータに最も頻発する一つのモードへモデルの出力経路が偏るという別の問題を持つ。この問題をunimodal effectsと呼ぶ。上述の例ではモデルは殆どの場合直進の経路のみを出力する。
 
-RTS（Region-based Training Strategy）はunimodal effectsを解決するため、真の経路と最も近い提案経路との誤差ではなく、別の方法で誤差を取る経路をを選ぶ。図に示すようにRTSはモデルが出力する個々の経路がどの走行領域（R1~R7)へ向かうかを事前に割り当てる。例えばmmTransformerが42個の経路出力を持つとすると、１つの領域に付き6個の経路を割り当てる。そして真の経路が属する領域に割り当てられたすべての提案経路と誤差を計算する。すべての該当する提案領域を誤差計算に利用することでよりマルチモーダルな結果が得られる。図の場合、真の経路（グリーン）が領域R1に属しているので、R1に割り当てられた経路（ピンク）を使って損失計算を行う。
+RTS（Region-based Training Strategy）はmode average problemとunimodal effectsを解決するため、真の経路と最も近い提案経路との誤差ではなく、別の方法で誤差を取る経路を選ぶ。図に示すようにRTSはモデルが出力する個々の経路がどの走行領域（R1~R7)へ向かうかを事前に割り当てる。例えばmmTransformerが42個の経路出力を持つとすると、１つの領域に付き6個の経路を割り当てる。そして真の経路が属する領域に割り当てられたすべての提案経路と誤差を計算する。すべての該当する提案領域を誤差計算に利用することでよりマルチモーダルな結果が得られる。図の場合、真の経路（グリーン）が領域R1に属しているので、R1に割り当てられた経路（ピンク）を使って損失計算を行う。
 
 ![rts_overview](./rts_overview.png)
 
@@ -171,6 +169,8 @@ mmTransformerおよびmmTransformer+RTSの定性的な結果を示す。様々�
 [VectorNet: Encoding HD Maps and Agent Dynamics from Vectorized Representation](../VectorNet: Encoding HD Maps and Agent Dynamics from Vectorized Representation/summary.md)
 
 [DSDNet: Deep Structured self-Driving Network](../DSDNet: Deep Structured self-Driving Network/summary.md)
+
+[SCENE TRANSFORMER: A UNIFIED ARCHITECTURE FOR PREDICTING MULTIPLE AGENT TRAJECTORIES](../SCENE TRANSFORMER: A UNIFIED ARCHITECTURE FOR PREDICTING MULTIPLE AGENT TRAJECTORIES/summary.md)
 
 ## 個人的メモ
 
