@@ -12,7 +12,7 @@
 
 mmTransformerはシークエンスデータのモデル化に有効なTransformerを使ったモデルである。Transformerによって道路情報や車両の経路間の関係を階層的に集約し、対象の単一の車の経路を複数予測する。Transformerを経路予測に使う方法として過去の経路やレーンの情報などすべての情報をある埋め込み表現に変換し、シークエンスとして連結して、Transformerに入力する方法が考えられる。この方法は次の2つの懸念がある。
 
-* Transformerは固定長の入力を必要とするため、この形式は多くのリソースを消費する。
+* Transformerは固定長の入力を必要とするため、メモリや計算などのリソースを多く消費する。
 
 * 様々な情報がアテンション層で集約されるため、潜在的な特徴の品質が下がる恐れがある。
 
@@ -50,7 +50,11 @@ Stacked Transformersで使用されるクエリは提案経路（Trajectory prop
 
 ![detr_transformer](./transformer.png)
 
-Stacked Transformerで集約する情報、つまりエンコーダへの入力はそれぞれのモジュールごとに異なる。Motion Extractorのエンコーダの入力はすべての車の過去$$T_{obs}$$秒間の2次元位置である。過去の経路とクエリから新しい特徴量を出力する。Map Aggregatorのエンコーダの入力は道路構造物の特徴量である。道路構造物の特徴量は”VectorNet: Encoding HD Maps and Agent Dynamics from Vectorized Representation”([summary](../VectorNet: Encoding HD Maps and Agent Dynamics from Vectorized Representation/summary.md))で提案された方法と同じ方法を使って計算される。つまり道路の構造物の中心線をベクター表現で表したあと、各ベクター表現をpolyline subgraphで処理する。Social Constructorのエンコーダの入力は他の車のproposal featuresである。Motion ExtractorおよびMap Aggregatorを使って経路を予測する対象の車と同じように他の車に対しても特徴量を計算する。他の車のproposal featuresはフィートフォワードネットワークを使って処理された後、エンコーダに入力される。
+Stacked Transformerで集約する情報、つまりエンコーダへの入力はそれぞれのモジュールごとに異なる。
+
+* Motion Extractorのエンコーダの入力はすべての車の過去$$T_{obs}$$秒間の2次元位置である。過去の経路とクエリから新しい特徴量を出力する。
+* Map Aggregatorのエンコーダの入力は道路構造物の特徴量である。道路構造物の特徴量は”VectorNet: Encoding HD Maps and Agent Dynamics from Vectorized Representation”([summary](../VectorNet: Encoding HD Maps and Agent Dynamics from Vectorized Representation/summary.md))で提案された方法と同じ方法を使って計算される。つまり道路の構造物の中心線をベクター表現で表したあと、各ベクター表現をpolyline subgraphで処理する。
+* Social Constructorのエンコーダの入力は他の車のproposal featuresである。Motion ExtractorおよびMap Aggregatorを使って経路を予測する対象の車と同じように他の車に対しても特徴量proposal featuresを計算する。他の車のproposal featuresはフィートフォワードネットワークを使って処理された後、エンコーダに入力される。
 
 #### Proposal Feature Decoder
 
@@ -62,7 +66,7 @@ Proposal Feature Decoderは２つの３層MLPで構成される。Stacked Transf
 
 mode average problemに対処する方法としてモデルが出力した複数の経路の内、最も近い提案経路のみを真の経路との損失計算を使う方法がある。しかしこの方法はデータに最も頻発する一つのモードへモデルの出力経路が偏るという別の問題を持つ。この問題をunimodal effectsと呼ぶ。上述の例ではモデルは殆どの場合直進の経路のみを出力する。
 
-RTS（Region-based Training Strategy）はmode average problemとunimodal effectsを解決するため、真の経路と最も近い提案経路との誤差ではなく、別の方法で誤差を取る経路を選ぶ。図に示すようにRTSはモデルが出力する個々の経路がどの走行領域（R1~R7)へ向かうかを事前に割り当てる。例えばmmTransformerが42個の経路出力を持つとすると、１つの領域に付き6個の経路を割り当てる。そして真の経路が属する領域に割り当てられたすべての提案経路と誤差を計算する。すべての該当する提案領域を誤差計算に利用することでよりマルチモーダルな結果が得られる。図の場合、真の経路（グリーン）が領域R1に属しているので、R1に割り当てられた経路（ピンク）を使って損失計算を行う。
+RTS（Region-based Training Strategy）はmode average problemとunimodal effectsを解決するため、真の経路と最も近い提案経路との誤差ではなく、別の方法で誤差を取る経路を選ぶ。図に示すようにRTSはモデルが出力する個々の経路がどの走行領域（R1~R7)へ向かうかを事前に割り当てる。例えばmmTransformerが42個の経路出力を持つとすると、１つの領域に付き6個の経路を割り当てる。そして真の経路が属する領域に割り当てられたすべての提案経路と誤差を計算する。すべての該当する提案領域を誤差計算に利用することでよりマルチモーダルな結果が得られる。次に示す図の場合、真の経路（グリーン）が領域R1に属しているので、R1に割り当てられている経路（ピンク）を使って損失計算を行う。
 
 ![rts_overview](./rts_overview.png)
 
