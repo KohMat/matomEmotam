@@ -9,7 +9,7 @@
 
 ## どんなもの？
 
-道路上では車がレーンチェンジして、走行している前のスペースに入ってきたり、目の前に走っている自転車が突然曲がり、目の前のスペースを横切るようなシーンで溢れている。車や自転車、人などの道路の利用者の意図を理解することが、Waymo Driverが安全な運転を行うために必要である。しかしながら道路の利用者の行動を予測することは難しい。精度の高い予測を行うためには道路の幅や形状、信号、標識など様々な道路の情報、交通ルールを理解する必要があるからである。加えて、他の利用者はいつも交通ルールを守るとは限らないことも要因のひとつである。
+道路上では車がレーンチェンジして、走行している前のスペースに入ってきたり、目の前に走っている自転車が突然曲がり、目の前のスペースを横切るようなシーンで溢れている。車や自転車、人などの道路の利用者の意図を理解することが、Waymo Driverが安全な運転を行うために必要である。しかしながら道路の利用者の行動を予測することは難しい。精度の高い予測を行うためには道路の幅や形状、信号、標識など様々な道路の情報、交通ルールを理解する必要がある。さらに他の車や人はいつも交通ルールを守るとは限らない。
 
 車や人などの道路上の利用者の行動を経路として予測するVectorNetを提案する。VecotrNetは利用者の過去の経路や道路情報をpolylineで表現する。Polylineは始点と終点、その属性を持つベクトルの集まりである。各利用者および各道路構造物は一つのpolylineで表される。
 
@@ -19,7 +19,7 @@ VectorNetは階層的なグラフニューラルネットワークである。�
 
 ![overview](./overview.png)
 
-またVectorNetの提案に加えて不完全なグラフを補完する補助タスク（auxiliary graph completion task）を提案する。グラフ補完タスクは訓練時に経路を予測する目的に加えて使用する。以下の成功を得た論文に習った補助タスクである。
+またVectorNetの提案に加えて不完全なグラフを補完する補助タスク（auxiliary graph completion task）を提案する。グラフ補完タスクは訓練時に将来の経路を予測するタスクに加えて使用する。以下の成功を得た論文に習った補助タスクである。
 
 * BERT: Pre-training of deep bidirectional transformers for language understanding([arxiv](https://arxiv.org/abs/1810.04805))
 
@@ -153,6 +153,8 @@ Polyline表現においてターゲットの利用者の位置に対してネッ
 [Multimodal Motion Prediction with Stacked Transformers](../Multimodal Motion Prediction with Stacked Transformers/summary.md)
 
 [SPAGNN: Spatially-Aware Graph Neural Networks for Relational Behavior Forecasting from Sensor Data](../SPAGNN Spatially-Aware Graph Neural Networks for Relational Behavior Forecasting from Sensor Data/summary.md)
+
+[SCENE TRANSFORMER: A UNIFIED ARCHITECTURE FOR PREDICTING MULTIPLE AGENT TRAJECTORIES](../SCENE TRANSFORMER: A UNIFIED ARCHITECTURE FOR PREDICTING MULTIPLE AGENT TRAJECTORIES/summary.md)
 
 ## 個人的メモ
 
