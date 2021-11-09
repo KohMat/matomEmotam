@@ -23,7 +23,7 @@ RTSはモデルの予測した経路のマルチモーダリティを陽に保�
 ## 先行研究と比べてどこがすごい？何を解決したか？
 
 * mmTransformerはstacked transformersを経路予測に使った初めてのモデルである。コンテキストを集約してマルチモーダルな経路を予測する。
-* マルチモーダルな予測を行うため新しい訓練方法RTSを提案した。RTSは個々の予測経路がある特定のモードを捉えることを保証する。
+* 訓練方法RTSは個々の予測経路がある特定のモードを捉えることを保証する。
 * mmTransformerとRTSを組み合わせた結果は2020年11月16日時点でArgoverseベンチマーク上1位となった。
 
 ## 手法は？
@@ -46,14 +46,14 @@ mmTransformerは過去の経路と道路や交通情報から対象の車の将�
 
 Stacked transformersはMotion Extractor、Map Aggregator、そしてSocial Constructorの3つのTransformerを持つ。いずれのTransformerもDETR（[arxiv](https://arxiv.org/abs/2005.12872)）で使われるTransformerと同じである。DETRのTransformerはエンコーダとデコーダで構成される。エンコーダはコンテキストの特徴を処理し、デコーダに渡す。デコーダは渡された特徴量とクエリを集約し、新たな特徴量を計算する。
 
-Stacked Transformersで使用されるクエリは提案経路（Trajectory proposals）である。提案経路は予測経路を計算するための特徴量proposal featuresである。DETRと同様に学習可能なパラメータである。提案経路は学習初期にランダムに初期化され、学習を通して更新される。またTransformer (AttentionのKeyとQuery)へ提案経路を入力する前にポジションエンコーディングを提案経路に対して加算する。
+Stacked Transformersで使用されるクエリは提案経路（Trajectory proposals）である。提案経路は予測経路を計算するための特徴量proposal featuresである。DETRと同様に学習可能なパラメータである。提案経路はその他のモデルとともに訓練データを使って更新する。またTransformerのAttentionのKeyとQueryへ提案経路を入力する前にポジションエンコーディングを提案経路に対して加算する。
 
 ![detr_transformer](./transformer.png)
 
 Stacked Transformerで使用されるコンテキスト、つまりエンコーダへの入力はそれぞれのモジュールごとに異なる。
 
 * Motion Extractorのエンコーダの入力はすべての車の過去$$T_{obs}$$秒間の2次元位置である。
-* Map Aggregatorのエンコーダの入力は道路構造物の特徴量である。道路構造物の特徴量は”VectorNet: Encoding HD Maps and Agent Dynamics from Vectorized Representation”([summary](../VectorNet: Encoding HD Maps and Agent Dynamics from Vectorized Representation/summary.md))で提案された方法と同じ方法を使って計算される。つまり道路の構造物の中心線をベクター表現で表したあと、各ベクター表現をpolyline subgraphで処理する。
+* Map Aggregatorのエンコーダの入力は道路構造物の特徴量である。道路構造物の特徴量は”VectorNet: Encoding HD Maps and Agent Dynamics from Vectorized Representation”([summary](../VectorNet: Encoding HD Maps and Agent Dynamics from Vectorized Representation/summary.md))で提案された方法で計算される。つまり道路の構造物の中心線をベクター表現で表したあと、各ベクター表現をpolyline subgraphで処理する。
 * Social Constructorのエンコーダの入力は他の車のproposal featuresである。Motion ExtractorおよびMap Aggregatorを使って経路を予測する対象の車と同じように他の車に対しても特徴量proposal featuresを計算する。他の車のproposal featuresはフィートフォワードネットワークを使って処理された後、エンコーダに入力される。
 
 #### Proposal Feature Decoder
@@ -128,11 +128,11 @@ mmTransformerもしくはmmTransformer+RTSを使う方法がいずれかのメ�
 
 #### mmTransformerの各モジュールおよびRTSの重要性
 
-stacked transformersのうちmotion extractorのみを使うモデルをベースラインのモデルとした（1行目）。Map AggregatiotorおよびSocial Constructorを使うことでMRがベースラインの23.3％から10.6%まで減少している（2〜４行目）。コンテキストである道路や過去の軌跡の情報を使ってシナリオのより深い理解が行われていると思われる。
+stacked transformersのうちmotion extractorのみを使うモデルをベースラインのモデルとした（1行目）。Map AggregatorおよびSocial Constructorを使うことでMRがベースラインの23.3％から10.6%まで減少している（2〜４行目）。コンテキストである道路や過去の軌跡の情報を使ってシナリオのより深い理解が行われていると思われる。
 
 ![module_abration](./module_abration.png)
 
-mmTransforとmmTransformer+RTSの結果は５行目と６行目である。RTSを使用することでMRが17.6％から9.2%に減少した。mmTransformerの提案数を６から36個に増やしたときの結果は4行目と5行目である。ただ単純に提案数を増やしてもRTSを用いいない場合性能が上がらないことが示されている。これより一つのモードへの集中を防ぐRTSが有効であることがわかる。
+mmTransforとmmTransformer+RTSの結果は５行目と６行目である。RTSを使用することでMRが17.6％から9.2%に減少した。mmTransformerの提案数を６から36個に増やしたときの結果は4行目と5行目である。ただ単純に提案数を増やしてもRTSを用いない場合性能が上がらないことが示されている。これより一つのモードへの集中を防ぐRTSが有効であることがわかる。
 
 #### RTSの領域の分割方法
 
