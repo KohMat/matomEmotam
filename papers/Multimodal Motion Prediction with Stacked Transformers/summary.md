@@ -44,15 +44,15 @@ mmTransformerは過去の経路と道路や交通情報から対象の車の将�
 
 #### Stacked Transformers
 
-Stacked transformersはMotion Extractor、Map Aggregator、そしてSocial Constructorの3つのTransformerを持つ。いずれのTransformerもDETR（[arxiv](https://arxiv.org/abs/2005.12872)）で使われるTransformerと同じである。つまりTransformerはエンコーダとデコーダで構成される。エンコーダはコンテキストの特徴を処理し、デコーダに渡す。デコーダは渡された特徴量とクエリを集約し、新たな特徴量を計算する。
+Stacked transformersはMotion Extractor、Map Aggregator、そしてSocial Constructorの3つのTransformerを持つ。いずれのTransformerもDETR（[arxiv](https://arxiv.org/abs/2005.12872)）で使われるTransformerと同じである。DETRのTransformerはエンコーダとデコーダで構成される。エンコーダはコンテキストの特徴を処理し、デコーダに渡す。デコーダは渡された特徴量とクエリを集約し、新たな特徴量を計算する。
 
-Stacked Transformersで使用されるクエリは提案経路（Trajectory proposals）である。K個のランダムに初期化された提案経路を３つのTransformerを通して、様々な情報と一緒に集約し、予測経路を計算するための特徴量proposal featuresに変換する。また各デコーダへの入力はポジションエンコーディングが追加される。
+Stacked Transformersで使用されるクエリは提案経路（Trajectory proposals）である。提案経路は予測経路を計算するための特徴量proposal featuresである。DETRと同様に学習可能なパラメータである。提案経路は学習初期にランダムに初期化され、学習を通して更新される。またTransformer (AttentionのKeyとQuery)へ提案経路を入力する前にポジションエンコーディングを提案経路に対して加算する。
 
 ![detr_transformer](./transformer.png)
 
-Stacked Transformerで集約する情報、つまりエンコーダへの入力はそれぞれのモジュールごとに異なる。
+Stacked Transformerで使用されるコンテキスト、つまりエンコーダへの入力はそれぞれのモジュールごとに異なる。
 
-* Motion Extractorのエンコーダの入力はすべての車の過去$$T_{obs}$$秒間の2次元位置である。過去の経路とクエリから新しい特徴量を出力する。
+* Motion Extractorのエンコーダの入力はすべての車の過去$$T_{obs}$$秒間の2次元位置である。
 * Map Aggregatorのエンコーダの入力は道路構造物の特徴量である。道路構造物の特徴量は”VectorNet: Encoding HD Maps and Agent Dynamics from Vectorized Representation”([summary](../VectorNet: Encoding HD Maps and Agent Dynamics from Vectorized Representation/summary.md))で提案された方法と同じ方法を使って計算される。つまり道路の構造物の中心線をベクター表現で表したあと、各ベクター表現をpolyline subgraphで処理する。
 * Social Constructorのエンコーダの入力は他の車のproposal featuresである。Motion ExtractorおよびMap Aggregatorを使って経路を予測する対象の車と同じように他の車に対しても特徴量proposal featuresを計算する。他の車のproposal featuresはフィートフォワードネットワークを使って処理された後、エンコーダに入力される。
 
