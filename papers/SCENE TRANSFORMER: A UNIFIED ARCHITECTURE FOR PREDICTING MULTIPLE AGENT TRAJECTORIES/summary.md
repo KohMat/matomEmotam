@@ -44,7 +44,7 @@ Scene Transformerは大半のレイヤーはTransformerで構成されるencoder
 
 ### Transformerによるエンコード
 
-$(A, T, D)$のエージェントの特徴量をAttentionする率直な方法としてエージェントと時間をまとめてATの次元ですSelf-Attentionする方法があるが、Scene Transformerはエージェントと時間の軸に分けてSelf-Attentionを行う。このFactorized Agents Self-Attentionを行うことで計算負荷を減らし、まったく同じ特徴量を持つエージェントを区別することができる。時間とエージェントの間で交互にSelf-Attentionを繰り返し、時間的な運動の滑らかさとエージェントの依存関係の両方を捉える。その後、道路データとCross Attentionを行い、運動の予測に関連のある道路データを抽出する。
+$(A, T, D)$のエージェントの特徴量をAttentionする率直な方法としてエージェントと時間をまとめてATの次元でSelf-Attentionする方法があるが、Scene Transformerはエージェントと時間の軸に分けてSelf-Attentionを行う。このFactorized Agents Self-Attentionを行うことで計算負荷を減らし、ポジションエンコーディングなしでまったく同じ特徴量を持つエージェントを区別することができる。時間とエージェントの間で交互にSelf-Attentionを繰り返し、時間的な運動の滑らかさとエージェントの依存関係の両方を捉える。その後、道路データとCross Attentionを行い、運動の予測に関連のある道路データを抽出する。
 
 ![architecture](./architecture.png)
 
