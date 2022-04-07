@@ -13,5 +13,6 @@
 * [Deep Structured Reactive Planning](papers/Deep Structured Reactive Planning/summary.md)
 * [R2P2: A reparameterized pushforward policy for diverse, precise generative path forecasting](papers/R2P2: A reparameterized pushforward policy for diverse, precise generative path forecasting/summary.md)
 * [Can autonomous vehicles identify, recover from, and adapt to distribution shifts](papers/Can autonomous vehicles identify, recover from, and adapt to distribution shifts/summary.md)
+* [SCENE TRANSFORMER: A UNIFIED ARCHITECTURE FOR PREDICTING MULTIPLE AGENT TRAJECTORIES](papers/SCENE TRANSFORMER: A UNIFIED ARCHITECTURE FOR PREDICTING MULTIPLE AGENT TRAJECTORIES/summary.md)
 * [Multimodal Motion Prediction with Stacked Transformers](papers/Multimodal Motion Prediction with Stacked Transformers/summary.md)
 * [PRECOG: PREdiction Conditioned On Goals in Visual Multi-Agent Settings](papers/PRECOG: PREdiction Conditioned On Goals in Visual Multi-Agent Settings/summary.md)
