@@ -12,7 +12,7 @@
 
 ![marginal_prediction_and_joint_prediction](./marginal_prediction_and_joint_prediction.png)
 
-この論文は自動運転システム内の運動の予測と計画を統合を目的としたマルチエージェントの運動予測を行うモデルScene Transformerを提案する。Scene Transformerはマルチエージェントの時系列データをシークエンスとして扱い、Transformerで処理するモデルである。Transformerベースのモデルであるためエージェントの順序に対してpermutation equivariantの性質を持つ。Scene TransformerはBERTで使われたMasked Language Modelに習って、Scene Transformerは入力された時系列データのマスクされた部分を予測する。このマスキング戦略によってScene Transformerにマスクをどう与えるかで様々な予測タスクを行うことができる。たとえば次のタスクである。
+この論文は自動運転システムにおける運動予測と運動計画を統合を目的として、マルチエージェントの運動予測を行うモデルScene Transformerを提案する。Scene Transformerはマルチエージェントの時系列データをシークエンスとして扱い、Transformerで処理するモデルである。Scene TransformerはBERTで使われたMasked Language Modelと同様に入力された時系列データのマスクされた部分を予測する。このマスキング戦略によってScene Transformerにマスクをどう与えるかで様々な予測タスクを行うことができる。たとえば次のタスクである。
 
 * ある時刻から時刻Tまでの運動を予測するMP(Motion Prediction）
 * 自動運転車両（AV）の運動を既知としてその他のエージェントの運動を予測するCMP(Conditional Motion Prediction)
@@ -20,7 +20,7 @@
 
 ![mask_strategy](./mask_strategy.png)
 
-またScene Transformerの入力および出力では、すべてのエージェントの位置を関心のあるエージェントを中心とした座標系で表現する。このScene-centric表現によりモデルを変更せず損失を変更するだけでMarginal PredictionとJoint Predictionの異なる運動予測を行うように訓練することができる。
+Scene Transformerの入力および出力では、すべてのエージェントの位置を関心のあるエージェントを中心とした座標系で表現する。このScene-centric表現によりモデルを変更せず損失を変更するだけでMarginal PredictionとJoint Predictionの異なる運動予測を行うように訓練することができる。またScene TransformerはTransformerベースのモデルであるためエージェントの順序に対してpermutation equivariantの性質を持つ。
 
 ## 先行研究と比べてどこがすごい？何を解決したか？
 
@@ -28,7 +28,7 @@ Scene-centric表現、エージェントに対するpermutation equivariantな�
 
 ## 手法は？
 
-Scene Transformerは大半のレイヤーはTransformerで構成されるencoder-decoderベースのアーキテクチャのモデルである。Scene Transformerの処理は次の3つのステージである。
+Scene Transformerは大半のレイヤーはTransformerからなるencoder-decoderベースのアーキテクチャのモデルである。Scene Transformerの処理は次の3つのステージで構成される。
 
 1. エージェントの時系列データおよび道路データを高次元空間に埋め込む
 2. エージェントや道路データの間の相互作用をエンコードする
