@@ -15,50 +15,54 @@
 
 ![EmbeddedImage](./EmbeddedImage.gif)
 
-ESP(Estimating Social-forecast Probabilities)は単一エージェントの経路を予測するR2P2([link](https://people.eecs.berkeley.edu/~nrhinehart/papers/r2p2_cvf.pdf), [summary](../R2P2: A reparameterized pushforward policy for diverse, precise generative path forecasting/summary.md))にマルチエージェント間の相互作用を捉えるように変更を加えたフローベース生成モデルである。ESPは潜在変数からすべてのエージェントの経路を生成する。また経路を生成するだけでなく、エージェントの行動を確率的に説明する。つまり各時刻の各エージェントの状態を表すFactorized潜在変数により、任意の時間における任意エージェントの状態を独立に変えたときの効果を確率で出力する。
+ESP(Estimating Social-forecast Probabilities)は単一エージェントの経路を予測するR2P2([link](https://people.eecs.berkeley.edu/~nrhinehart/papers/r2p2_cvf.pdf), [summary](../R2P2: A reparameterized pushforward policy for diverse, precise generative path forecasting/summary.md))にマルチエージェント間の相互作用を捉えるように変更を加えたフローベース生成モデルである。ESPは潜在変数からすべてのエージェントの経路を生成する。また生成した行動の尤度を出力する。ESPは各時刻の各エージェントの状態をFactorized潜在変数で表すことにより、任意の時間における任意エージェントの状態を独立に変えることができる。
 
-PRECOG (PREdition Conditioned On Goal)はESPを使った条件付き予測を行う方法である。PRECOGは自動運転車の目的地などの有り得そうな将来の状態をゴールとみなす。そして自動運転車がゴールへ向かうような経路を計画する。計画により予測経路とともにその経路を表す潜在変数が得られる。得られた自動運転車の潜在変数と正規分布からサンプリングした他のエージェントの潜在変数をESPで予測経路に変換する。このように計算された経路は自動運転車の経路に条件付けられた経路となる。自動運転車が目的地へ向かう場合に集中して予測するので予測する経路の可能性を絞ることができる。結果として自車両だけでなく相互に作用する他のエージェントの軌道の予測精度を高めることができる。
+PRECOG (PREdition Conditioned On Goal)は自動運転車など将来の意図がわかっている車両の目的地を条件としてESPにより経路を予測する方法である。自動運転車が目的地へ向かう場合に集中して予測するので、予測する経路の可能性を絞ることになる。結果として自車両だけでなく相互に作用する他のエージェントの軌道の予測精度を高めることができる。
 
 ## 先行研究と比べてどこがすごい？何を解決したか？
 
 * ESPがエージェント間の相互作用を考慮する予測を実行できることを示した。
-* ESPがCALRAおよびnuScenesのデータセットで３つのstate-of-artの方法の性能を上回ることを示した。
+* ESPがCALRAおよびnuScenesのデータセットで現状の３つのstate-of-artの方法の性能を上回ることを示した。
 * PRECOGが自車両だけでなく相互に作用するその他のエージェントの予測性能が改善されることをCALRAおよびnuScenesのデータセットを使い示した。
 
 ## 手法は？
 
 ### Estimating Social-forecast Probability (ESP)
 
-ESPは次の観測$$\phi \doteq \{\mathbf{s}_{-\tau:0}, \chi \}$$を予測に使う。
+ESPは状態の遷移確率を正規分布と仮定した自己回帰型のフローベースの生成モデルである。ESPの潜在変数は各エージェントの各タイムステップに分解されて表現される。
 
-* 過去から現在までのすべてエージェントの位置$$\mathbf{s}_{-\tau:0}$$
-* LiDARの点群もしくは道路の構造物を俯瞰図で表現したボクセル$$\chi = \mathbb{R}^{200 \times 200 \times 2}$$
+$$\mathbf{Z} = \mathbf{Z}_{1:T}^{1:A} = \{\mathbf{Z}_1^1, \dots, \mathbf{Z}_T^1, \mathbf{Z}_1^2, \dots, \mathbf{Z}_T^2, \dots, \mathbf{Z}_1^{A}, \dots, \mathbf{Z}_T^{A}\}$$
 
-ESPはフローベースの生成モデル$$\mathbf{S} \sim q(\mathbf{S} \mid \phi)$$である。生成モデルは逆変換可能な関数$$f_{\theta}(\cdot)$$を使い現在時刻から$$T$$ステップ先までのすべてのエージェントの経路$$\mathbf{S} \in \mathbb{R}^{T \times A \times D}$$を生成することができる。。
-
-$$\mathbf{Z} \sim \mathcal{N}(0, I); \mathbf{S} = f_{\theta}(\mathbf{Z}; \phi)$$
-
-関数$$f_{\theta}(\cdot)$$は各エージェント$$a$$の１ステップ先の更新式で構成される。
+ESPはこの潜在変数を逆変換可能な関数$$f_{\theta}(\cdot)$$を使って潜在変数$$\mathbf{Z}$$を変換し、A個のエージェントの時刻Tまでの経路$$\mathbf{S}$$を生成する。具体的には次に示す１ステップ先の更新式をすべてのエージェントで現在時刻から繰り返し適用する。
 
 $$\mathbf{S}_{t}^{a} = f_{\theta}(\mathbf{Z}_t^a) = \mu_{\theta}^a(\mathbf{S}_{1:t-1}, \phi) + \sigma_{\theta}^a(\mathbf{S}_{1:t-1}, \phi) \cdot \mathbf{Z}_t^a \in \mathbb{R}^{D}$$
 
-$$\mathbf{S}_{t}^{a}$$および$$\mathbf{Z}_{t}^{a}$$は時刻$$t$$におけるエージェント$$a$$の位置と潜在変数である。パラメータ$$\mu_{\theta}^a(\cdot) \in \mathbb{R}^{D}$$および$$\sigma_{\theta}^a(\cdot)\in \mathbb{R}^{D \times D}$$は状態$$\mathbf{S}_{t}$$の平均および標準偏差を出力するネットワーク関数である。１ステップ先のの更新式を繰り返し適用することで現在時刻からTステップ先までの経路を計算する。各遷移確率は正規分布と仮定している。ESPは次式で表すこともできる。
+$$\mathbf{S}_{t}^{a}$$および$$\mathbf{Z}_{t}^{a}$$は時刻$$t$$におけるエージェント$$a$$の位置と潜在変数である。パラメータ$$\mu_{\theta}^a(\cdot) \in \mathbb{R}^{D}$$および$$\sigma_{\theta}^a(\cdot)\in \mathbb{R}^{D \times D}$$は状態$$\mathbf{S}_{t}$$の平均および標準偏差を出力するネットワーク関数である。$$\phi$$は過去から現在までのすべてエージェントの位置、LIDARの点群、道路の構造物などの観測である。
 
-$$q(\mathbf{S} \mid \phi)= \prod_{t=1}^T q(\mathbf{S}_t \mid \mathbf{S}_{1:t-1}, \phi)$$
+同様に経路から潜在変数の変換は次のように行われる。
 
-$$q(\mathbf{S}_t \mid \mathbf{S}_{1:t-1}, \phi)
-= \prod_{a=1}^A
-\mathcal{N}(\mathbf{S}_t^a ; \mu_{\theta}^a, \sigma_{\theta}^a{\sigma_{\theta}^a}^{\top})$$
+$$\mathbf{Z}_t^a ={\sigma_{\theta}^a}^{-1}(\mathbf{S}_{1:t-1}, \phi)
+\left(
+\mathbf{S}_{t}^{a} - \mu_{\theta}^a(\mathbf{S}_{1:t-1}, \phi)
+\right)$$
 
-ネットワーク関数の具体的なアーキテクチャは図で示すように観測マップ$$\chi$$から特徴マップ$$\Gamma$$を計算するCNN、過去のエージェントの経路から特徴を個々に計算するRNN、そして将来の経路を計算するRNNで構成される。
+ただし、常に逆変換可能であるためには標準偏差$$\sigma_{\theta}^a(\cdot)$$は常に０より大きい必要がある。また尤度を計算するための同時分布は次の式で計算できる。
+
+$$q_{\theta}(\mathbf{X} \mid \mathbf{o}) = \mathcal{N}(f_{\theta}^{-1}(\mathbf{X} ; \mathbf{o};0, I))
+\big| \det
+\frac{\mathbf{d}f_{\theta}}{\mathbf{d} \mathbf{Z}}_{\mathbf{Z} = f_{\theta}^{-1}(\mathbf{X}; \mathbf{o})} \big| $$
+
+状態$$\mathbf{S}_{t}$$の平均および標準偏差を出力するネットワークは図で示すように観測マップ$$\chi$$から特徴マップ$$\Gamma$$を計算するCNN、過去のエージェントの経路から特徴を個々に計算するRNN、そして将来の経路を計算するRNNで構成されるネットワークである。
 
 <img src="./EmbeddedImage.png" alt="EmbeddedImage" style="zoom: 50%;" />
 
 このモデルは次の手順で動作する。
 
-1. 現在時刻で得られた観測からRNN(GRU)とCNNを使って特徴量$$\alpha$$と特徴マップ$$\Gamma$$を計算する
+1. 現在時刻で得られたLIDARの点群と道路をラスタライズしてテンソルを作り、CNNで処理して特徴マップ$$\Gamma$$を計算する
 
-2. 時刻$$1:T$$までの以下のステップを繰り返す
+2. 過去から現在までのすべてエージェントの位置をエージェントごとにRNN(GRU)を使って特徴量$$\alpha$$を計算する。
+
+3. 時刻$$1:T$$までの以下のステップを繰り返す
 
    1. 時刻$$t$$の各エージェントの位置$$\mathbf{s}_{t-1}^a$$に対応した空間特徴量$$\Gamma(\mathbf{s}_{t-1}^a)$$をbilinear補間により特徴マップ$$\Gamma$$から取り出す
 
@@ -68,7 +72,7 @@ $$q(\mathbf{S}_t \mid \mathbf{S}_{1:t-1}, \phi)
 
    3. 特徴$$p_{t-1}$$から予測用のRNN(GRU)を使い、ベレの方法([wiki](https://en.wikipedia.org/wiki/Verlet_integration))のステップ$$m_{\theta}$$と位置の標準偏差$$\sigma_{\theta}$$を計算する
 
-   4. ベレの方法から位置の平均を求める
+   4. ベレの方法を使って位置の平均を求める
 
       $$\mu = 2 \mathbf{s}_{t-1}^a - \mathbf{s}_{t-2}^a + m_{\theta}$$
 
@@ -77,52 +81,54 @@ $$q(\mathbf{S}_t \mid \mathbf{S}_{1:t-1}, \phi)
       $$\mathbf{s}_{t}^a = \mu_{\theta} + \sigma_{\theta} \cdot \mathbf{z}_t^a$$
 
 
-このモデルは訓練データ$$\mathcal{D}$$を使って対数尤度を最大化するように訓練される。
+またESPは訓練データ$$\mathcal{D}$$を使って対数尤度を最大化するように訓練される。
 
-$$\max_{\theta} \mathbb{E}_{(s, \phi) \sim \mathcal{D}} \log p_{\theta}(\mathbf{S} \mid \phi)$$
+$$\max_{\theta} \mathbb{E}_{(s, \phi) \sim \mathcal{D}} \log q(\mathbf{S} \mid \phi)$$
 
 ### PREdiction Conditioned On Goals (PRECOG)
 
 PRECOGのアルゴリズムは次の通りである。
 
-1. Imitative planningにより自動運転車がゴールに止まるような潜在変数$$\mathbf{z}_{1:T}^0$$を求める
+1. Imitative planning([arxiv](https://arxiv.org/pdf/1810.06544.pdf), [summary](../DEEP IMITATIVE MODELS FOR FLEXIBLE INFERENCE, PLANNING, AND CONTROL/summary.md))により自動運転車がゴールに止まるような潜在変数$$\mathbf{z}_{1:T}^0$$を求める
+
+   1. 自動運転車の潜在変数$$\mathbf{z}_{1:T}^0$$を正規分布からサンプルする
+
+   2. 自動運転車の潜在変数が収束するまで以下を繰り返す
+
+      1. その他のエージェントの潜在変数$$^{1:K}\mathbf{z}$$を正規分布から$$K$$回サンプリングする
+
+         $$^{1:K}\mathbf{z}_{1:T}^{1:A-1} \overset{iid}{\sim} \mathcal{N}(0, I)$$
+
+      2. マルチエージェントの模倣尤度とゴールの尤度の和の期待値$$\mathcal{L}(\mathbf{z}^r, \mathcal{G})$$を計算する。
+
+         $$\mathcal{L}(\mathbf{z}^0, \mathcal{G}, \phi) = \mathbb{E}_{\mathbf{Z}^{1:A}} \left[ \log q(f(\mathbf{Z}) \mid \phi) + \log q(\mathcal{G} \mid f(\mathbf{Z}), \phi) \right]$$
+
+         $$\log q(f(\mathbf{Z}) \mid \phi)$$は訓練データで学習した経路とどれだけ近いかを示す尤度、$$q(\mathcal{G} \mid f(\mathbf{Z}), \phi)$$は自車両からゴールに向かうまでのウェイポイント$$\mathbf{w}$$を使ったゴールの尤度である。
+
+         実際には前ステップでサンプリングした潜在変数を使って期待値の近似値を計算する。
+
+         $$\hat{\mathcal{L}}(^{1:K}\mathbf{z}, \mathcal{G}, \phi)
+         = \frac{1}{K} \sum_{k=1}^{K}
+         \log(
+         p(f(^k\mathbf{z}) \mid \phi)
+         p(\mathcal{G} \mid f(^k\mathbf{z}), \phi)
+         )$$
+
+      3. 期待値を最大化するようにGradient Ascentによって自動運転車の潜在変数を更新する。
+
+         $$\mathbf{z}_{1:T}^0 \leftarrow \mathbf{z}_{1:T}^0 + \Delta_{\mathbf{z}_{1:T}^0} \hat{\mathcal{L}}(^{1:K}\mathbf{z}, \mathcal{G}, \phi)$$
 
 2. その他のエージェントの潜在変数$$^{1:K}\mathbf{z}$$を正規分布から$$K$$回サンプリングする
 
    $$^{1:K}\mathbf{z}_{1:T}^{1:A-1} \overset{iid}{\sim} \mathcal{N}(0, I)$$
 
-3. 潜在変数を連結する
+3. 自動運転車とその他のエージェントの潜在変数を連結する
 
    $$^{1:K}\mathbf{z}_{1:T}^{1:A} = [\mathbf{z}_{1:T}^{0}, ^k\mathbf{z}_{1:T}^{1:A-1}]$$
 
-4. 潜在変数を予測経路に変換する
+4. 潜在変数を関数$$f_{\theta}(\cdot)$$を使って予測経路に変換する
 
-   $$^{1:K}\mathbf{s}_{1:T}^{1:A} \leftarrow f(^{1:K}\mathbf{z}_{1:T}^{1:A}, \phi) $$
-
-Imitative planningは"Deep Imitative Models for Flexible Inference, Planning, and Control"([arxiv](https://arxiv.org/pdf/1810.06544.pdf), [summary](../DEEP IMITATIVE MODELS FOR FLEXIBLE INFERENCE, PLANNING, AND CONTROL/summary.md))で提案された経路計画法である。Imitative planningはESPを使って次の最適化問題を解く。
-
-$$\DeclareMathOperator*{\argmin}{arg\,min}
-\DeclareMathOperator*{\argmax}{arg\,max}
-\begin{equation}
-z^{0 *} = \argmax_{z^r} \mathcal{L}(\mathbf{z}^0, \mathcal{G}, \phi)
-\end{equation}$$
-
-目的関数$$\mathcal{L}(\mathbf{z}^r, \mathcal{G})$$はマルチエージェントの模倣尤度とゴールの尤度の和の期待値である。
-
-$$\mathcal{L}(\mathbf{z}^0, \mathcal{G}, \phi) = \mathbb{E}_{\mathbf{Z}^{1:A}} \left[ \log q(f(\mathbf{Z}) \mid \phi) + \log q(\mathcal{G} \mid f(\mathbf{Z}), \phi) \right]$$
-
-マルチエージェントの模倣尤度は訓練データで学習した経路とどれだけ近いかを示す尤度である。ゴールの尤度$$q(\mathcal{G} \mid f(\mathbf{Z}), \phi)$$は自車両からゴールに向かうまでのウェイポイント$$\mathbf{w}$$を使った$$\mathcal{N}(\mathbf{w}; \mathbf{S}_T^r, \epsilon \mathbf{I})$$である。期待値$$\mathcal{L}(\mathbf{z}^r, \mathcal{G})$$は次で示すようにゴールの尤度による重み付き平均を行い近似して実装される。
-
-$$\hat{\mathcal{L}}(^{1:K}\mathbf{z}, \mathcal{G}, \phi)
-= \frac{1}{K} \sum_{k=1}^{K}
-\log(
-p(f(^k\mathbf{z}) \mid \phi)
-p(\mathcal{G} \mid f(^k\mathbf{z}), \phi)
-)$$
-
-またImitative planningの最適化問題はGradient Ascentで求める。
-
-![multimitativeplanning](./multimitativeplanning.png)
+   $$^{1:K}\mathbf{s}_{1:T}^{1:A} \leftarrow f_{\theta}(^{1:K}\mathbf{z}_{1:T}^{1:A}, \phi) $$
 
 ## どうやって有効だと検証した？
 

@@ -6,95 +6,88 @@
 
 ## どんなもの？
 
-Reactive planningは予測と計画を同時に行う経路計画法である。Reactive planningは自動運転車の行動が他の車の行動に及ぼす影響を考慮することができる。次のシナリオは一般的な運転でもよく遭遇するようなシナリオであるが、速やかに走行するためには他の車の行動の理解が求められる。
+自動運転を実現するためには他の車の行動の理解が求められる。人間は例えば次のような一般的なシナリオを問題なく運転する。
 
 * 自動運転車が他の車に道を譲った場合、他の車がその道を先に走行する
 * 自動運転車が道を譲らず走行した場合、他の車はその道を譲る
 
-しかし予測を元に計画を行うシステム（non-reactive planner）はこのようなシナリオに対して快適な走行を行うことはできない。自動運転車の行動が他の車に及ぼす影響を無視しているからである。Non-reactive plannerは従来の自動運転に多く採用されている。大抵の場合、non-reactive plannerは目的の車線が利用可能になるまで待機する選択を行う。しかしながら、自動運転車の後ろに車がいる場合、待つという行動は交通の妨げになる。したがって単純に待つという戦略は理にかなっている運転とは言えない。自動運転車だけでなく他の車にとっても安全で快適な運転を行うことが望まれる。
+しかし従来の自動運転に多く採用されている、予測を元に運動計画を行うNon-reactive Plannerはこのようなシナリオに対して快適な走行を行うことはできない。自動運転車両の行動を決定するときに、他車両の行動がすでに決まっているため、自動運転車両がどんな行動をしても他車両の行動は変わらないからである。このため、Non-reactive Plannerで計画した行動は非常に消極的な行動となる。この問題を解決する方法として予測と計画を同時に行うReactive planningがある。自車両と他車両の行動を同時に決めることで自動運転車の行動が他の車の行動に及ぼす影響を考慮することができる。
 
 ![reactive_vs_non_reactive](./reactive_vs_non_reactive.png)
 
-この論文はDeep Structured Reactive Planningを提案する。Deep Structured Reactive Planningはサンプルベースのプランニングである。Trajectory Samplerを使って経路を生成する。そして生成した経路の評価を行い、最も良い経路を選択する。
-
-Trajectory Samplerは走行空間を効率よくサンプリングするジオメトリックなサンプラーである。環境中にいる車（アクターと呼ぶ）に対して直線や円弧、クロソイド曲線など様々な経路の離散的なセットを出力する。
-
-経路の評価にはDeep Structured Modelsを使う。Deep Structured Modelsは深層モデルを使ったMRF (マルコフ確率場)である。各アクターの予測経路をノードとして構成する。アクター間の相互作用を捉えたグラフである。Deep Structured Modelsは深層モデルにより２つのエネルギーを計算する。１つは予測経路単体の良さを示すエネルギーである。もう１つは２つの予測経路の衝突に関するエネルギーである。計算したエネルギーはMRFを伝播するために使われる。伝播を行うことで、自動運転車両がある経路を選択するとき、他の車の予測経路がどれだけ起こりやすいかを示す周辺確率を計算する。
-
-Deep Structured Reactive Planningは経路を選択するとき、Deep Structured Modelsが計算したエネルギーで構成されたコストを、同じく計算した周辺確率で重み付けすることでコストの期待値を計算する。一つの自動運転車の計画経路に対して各アクターにつき複数の候補を考慮する。こうすることで他のアクターの行動の不確実性を考慮することができる。安全性を犠牲にすることなくターゲットレーンへの合流や右左折などの複雑な操作をより効果的かつ効率的に完了することができる。
+この論文はディープニューラルネットワークをつかったReactive PlanningであるDeep Structured Reactive Planningを提案する。Deep Structured Reactive Planningはサンプルベースのプランニングである。複数生成したアクターの経路のサンプルに対してDeep Structured Modelsを使って生成した経路の評価を行う。そして評価した経路の中から最も良い経路を選んで実行する。経路評価に使うDeep Structured Modelは深層モデルを使ったMRF (マルコフ確率場)である。Deep Structured Modelは自動運転車両がある行動を行うとき他のアクターのどのような行動を行うかの確率を効率的に計算することができる。
 
 ## 先行研究と比べてどこがすごい？何を解決したか？
 
-* 自動運転車の行動だけでなく自動運転車の行動に条件付けられた他のアクターの行動を取り入れたプランニングは他のアクターの反応と安全を本質的に考慮していることを示した。
+* Deep Structured Reactive Planningは他のアクターの反応と安全を本質的に考慮していることを示した。
 
-* 検証を行った結果、Deep Structured Reactive PlanningはNon-reactive plannerの性能を凌駕した。
+* 性能の検証を行い、Deep Structured Reactive PlanningはNon-reactive plannerの性能を凌駕することを示した。
 
 ## 手法は？
 
-N個のアクターが走行している環境で自動運転車が走行するシナリオを考える。すべてのアクターの将来の行動を$$\mathcal{Y} = (\mathbf{y}_0, \mathbf{y}_1, \dots, \mathbf{y}_N)$$とする。$$\mathbf{y}_0$$を自動運転車、$$\mathcal{Y}_r = (\mathbf{y}_1, \dots, \mathbf{y}_N)$$を他のアクターとする。また自動運転車はLIDARの点群とHDマップなどの情報にアクセスできるとする。
+Deep Structured Reactive Planningは次の手順で最適な経路を計算する。
 
-### Deep Structured Model
-
-環境コンテクスト$$\mathcal{X}$$を条件とするアクターの将来の経路の同時分布をDeep Structured Modelで表す。
-
-$$p(\mathcal{Y}\mid \mathcal{X}; \mathbf{w}) = \frac{1}{Z} \exp (-C(\mathcal{Y}, \mathcal{X}; \mathbf{w}))$$
-
-$$C$$はすべてのアクターの経路の結合エネルギーである。結合エネルギーはアクターの固有のエネルギー$$C_{\text{traj}}$$とアクター間の相互作用のエネルギー$$C_{\text{inter}}$$で構成される。
-
-$$C(\mathcal{Y}, \mathcal{X}; \mathbf{w}) =
-\sum_{i=0}^{N} C_{\text{traj}}(\mathbf{y}_i \mid \mathcal{X}; \mathbf{w_{traj}}) +
-\sum_{i,j} C_{\text{inter}}(\mathbf{y}_i, \mathbf{y}_j)$$
-
-アクターの固有のエネルギー$$C_{\text{traj}}$$はアクターの経路の良さをコストとして示す。アクターの固有のエネルギー$$C_{\text{traj}}$$はニューラルネットワークにより計算する。用いるネットワークはDSDNet ([summary](../DSDNet: Deep Structured self-Driving Network/summary.md))で使われたネットワークと同じである。計算の際には自動運転車の固有エネルギーと他のアクターの固有エネルギーの計算は違う ネットワークの重みを用いる。
-
-アクター間の相互作用のエネルギー$$C_{\text{inter}}$$は衝突によるエネルギー$$C_{\text{collision}}$$と安全な距離によるエネルギー$$C_{\text{safety distance}}$$で構成される。安全な距離を4mである。
-
-![interaction_energy](./interaction_energy.png)
-
-Deep Structured Modelを使ってグラフを伝播することで様々な周辺確率を計算できる。推論時は$$p(\mathbf{y}_i \mid \mathbf{y}_0, \mathcal{X}; \mathbf{w}) $$、訓練時は$$p(\mathbf{y}_i, \mathcal{X}; \mathbf{w})$$および$$p(\mathbf{y}_i,\mathbf{y}_j, \mathcal{X}; \mathbf{w})$$を計算する。周辺確率はLoopy Belief Propagation (LBP)を使うことで効率的に計算できる。LBPはリカレントニューラルネットワークの特殊系として解釈することができる。つまりLBPによって計算した周辺分布は勾配の計算が可能である。
+1. 走行空間を効率よくサンプリングするジオメトリックなサンプラーを使って、自動運転車両を含むすべてのアクターに対してK個ずつの経路サンプルを生成する
+2. 自動運転車両の各サンプルをDeep Structured Modelsを使って評価する
+3. 自動運転車両のK個のサンプルの内、もっともコストが低いものを最適解として選ぶ
 
 ### Trajectory Sampler
 
-連続空間で表現されるアクターの経路のエネルギーを推論することは非常に困難である。エネルギーの推論を簡単にするためにDSDNet ([summary](../DSDNet: Deep Structured self-Driving Network/summary.md))と同様に、走行空間を効率よくサンプルするTrajectory Samplerを用いる。Trajecotry Samplerは直線や円弧、クロソイド曲線をさまざまなパラメータで出力する。出力される経路群は常に一定である。
+複数のアクターの経路のエネルギーの推論を簡単にするためにDSDNet ([summary](../DSDNet: Deep Structured self-Driving Network/summary.md))と同様に、走行空間を効率よくサンプルするTrajectory Samplerを用いて直線や円弧、クロソイド曲線をさまざまなパラメータで出力する。Trajectory Samplerからは常に決まった経路群が出力される。
 
 ![trajectory sampler](./trajectory_sampler.png)
 
 (*)この図はDSDNetのECCV 2020 long talks([link](https://www.youtube.com/watch?v=hop6FBJnM-c))のものである。
 
+### Deep Structured Model
+
+N個のアクターが走行している環境ですべてのアクターの現在時刻から数秒後までの行動を$$\mathcal{Y} = (\mathbf{y}_0, \mathbf{y}_1, \dots, \mathbf{y}_N)$$で表す。$$\mathbf{y}_0$$は自動運転車両、$$\mathcal{Y}_r = (\mathbf{y}_1, \dots, \mathbf{y}_N)$$は他のアクターの行動である。
+
+Deep Structured Modelは深層モデルを使ったMRF (マルコフ確率場)である。LIDARの点群とHDマップなどの情報$$\mathcal{X}$$を条件とするすべてのアクターの将来の経路$$\mathcal{Y}$$の同時分布を各アクターの経路をノードとした無向グラフで表す。
+
+$$p(\mathcal{Y} \mid \mathcal{X}; \mathbf{w}) = \frac{1}{Z} \exp (-C(\mathcal{Y}, \mathcal{X}; \mathbf{w}))$$
+
+$$C(\mathcal{Y}, \mathcal{X}; \mathbf{w}) =
+\sum_{i=0}^{N} C_{\text{traj}}(\mathbf{y}_i \mid \mathcal{X}; \mathbf{w_{traj}}) +
+\sum_{i,j} C_{\text{inter}}(\mathbf{y}_i, \mathbf{y}_j)$$
+
+$$C$$はすべてのアクターの経路の結合エネルギー、$$C_{\text{traj}}$$はアクターの経路の良さを示す固有エネルギー、$$C_{\text{inter}}$$はアクター間の相互作用のエネルギーである。アクターの固有のエネルギー$$C_{\text{traj}}$$はDSDNet ([summary](../DSDNet: Deep Structured self-Driving Network/summary.md))と同じネットワークを使って計算する。アクター間の相互作用のエネルギー$$C_{\text{inter}}$$は衝突によるエネルギー$$C_{\text{collision}}$$と安全な距離を確保するエネルギー$$C_{\text{safety distance}}$$で定義する。$$C_{\text{safety distance}}$$はアクター間の距離が4m以下になると増加するエネルギーである。
+
+![interaction_energy](./interaction_energy.png)
+
+Deep Structured ModelはMRFの一種である。Loopy Belief Propagation (LBP)によりグラフを伝播することで様々な周辺確率を計算することができる。例えば$$p(\mathbf{y}_i \mid \mathbf{y}_0, \mathcal{X}; \mathbf{w}) $$や$$p(\mathbf{y}_i, \mathcal{X}; \mathbf{w})$$、$$p(\mathbf{y}_i,\mathbf{y}_j, \mathcal{X}; \mathbf{w})$$である。またLBPによる操作の勾配は計算することができる。
+
 ### Reactive Inference objective
 
-次の最適化問題を解くことで現在時刻から数秒間先までの経路$$\mathbf{y}_0^{*}$$を計画する。
+現在時刻から数秒間先までの経路$$\mathbf{y}_0^{*}$$を計画する最適化問題を次のように定義する。
 
 $$\DeclareMathOperator*{\argmin}{arg\,min}
 \mathbf{y}_0^{*} = \argmin_{\mathbf{y}_0} f (\mathcal{Y}, \mathcal{X}; \mathbf{w})$$
 
-関数$$f (\mathcal{Y}, \mathcal{X}; \mathbf{w})$$は自動運転車の経路を条件とする他のアクターの経路の分布全体にわたる結合エネルギーの期待値である。
+目的関数$$f (\mathcal{Y}, \mathcal{X}; \mathbf{w})$$は自動運転車両の経路$$\mathbf{y}_0$$を条件とする他のアクターの経路の分布全体にわたる結合エネルギーの期待値である。
 
 $$\begin{align}
 f(\mathcal{Y}, \mathcal{X}; \mathbf{w}) &=
 \mathbb{E}_{\mathcal{Y}_r \sim p(\mathcal{Y}_r \mid \mathbf{y}_0, \mathcal{X}; \mathbf{w})} [C(\mathcal{Y}, \mathcal{X}; \mathbf{w})]
-\\
-&= C_{\text{traj}}(\mathbf{y}_0, \mathcal{X}; \mathbf{w}) +
-\mathbb{E}_{\mathcal{Y}_r \sim p(\mathcal{Y}_r \mid \mathbf{y}_0, \mathcal{X}; \mathbf{w})} \left[
-\sum_{i=1}^{N} C_{\text{traj}}(\mathbf{y}_i \mid \mathcal{X}; \mathbf{w}) +
-\sum_{i=1}^{N} C_{\text{inter}}(\mathbf{y}_0, \mathbf{y}_i) +
-\sum_{i=1,j=1}^{N,N} C_{\text{inter}}(\mathbf{y}_i, \mathbf{y}_j)
-\right]\
 \end{align} $$
 
-実装では計算量を削減するため、他のアクター同士の相互作用のエネルギー$$C_{\text{inter}}(\mathbf{y}_i, \mathbf{y}_j)$$は無視する。そしてTrajectory Samplerで生成されるサンプルをつかって直接期待値を計算する。したがって次の計算を行う。
+$$p(\mathcal{Y}_r \mid \mathbf{y}_0, \mathcal{X}; \mathbf{w})$$は自動運転車両がある経路$$\mathbf{y}_0$$を選択するとき、他のすべてのアクターが経路$$\mathcal{Y}_r$$を選択する周辺確率である。$$C$$はDeep Structured Modelで定義した結合エネルギーである。
+
+実装では計算量を削減するため、他のアクター同士の相互作用のエネルギー$$C_{\text{inter}}(\mathbf{y}_i, \mathbf{y}_j)$$を無視する。またTrajectory Samplerのサンプルがあるので、Monte Calroではなく直接期待値を計算する。最終的にDeep Structured Reactive Planningは自動運転車両の経路サンプルの評価に次の関数を使う。
 
 $$C_{\text{traj}}(\mathbf{y}_0, \mathcal{X}; \mathbf{w}) +
 \sum_{i=1}^{N} p(\mathbf{y}_i \mid \mathbf{y}_0, \mathcal{X}; \mathbf{w}) C_{\text{traj}} (\mathbf{y}_i \mid \mathcal{X}; \mathbf{w}) +
 \sum_{i=1}^{N} p(\mathbf{y}_i \mid \mathbf{y}_0, \mathcal{X}; \mathbf{w}) C_{\text{inter}} (\mathbf{y}_0, \mathbf{y}_i)$$
 
+> 自動運転車の固有エネルギーと他のアクターの固有エネルギーの計算は異なるネットワークの重みを使う。
+
 ### Goal Energy
 
-DIM ([summary](../DEEP IMITATIVE MODELS FOR FLEXIBLE INFERENCE, PLANNING, AND CONTROL/summary.md))やPRECOG ([summary](../PRECOG: PREdiction Conditioned On Goals in Visual Multi-Agent Settings/summary.md))の方法と同様にゴールエネルギーを計画の目的関数に加える。ゴールエネルギーを加えることで自動運転車の目的を達成するように経路計画を行う。ゴールエネルギーは自動運転車が走行するシナリオに応じて変えることができる。例えば交差点の右左折では目的の道路を2次元点で表し、経路の最終地点とL2距離をエネルギーとする。レーンチェンジでは目的のレーンをPolylineで表し、経路の各点とpolylineの距離の平均をエネルギーとする。
+DIM ([summary](../DEEP IMITATIVE MODELS FOR FLEXIBLE INFERENCE, PLANNING, AND CONTROL/summary.md))やPRECOG ([summary](../PRECOG: PREdiction Conditioned On Goals in Visual Multi-Agent Settings/summary.md))で提案された運動計画方法と同様にゴールエネルギーを計画の目的関数に加える。ゴールエネルギーを加えることで自動運転車の目的を達成するように経路計画を行うことが可能となる。ゴールエネルギーは自動運転車が走行するシナリオに応じて変更する。交差点の右左折では目的の道路を2次元点で表し、経路の最終地点とL2距離をエネルギーとする。レーンチェンジでは目的のレーンをPolylineで表し、経路の各点とpolylineの距離の平均をエネルギーとする。
 
 ### 学習
 
-訓練データであるアクターの経路を使ってDeep Structured Modelを訓練する。LBPを使って観測を条件とするアクターの経路の周辺確率$$p(\mathbf{y}_i, \mathcal{X}; \mathbf{w})$$および同時確率$$p(\mathbf{y}_i,\mathbf{y}_j, \mathcal{X}; \mathbf{w})$$を計算する。そして計算した確率をクロスエントロピーを使って真の経路と予測経路の分布を近づける。ただし真の経路に近い経路は損失計算から除く。すべての予測経路をクロスエントロピーの計算に使うと、真の経路に距離が近い経路が間違いと評価されるためである。不当な評価を避けることで確率の推定性能が向上する。
+訓練データのアクターの経路に対してTrajectory Samplerでサンプルを生成し、LBPを使って観測を条件とする自動運転車両を含むすべてアクターの経路の周辺確率$$p(\mathbf{y}_i, \mathcal{X}; \mathbf{w})$$および同時確率$$p(\mathbf{y}_i,\mathbf{y}_j, \mathcal{X}; \mathbf{w})$$を計算する。各アクターの真の経路に最も近いサンプルを正解とすることでクロスエントロピーを計算し、真の経路と予測経路の分布を近づけるように学習させる。ただし真の経路の形状によっては複数のサンプルと非常に近くなる場合がある。このことから、すべての予測経路をクロスエントロピーの計算に使うと、真の経路に距離が近い経路が間違いと誤判断することになる。そこで真の経路に近いk個の経路$$\Delta (\mathbf{y}_i^{*})$$の損失を計算から除くことで不当な評価を避ける。以上より、Deep Structured Modelを学習するために次の損失関数を使う。
 
 $$\mathcal{L} = \sum_{i} \mathcal{L}_i +  \sum_{i,j} \mathcal{L}_{i,j}$$
 
@@ -110,11 +103,11 @@ $$\Delta (\mathbf{y}_i^{*})$$は正解の経路と距離が近いが正解でな
 
 ## どうやって有効だと検証した？
 
-CARLAおよびUber ATGのSimbaのシミュレーターで走行性能、予測性能、Ablation Studyの検証を行った。テストするシミュレーターごとのデータセットで検証に使われるモデルを訓練した。訓練に使用したCARLAのデータセットはPRECOGで使われたオープンなデータセットと同じものである。CARLAのデータセットは60000個の6秒間のシークエンスを含む。LIDARの点群をラスタライズした俯瞰図と最初の2秒間の経路をモデルへの入力データ、2~4秒の経路を予測する経路とした。Simbaのデータセットは1000回以上の自動運転車の走行からなる6500個のシークエンスを含む。各シークエンスの長さは25秒である。
+CARLAおよびUber ATGのSimbaのシミュレーターで走行性能、予測性能、Ablation Studyの検証を行った。テストするシミュレーターごとのデータセットで検証に使われるモデルをそれぞれ訓練した。訓練に使用したCARLAのデータセットはPRECOGで使われたオープンなデータセットと同じものである。CARLAのデータセットは60000個の6秒間のシークエンスを含む。LIDARの点群をラスタライズした俯瞰図と最初の2秒間の経路をモデルへの入力データ、2~4秒の経路を予測する経路とした。Simbaのデータセットは1000回以上の自動運転車の走行からなる6500個のシークエンスを含む。各シークエンスの長さは25秒である。
 
 ### 走行テスト
 
-Deep structured reactive planningの走行性能を検証するため、CARLAおよびSimbaのシミュレーターでテストした。テストシナリオは次の２つである。
+Deep structured reactive planningの走行性能を検証するため、CARLAおよびSimbaのシミュレーターで次の２つのシナリオをテストした。
 
 * レーンチェンジ
 * 信号のない交差点で左折を行う
@@ -135,7 +128,7 @@ Simbaと異なりテンプレートシナリオの数を6個とした。また�
 
 #### 比較手法
 
-Deep strucutred reactive planningの他にPRECOG ([summary](../PRECOG: PREdiction Conditioned On Goals in Visual Multi-Agent Settings/summary.md))とReactive planningすることの重要性を明確にするためのnon-reactiveなプランナーを用意した。Non-reactiveなプランナーは自動運転車の経路に条件付けられないコストを使う。
+比較手法としてReactive PlannerであるPRECOG ([summary](../PRECOG: PREdiction Conditioned On Goals in Visual Multi-Agent Settings/summary.md))とReactive planningすることの重要性を明確にするため、Non−Reactive Plannerを用意した。Non−Reactive Plannerは自動運転車の経路に条件付けられない次のコストを使った運動計画方法である。
 
 $$\begin{align}
 f_{\text{nonreactive}} &=
@@ -156,13 +149,13 @@ CARLAおよびSimbaのシミュレーターでテストした結果は次のと�
 
 ![simulation_test](./simulation_test.png)
 
-Succ (%)はSucess Rateである。自動運転車がレーンチェンジや左折を成功させた割合である。TTC (s)はtime to completionである。シナリオの完走にかかった時間である。Goalはゴールまでの距離である。CR (%)はCollision Rateである。Brakeはブレーキした回数である。CARLAのみ有効である。
+Succ (%)はSucess Rateである。自動運転車がレーンチェンジもしくは左折のシナリオを成功させた割合である。TTC (s)はtime to completionである。シナリオの完走にかかった時間である。Goalはシナリオで設定したゴールまでの距離である。CR (%)はCollision Rateである。Brakeはブレーキした回数である。CARLAのみ有効である。
 
-提案手法であるReactive PlannerがSuccess Rate、TTC、Goalのメトリックで他の手法より良い結果である。またCollision RateはReactive Planner、Non−Reactive Plannerともに同等の値である。Reactive Plannerが目的関数通り、他のアクターの反応を考慮していることを示している。事故する割合が上がるようなアグレッシブな動作をすることなく、他のアクターがいる中でより効果的にゴールへのナビゲーションが行えていることを示している。またReactiveおよびNon−Reactive PlannerがPRECOGよりも良い結果である。
+提案手法であるReactive PlannerがSuccess Rate、TTC、Goalのメトリックで他の手法より良い結果となった。またCollision RateはReactive Planner、Non−Reactive Plannerともに同等の値である。TTCが減っているのでReactive Plannerが目的関数通り、他のアクターの反応を考慮していることを示している。事故する割合が上がるようなアグレッシブな動作をすることなく、他のアクターがいる中でより効果的にゴールへのナビゲーションが行えている。
 
-#### レーンチェンジの走行結果
+#### レーンチェンジの走行結果の可視化
 
-次の図はターゲットのレーンへ合流するシナリオを走行した結果である。Reactive Plannerは制限時間内ターゲットレーンに合流することができた。Non−Reactive Plannerはできなかった。Reactive Plannerの結果ではターゲットレーンにいる車が自動運転車を入れさせるために減速している。その一方でNon−Reactive Plannerは時間の経過とともにレーンの左側にゆっくりとよっている。
+次の図はターゲットのレーンへ合流するシナリオを走行した結果である。Reactive Plannerは制限時間内ターゲットレーンに合流することができた。Non−Reactive Plannerはできなかった。Reactive Plannerはターゲットレーンにいる車が自動運転車を入れさせるために減速している一方で、Non−Reactive Plannerは時間の経過とともにレーンの左側にゆっくりとよっている。
 
 ![lane_merge_result](./lane_merge_result.png)
 
@@ -188,7 +181,7 @@ PRECOGのデータセットおよびNuScenesで予測性能をテストした。
 
 ### Reactive plannerの定義
 
-自動運転車の行動$$\mathbf{y}_0$$を条件に他のアクターの行動の予測を考えるプランナーをreactive plannerと定義する。また自動運転車の行動$$\mathbf{y}_0$$と独立した予測モデルを使って他のアクターの行動を考えるプランナーをnon-reactive plannerと定義する。
+自動運転車の行動$$\mathbf{y}_0$$を条件に他のアクターの行動の予測を考えるプランナーをReactive plannerと定義する。また自動運転車の行動$$\mathbf{y}_0$$と独立した予測モデルを使って他のアクターの行動を考えるプランナーをNon-reactive plannerと定義する。
 
 ### Reactive plannerとNon Reactive plannerの補間
 
@@ -211,7 +204,7 @@ $$k$$の数が増えるほど（Non-reactiveになるほど）、ほぼ一定の
 
 ### PRECOGの走行テストの結果が悪い原因の考察
 
-PRECOGは生成モデルであるESPを使って観測を条件としてアクターの経路を生成する。そして生成した経路を使ってReactive Planningを行う。PRECOGの検証結果が悪い原因として2つの仮設が考えられる。1つめはout-of-distributionである。訓練データにない状況で経路を効果的に予測できないことが起因していると思われる。２つめは評価するべき経路の生成を保証しないことである。潜在変数を通して生成を行うため、経路計画に必要とする経路を生成するまで多くの試行回数を必要とする可能性がある。
+実験ではReactiveおよびNon−Reactive PlannerがPRECOGよりも良い結果を示した。PRECOGは生成モデルであるESPを使って観測を条件としてアクターの経路を生成する。そして生成した経路を使ってReactive Planningを行う。PRECOGの検証結果が悪い原因としてout-of-distributionが考えられる。訓練データにない状況で経路を効果的に予測できないことが起因していると思われる。また生成モデルであるため、経路の生成を潜在変数を通して行う。自動運転車両の目的に沿った経路の生成に試行回数を必要とする。限られた実行時間で目的の経路の生成を保証しないことが原因である可能性がある。
 
 ## 次に読むべき論文は？
 
