@@ -11,7 +11,7 @@
 * 自動運転車が他の車に道を譲った場合、他の車がその道を先に走行する
 * 自動運転車が道を譲らず走行した場合、他の車はその道を譲る
 
-しかし従来の自動運転に多く採用されている、予測を元に運動計画を行うNon-reactive Plannerはこのようなシナリオに対して快適な走行を行うことはできない。自動運転車両の行動を決定するときに、他車両の行動がすでに決まっているため、自動運転車両がどんな行動をしても他車両の行動は変わらないからである。このため、Non-reactive Plannerで計画した行動は非常に消極的な行動となる。この問題を解決する方法として予測と計画を同時に行うReactive planningがある。自車両と他車両の行動を同時に決めることで自動運転車の行動が他の車の行動に及ぼす影響を考慮することができる。
+しかし従来の自動運転に多く採用されているNon-reactive Plannerはこのようなシナリオに対して快適な走行を行うことはできない。予測を元に運動計画を行う構成であるため、自動運転車両の行動を決定するときに他車両の行動がすでに決まっている。自動運転車両がどんな行動を計画しても他車両の行動は不変であるという事実がある。この事実よりNon-reactive Plannerで計画した行動は非常に消極的な行動となる。この問題を解決する方法として予測と計画を同時に行うReactive planningがある。自車両と他車両の行動を同時に決めることで自動運転車の行動が他の車の行動に及ぼす影響を考慮することができる。
 
 ![reactive_vs_non_reactive](./reactive_vs_non_reactive.png)
 
@@ -43,7 +43,7 @@ Deep Structured Reactive Planningは次の手順で最適な経路を計算す�
 
 N個のアクターが走行している環境ですべてのアクターの現在時刻から数秒後までの行動を$$\mathcal{Y} = (\mathbf{y}_0, \mathbf{y}_1, \dots, \mathbf{y}_N)$$で表す。$$\mathbf{y}_0$$は自動運転車両、$$\mathcal{Y}_r = (\mathbf{y}_1, \dots, \mathbf{y}_N)$$は他のアクターの行動である。
 
-Deep Structured Modelは深層モデルを使ったMRF (マルコフ確率場)である。LIDARの点群とHDマップなどの情報$$\mathcal{X}$$を条件とするすべてのアクターの将来の経路$$\mathcal{Y}$$の同時分布を各アクターの経路をノードとした無向グラフで表す。
+LIDARの点群とHDマップなどの情報$$\mathcal{X}$$を条件とするすべてのアクターの将来の経路$$\mathcal{Y}$$の同時分布$$p(\mathcal{Y} \mid \mathcal{X}; \mathbf{w})$$のモデル化にDeep Structured Modelを使う。Deep Structured Modelは深層モデルを使ったMRF (マルコフ確率場)である。本論文では無向グラフのノードとして各アクターの経路を選ぶ。これより同時分布を表すDeep Structured Modelは次の式で表せる。
 
 $$p(\mathcal{Y} \mid \mathcal{X}; \mathbf{w}) = \frac{1}{Z} \exp (-C(\mathcal{Y}, \mathcal{X}; \mathbf{w}))$$
 
@@ -51,11 +51,11 @@ $$C(\mathcal{Y}, \mathcal{X}; \mathbf{w}) =
 \sum_{i=0}^{N} C_{\text{traj}}(\mathbf{y}_i \mid \mathcal{X}; \mathbf{w_{traj}}) +
 \sum_{i,j} C_{\text{inter}}(\mathbf{y}_i, \mathbf{y}_j)$$
 
-$$C$$はすべてのアクターの経路の結合エネルギー、$$C_{\text{traj}}$$はアクターの経路の良さを示す固有エネルギー、$$C_{\text{inter}}$$はアクター間の相互作用のエネルギーである。アクターの固有のエネルギー$$C_{\text{traj}}$$はDSDNet ([summary](../DSDNet: Deep Structured self-Driving Network/summary.md))と同じネットワークを使って計算する。アクター間の相互作用のエネルギー$$C_{\text{inter}}$$は衝突によるエネルギー$$C_{\text{collision}}$$と安全な距離を確保するエネルギー$$C_{\text{safety distance}}$$で定義する。$$C_{\text{safety distance}}$$はアクター間の距離が4m以下になると増加するエネルギーである。
+$$C$$はすべてのアクターの経路の結合エネルギー、$$C_{\text{traj}}$$はアクターの経路の良さを示す固有エネルギー、$$C_{\text{inter}}$$はアクター間の相互作用のエネルギーである。アクターの固有のエネルギー$$C_{\text{traj}}$$はDSDNet ([summary](../DSDNet: Deep Structured self-Driving Network/summary.md))と同じネットワークを使って計算されるエネルギーである。アクター間の相互作用のエネルギー$$C_{\text{inter}}$$は衝突によるエネルギー$$C_{\text{collision}}$$と安全な距離を確保するエネルギー$$C_{\text{safety distance}}$$で定義する。$$C_{\text{safety distance}}$$はアクター間の距離が4m以下になると増加するエネルギーである。いずれのエネルギーも低い値ほど良いことを示す。
 
 ![interaction_energy](./interaction_energy.png)
 
-Deep Structured ModelはMRFの一種である。Loopy Belief Propagation (LBP)によりグラフを伝播することで様々な周辺確率を計算することができる。例えば$$p(\mathbf{y}_i \mid \mathbf{y}_0, \mathcal{X}; \mathbf{w}) $$や$$p(\mathbf{y}_i, \mathcal{X}; \mathbf{w})$$、$$p(\mathbf{y}_i,\mathbf{y}_j, \mathcal{X}; \mathbf{w})$$である。またLBPによる操作の勾配は計算することができる。
+Deep Structured ModelはMRFの一種であるので、Loopy Belief Propagation (LBP)によりグラフを伝播することで様々な周辺確率を計算することができる。例えば$$p(\mathbf{y}_i \mid \mathbf{y}_0, \mathcal{X}; \mathbf{w}) $$や$$p(\mathbf{y}_i, \mathcal{X}; \mathbf{w})$$、$$p(\mathbf{y}_i,\mathbf{y}_j, \mathcal{X}; \mathbf{w})$$である。またLBPによる操作は微分可能であり、勾配は計算することができる。
 
 ### Reactive Inference objective
 
@@ -71,9 +71,9 @@ f(\mathcal{Y}, \mathcal{X}; \mathbf{w}) &=
 \mathbb{E}_{\mathcal{Y}_r \sim p(\mathcal{Y}_r \mid \mathbf{y}_0, \mathcal{X}; \mathbf{w})} [C(\mathcal{Y}, \mathcal{X}; \mathbf{w})]
 \end{align} $$
 
-$$p(\mathcal{Y}_r \mid \mathbf{y}_0, \mathcal{X}; \mathbf{w})$$は自動運転車両がある経路$$\mathbf{y}_0$$を選択するとき、他のすべてのアクターが経路$$\mathcal{Y}_r$$を選択する周辺確率である。$$C$$はDeep Structured Modelで定義した結合エネルギーである。
+$$p(\mathcal{Y}_r \mid \mathbf{y}_0, \mathcal{X}; \mathbf{w})$$は自動運転車両がある経路$$\mathbf{y}_0$$を選択するとき、他のすべてのアクターが経路$$\mathcal{Y}_r$$を選択する周辺確率、$$C$$は結合エネルギーである。
 
-実装では計算量を削減するため、他のアクター同士の相互作用のエネルギー$$C_{\text{inter}}(\mathbf{y}_i, \mathbf{y}_j)$$を無視する。またTrajectory Samplerのサンプルがあるので、Monte Calroではなく直接期待値を計算する。最終的にDeep Structured Reactive Planningは自動運転車両の経路サンプルの評価に次の関数を使う。
+Deep Structured Reactive PlanningはDeep Structured Modelで周辺確率と結合エネルギーを計算し、目的関数$$f (\mathcal{Y}, \mathcal{X}; \mathbf{w})$$を計算する。ただし結合エネルギーの計算量は非常に大きいため、他のアクター同士の相互作用のエネルギー$$C_{\text{inter}}(\mathbf{y}_i, \mathbf{y}_j)$$を無視する。またTrajectory Samplerのサンプルがあるので、このサンプルをつかって直接期待値を計算する。したがって自動運転車両の経路サンプルの評価に使う関数は次の式である。
 
 $$C_{\text{traj}}(\mathbf{y}_0, \mathcal{X}; \mathbf{w}) +
 \sum_{i=1}^{N} p(\mathbf{y}_i \mid \mathbf{y}_0, \mathcal{X}; \mathbf{w}) C_{\text{traj}} (\mathbf{y}_i \mid \mathcal{X}; \mathbf{w}) +
@@ -87,7 +87,7 @@ DIM ([summary](../DEEP IMITATIVE MODELS FOR FLEXIBLE INFERENCE, PLANNING, AND CO
 
 ### 学習
 
-訓練データのアクターの経路に対してTrajectory Samplerでサンプルを生成し、LBPを使って観測を条件とする自動運転車両を含むすべてアクターの経路の周辺確率$$p(\mathbf{y}_i, \mathcal{X}; \mathbf{w})$$および同時確率$$p(\mathbf{y}_i,\mathbf{y}_j, \mathcal{X}; \mathbf{w})$$を計算する。各アクターの真の経路に最も近いサンプルを正解とすることでクロスエントロピーを計算し、真の経路と予測経路の分布を近づけるように学習させる。ただし真の経路の形状によっては複数のサンプルと非常に近くなる場合がある。このことから、すべての予測経路をクロスエントロピーの計算に使うと、真の経路に距離が近い経路が間違いと誤判断することになる。そこで真の経路に近いk個の経路$$\Delta (\mathbf{y}_i^{*})$$の損失を計算から除くことで不当な評価を避ける。以上より、Deep Structured Modelを学習するために次の損失関数を使う。
+訓練データのアクターの経路に対してTrajectory Samplerでサンプルを生成し、LBPを使って観測を条件とする自動運転車両を含むすべてアクターの経路の周辺確率$$p(\mathbf{y}_i, \mathcal{X}; \mathbf{w})$$および同時確率$$p(\mathbf{y}_i,\mathbf{y}_j, \mathcal{X}; \mathbf{w})$$を計算する。各アクターの真の経路に最も近いサンプルを正解とすることでクロスエントロピーを計算し、真の経路と予測経路の分布を近づけるように学習させる。ただし真の経路の形状によっては複数のサンプルと非常に近くなる場合がある。このことから、すべての予測経路をクロスエントロピーの計算に使うと、真の経路に距離が近い経路が間違いと誤判断することになる。そこで真の経路に近いk個の経路$$\Delta (\mathbf{y}_i^{*})$$の損失を計算から除くことで不当な評価を避ける。以上より、Deep Structured Modelを学習するために使う損失関数は次の式である。
 
 $$\mathcal{L} = \sum_{i} \mathcal{L}_i +  \sum_{i,j} \mathcal{L}_{i,j}$$
 
