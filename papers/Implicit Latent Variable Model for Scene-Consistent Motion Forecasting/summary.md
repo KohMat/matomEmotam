@@ -91,7 +91,7 @@ $$h_n = \text{MLP}(x_n \oplus z_n)$$
 
 この初期値を用いてSIMで伝播を行った後、更新された隠れ状態をMLPで処理することで予測経路を計算する。
 
-$$y_n = \text{MLP}(ｈ_n)$$
+$$y_n = \text{MLP}(h_n)$$
 
 計算した予測経路$$y_n$$はアクターの現在位置とヘディングによって定義された座標系で表現される2次元のウェイポイントで構成される。
 
@@ -172,7 +172,7 @@ minSADEとmeanSADEはシーン中のすべてアクターのAverage Displacement
 
 各アクターと時間ステップを独立に予測する方法はアクターごとに予測のサンプリングプロセスが独立している。シーンレベルで評価するために、シーン内のアクターごとに1つのサンプルを取り出しシーンを作成した。また比較手法の内、検出器を持たない手法に関してはILVMと同じ検出器を使用し、End-to-Endで訓練した。
 
-ATG4Dデータセットを使い、S=15のときの性能を比較した結果は次の表である。ILVMがすべての評価項目でベースラインを上回った。ベースラインのなかで最も良い[ESP]((../PRECOG: PREdiction Conditioned On Goals in Visual Multi-Agent Settings/summary.md))と比較してSCRを75％、meanSFDEを20％、minSFDEを19%削減することができた。
+ATG4Dデータセットを使い、S=15のときの性能を比較した結果は次の表である。ILVMがすべての評価項目でベースラインを上回った。ベースラインのなかで最も良い[ESP](../PRECOG: PREdiction Conditioned On Goals in Visual Multi-Agent Settings/summary.md)と比較してSCRを75％、meanSFDEを20％、minSFDEを19%削減することができた。
 
 ![result](./result.png)
 
@@ -210,6 +210,6 @@ Coming soon
 
 Implicit modelsについて[Lecture 5 Implicit Models -- GANs Part I --- UC Berkeley, Spring 2020](https://www.youtube.com/watch?v=1CT-kxjYbFU)を参考にしました。
 
-論文の結果にILVMを運動計画に組み込んだ結果があるが、記述が少ないので、このまとめからは省きました。文章の把握のためには以下の論文を読んで、補足する必要を感じます。
+論文の結果にILVMを運動計画に組み込んだ結果がありますが、記述が少ないので、このまとめからは省きました。文章の把握のためには以下の論文を読んで、補足する必要を感じます。
 
-Sadat, A., Ren, M., Pokrovsky, A., Lin, Y.C., Yumer, E., Urtasun, R.: Jointly learnable behavior and trajectory planning for self-driving vehicles. arXiv preprint arXiv:1910.04586 (2019)
+Sadat, A., Ren, M., Pokrovsky, A., Lin, Y.C., Yumer, E., Urtasun, R.: Jointly learnable behavior and trajectory planning for self-driving vehicles. arXiv preprint arXiv:1910.04586 (2019)([summary](../Jointly learnable behavior and trajectory planning for self-driving vehicles/summary.md))
