@@ -128,7 +128,7 @@ $$\text{minSADE} = \underset{s \in 1 \dots S}{\min} \frac{1}{NT}
 y_{n, s}^t -y_{n, GT}^t
 \Vert^2$$
 
-$$\text{minSADE} = \frac{1}{NTS}
+$$\text{meanSADE} = \frac{1}{NTS}
 \overset{S}{\underset{s=1}{\sum}}
 \overset{N}{\underset{n=1}{\sum}}
 \overset{T}{\underset{t=1}{\sum}}
@@ -142,7 +142,7 @@ $$\text{minSFDE} = \underset{s \in 1 \dots S}{\min} \frac{1}{NT}
 y_{n, s}^{T} -y_{n, GT}^{T}
 \Vert^2$$
 
-$$\text{minSFDE} = \frac{1}{NTS}
+$$\text{meanSFDE} = \frac{1}{NTS}
 \overset{S}{\underset{s=1}{\sum}}
 \overset{N}{\underset{n=1}{\sum}}
 \Vert
@@ -168,11 +168,11 @@ minSADEとmeanSADEはシーン中のすべてアクターのAverage Displacement
 センサデータから環境中にいるアクターの検出を行い、検出したアクターの経路を予測するタスクで、次に示すベースラインと比較することでILVMの性能を検証した。
 
 * 各アクターと時間ステップを独立に予測する方法：SpAGNN、MTP、MultiPath、RULESROAD、R2P2-MA
-* １時刻前の状態を条件として自己回帰する方法：SOCIALLSTM、ESP、MFP、NRI
+* １時刻前の状態を条件として自己回帰する方法：SOCIALLSTM、ESP[(summary)](../PRECOG: PREdiction Conditioned On Goals in Visual Multi-Agent Settings/summary.md)、MFP、NRI
 
 各アクターと時間ステップを独立に予測する方法はアクターごとに予測のサンプリングプロセスが独立している。シーンレベルで評価するために、シーン内のアクターごとに1つのサンプルを取り出しシーンを作成した。また比較手法の内、検出器を持たない手法に関してはILVMと同じ検出器を使用し、End-to-Endで訓練した。
 
-ATG4Dデータセットを使い、S=15のときの性能を比較した結果は次の表である。ILVMがすべての評価項目でベースラインを上回った。ベースラインのなかで最も良い[ESP](../PRECOG: PREdiction Conditioned On Goals in Visual Multi-Agent Settings/summary.md)と比較してSCRを75％、meanSFDEを20％、minSFDEを19%削減することができた。
+ATG4Dデータセットを使い、S=15のときの性能を比較した結果は次の表である。ILVMがすべての評価項目でベースラインを上回った。ベースラインのなかで最も良いESPと比較してSCRを75％、meanSFDEを20％、minSFDEを19%削減することができた。
 
 ![result](./result.png)
 
