@@ -104,7 +104,7 @@ E(\mathbf{Y}, \mathbf{Y}_{\text{gt}}) +
 \beta \overset{K}{\underset{k=1}\sum}
 \text{KL} (p(Z_k \mid X) || p(Z))$$
 
-第１項は多様性ためのエネルギー関数$$E(\mathbf{Y}, \mathbf{Y}_{\text{gt}})$$、第２項は出力する潜在分布がpriorに近くなるようにするためのKLダイバージェンス$$\text{KL} (p(Z_k \mid X) || p(Z))$$である。多様性ためのエネルギー関数$$E(\mathbf{Y}, \mathbf{Y}_{\text{gt}})$$は３つのエネルギーで構成される。
+第１項は多様性ためのエネルギー関数$$E(\mathbf{Y}, \mathbf{Y}_{\text{gt}})$$、第２項は出力する潜在分布がpriorに近くなるようにするためのKLダイバージェンス$$\text{KL} (p(Z_k \mid X) \Vert p(Z))$$である。多様性ためのエネルギー関数$$E(\mathbf{Y}, \mathbf{Y}_{\text{gt}})$$は３つのエネルギーで構成される。
 
 $$E(\mathbf{Y}, \mathbf{Y}_{\text{gt}})=
 w_r E_r(\mathbf{Y}, \mathbf{Y}_{\text{gt}}) + w_p E_p(\mathbf{Y}) + w_d  E_d(\mathbf{Y})$$
