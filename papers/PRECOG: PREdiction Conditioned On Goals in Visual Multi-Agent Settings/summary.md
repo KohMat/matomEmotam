@@ -15,9 +15,9 @@
 
 ![EmbeddedImage](./EmbeddedImage.gif)
 
-ESP(Estimating Social-forecast Probabilities)は単一エージェントの経路を予測するR2P2([link](https://people.eecs.berkeley.edu/~nrhinehart/papers/r2p2_cvf.pdf), [summary](../R2P2: A reparameterized pushforward policy for diverse, precise generative path forecasting/summary.md))をベースとした自己回帰型フローベースの生成モデルである。ESPはマルチエージェント間の相互作用を捉えるように、各エージェントおよび各タイムステップで分散表現された潜在変数とすべてのエージェントの一時刻前の状態を利用して次の時刻の状態を計算する。そしてこの計算を予測時刻まで繰り返すことで将来の経路を生成する。ESPはあるエージェントおよびある時刻の特定の潜在変数を変更することで、その変更による影響を加味した予測を行うことができる。また各予測の尤度を計算することもできる。
+ESP(Estimating Social-forecast Probabilities)は単一エージェントの経路を予測するR2P2([link](https://people.eecs.berkeley.edu/~nrhinehart/papers/r2p2_cvf.pdf), [summary](../R2P2: A reparameterized pushforward policy for diverse, precise generative path forecasting/summary.md))をベースとした自己回帰型フローベースの生成モデルである。ESPはマルチエージェント間の相互作用を捉えるように、各エージェントおよび各タイムステップで分散表現された潜在変数とすべてのエージェントの一時刻前の状態を利用して次の時刻の状態を計算する。そしてこの計算を予測時刻まで繰り返すことで将来の経路を生成する。あるエージェントおよびある時刻の特定の潜在変数を変更することで、その変更による影響を加味した予測を行うことができる。また各予測の尤度を計算することもできる。
 
-PRECOG (PREdition Conditioned On Goal)は自動運転車など将来の意図がわかっている車両の目的地を条件としたすべてのエージェントの将来の経路を予測する方法である。自動運転車が目的地へ向かう場合に集中して予測するので、予測する経路の可能性を絞ることができる。つまり自動運転車両だけでなく相互に作用する他のエージェントの軌道の予測精度を高めることができる。
+PRECOG (PREdition Conditioned On Goal)は自動運転車の目的地を条件としてエージェントの将来の経路を予測する方法である。PRECOGはESPを使用して自動運転者がゴールに向かうような経路を潜在変数で求めた後、その潜在変数を利用して再度ESPを使用することで条件付き予測を行う。自動運転車が目的地へ向かう場合に集中して予測するので、予測する経路の可能性を絞ることができる。
 
 ## 先行研究と比べてどこがすごい？何を解決したか？
 
