@@ -8,7 +8,7 @@
 
 ## どんなもの？
 
-この論文はセンサー信号から自動車の運動を計画するEnd-to-Endの自律システムLookOutを提案する。LookOutは最初にセンサーで取得した情報から車や人などのアクターを検出する。そして生成モデルを使って確率の高いシーンだけではなく、低いものも含めて自動運転車に関連する多様なシーンを複製生成する。次に生成したシーンすべてに対応できる共通の短期のアクションと、予測シーンごとに対応する長期の軌道を計画する。LookOutは多くの情報が得られるまで快適性と安全性を保ちながら、過度に消極的な行動を避けることができる。
+この論文はセンサー信号から自動車の運動を計画するEnd-to-Endの自律システムLookOutを提案する。LookOutは最初にセンサーで取得した情報から車や人などのアクターを検出し、生成モデルを使って確率の高いシーンだけではなく、低いものも含めて自動運転車に関連する多様なシーンを複製予測する。次に予測したシーンすべてに対応できる共通の短期のアクションと、予測シーンごとに対応する長期の軌道を計画する。LookOutは多くの情報が得られるまで快適性と安全性を保ちながら、過度に消極的な行動を避けることができる。
 
 ![lookout_planning](./lookout_planning.png)
 
@@ -54,7 +54,7 @@ Joint Predictionは環境中のアクター間の相互作用を考慮して複�
 
 ## 手法は？
 
-次に示す図がセンサーデータから実行可能なアクションを計算するLookOutの推論パイプラインである。Backbone CNN、Object Detector、ActorCNN、Diverse sampler、Prediction decoder、Scenario Scorer、Contingency Plannerで構成される。
+次に示す図がLookOutの推論パイプラインである。Backbone CNN、Object Detector、ActorCNN、Diverse sampler、Prediction decoder、Scenario Scorer、Contingency Plannerで構成される。
 
 ![lookout_inference](./lookout_inference.png)
 
