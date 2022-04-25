@@ -17,7 +17,7 @@
 
 ESP(Estimating Social-forecast Probabilities)は単一エージェントの経路を予測するR2P2([link](https://people.eecs.berkeley.edu/~nrhinehart/papers/r2p2_cvf.pdf), [summary](../R2P2: A reparameterized pushforward policy for diverse, precise generative path forecasting/summary.md))をベースとした自己回帰型フローベースの生成モデルである。ESPはマルチエージェント間の相互作用を捉えるように、各エージェントおよび各タイムステップで分散表現された潜在変数とすべてのエージェントの一時刻前の状態を利用して次の時刻の状態を計算する。そしてこの計算を予測時刻まで繰り返すことで将来の経路を生成する。あるエージェントおよびある時刻の特定の潜在変数を変更することで、その変更による影響を加味した予測を行うことができる。また各予測の尤度を計算することもできる。
 
-PRECOG (PREdition Conditioned On Goal)は自動運転車の目的地を条件としてエージェントの将来の経路を予測する方法である。PRECOGはESPを使用して自動運転者がゴールに向かうような経路を潜在変数で求めた後、その潜在変数を利用して再度ESPを使用することで条件付き予測を行う。自動運転車が目的地へ向かう場合に集中して予測するので、予測する経路の可能性を絞ることができる。
+PRECOG (PREdition Conditioned On Goal)は自動運転車両の目的地を条件としてエージェントの将来の経路を予測する方法である。PRECOGはESPを使用して自動運転者がゴールに向かうような経路を潜在変数で求めた後、その潜在変数を利用して再度ESPを使用することで条件付き予測を行う。自動運転車が目的地へ向かう場合に集中して予測するので、予測する経路の可能性を絞ることができる。
 
 ## 先行研究と比べてどこがすごい？何を解決したか？
 
@@ -29,38 +29,42 @@ PRECOG (PREdition Conditioned On Goal)は自動運転車の目的地を条件と
 
 ### Estimating Social-forecast Probability (ESP)
 
-ESPは状態の遷移確率を正規分布と仮定した自己回帰型のフローベースの生成モデルである。ESPの潜在変数は各エージェントの各タイムステップに分解されて表現される。
+ESPはマルチエージェントの将来の経路の分布$q(\mathbf{S} \mid \phi; \mathcal{D})$$$を表す状態の遷移確率を正規分布と仮定した自己回帰型のフローベースの生成モデルである。
 
-$$\mathbf{Z} = \mathbf{Z}_{1:T}^{1:A} = \{\mathbf{Z}_1^1, \dots, \mathbf{Z}_T^1, \mathbf{Z}_1^2, \dots, \mathbf{Z}_T^2, \dots, \mathbf{Z}_1^{A}, \dots, \mathbf{Z}_T^{A}\}$$
+$$q(\mathbf{S}_t \mid \mathbf{S}_{1:t-1}, \phi) = \prod_{a=1}^A　\mathcal{N}(\mathbf{S}_t^a ; \mu_{\theta}^a, \sigma_{\theta}^a{\sigma_{\theta}^a}^{\top})$$
 
-ESPはこの潜在変数$$\mathbf{Z}$$を逆変換可能な関数$$f_{\theta}(\cdot)$$を使って変換し、A個のエージェントの時刻Tまでの経路$$\mathbf{S}$$を生成する。具体的には次に示す１ステップ先の更新式をすべてのエージェントで現在時刻から繰り返し適用する。
+パラメータ$$\mu_{\theta}^a(\cdot) \in \mathbb{R}^{D}$$および$$\sigma_{\theta}^a(\cdot)\in \mathbb{R}^{D \times D}$$は時刻$$t$$におけるエージェント$$a$$の状態$$\mathbf{S}_{t}^a$$の平均および標準偏差を出力するネットワーク関数である。これのアーキテクチャは次のセクションで説明する。
+
+ESPの潜在変数は各エージェントの各タイムステップに分解されて表現される。
+
+$$\mathbf{Z} = \mathbf{Z}_{1:T}^{1:A} = \{\mathbf{Z}_1^1, \dots, \mathbf{Z}_T^1, \mathbf{Z}_1^2, \dots, \mathbf{Z}_T^2, \dots, \mathbf{Z}_1^{A}, \dots, \mathbf{Z}_T^{A}\}, \mathbf{Z}_t^a \sim \mathcal{N}(0, I)$$
+
+ESPこの潜在変数$$\mathbf{Z}$$をもとにA個のエージェントの時刻Tまでの経路$$\mathbf{S}$$を生成する。具体的には次に示す１ステップ先の更新式をすべてのエージェントで現在時刻から繰り返し適用する。
 
 $$\mathbf{S}_{t}^{a} = f_{\theta}(\mathbf{Z}_t^a) = \mu_{\theta}^a(\mathbf{S}_{1:t-1}, \phi) + \sigma_{\theta}^a(\mathbf{S}_{1:t-1}, \phi) \cdot \mathbf{Z}_t^a \in \mathbb{R}^{D}$$
 
-ただし$$\mathbf{S}_{t}^{a}$$および$$\mathbf{Z}_{t}^{a}$$は時刻$$t$$におけるエージェント$$a$$の位置と潜在変数である。パラメータ$$\mu_{\theta}^a(\cdot) \in \mathbb{R}^{D}$$および$$\sigma_{\theta}^a(\cdot)\in \mathbb{R}^{D \times D}$$は状態$$\mathbf{S}_{t}$$の平均および標準偏差を出力するネットワーク関数である。$$\phi$$は過去から現在までのすべてエージェントの位置、LIDARの点群、道路の構造物などの観測である。
-
-経路から潜在変数の変換は次式で行うことができる。
+また経路から潜在変数の変換、経路の尤度の計算は次の式を使う。
 
 $$\mathbf{Z}_t^a ={\sigma_{\theta}^a}^{-1}(\mathbf{S}_{1:t-1}, \phi)
 \left(
 \mathbf{S}_{t}^{a} - \mu_{\theta}^a(\mathbf{S}_{1:t-1}, \phi)
 \right)$$
 
-ただし、常に逆変換可能であるためには標準偏差$$\sigma_{\theta}^a(\cdot)$$は常に０より大きい必要がある。また尤度を計算するための同時分布は次の式で計算できる。
-
-$$q_{\theta}(\mathbf{X} \mid \mathbf{o}) = \mathcal{N}(f_{\theta}^{-1}(\mathbf{X} ; \mathbf{o};0, I))
+$$q(\mathbf{S} \mid \phi; \mathcal{D})= \mathcal{N}(f_{\theta}^{-1}(\mathbf{S} ; \phi;0, I))
 \big| \det
-\frac{\mathbf{d}f_{\theta}}{\mathbf{d} \mathbf{Z}}_{\mathbf{Z} = f_{\theta}^{-1}(\mathbf{X}; \mathbf{o})} \big| $$
+\frac{\mathbf{d}f_{\theta}}{\mathbf{d} \mathbf{Z}}_{\mathbf{Z} = f_{\theta}^{-1}(\mathbf{S}; \phi)} \big| $$
 
-次の図はESPのネットワークアーキテクチャである。観測マップ$$\chi$$から特徴マップ$$\Gamma$$を計算するCNN、過去のエージェントの経路から特徴を個々に計算するRNN、そして将来の経路を計算するRNNで構成される。
+### アーキテクチャー
+
+ESPのネットワークアーキテクチャを次の図に示す。
 
 <img src="./EmbeddedImage.png" alt="EmbeddedImage" style="zoom: 50%;" />
 
-このネットワークは次の手順で動作する。
+図で示すようにESPは観測マップ$$\chi$$から特徴マップ$$\Gamma$$を計算するCNN、過去のエージェントの経路から特徴を個々に計算するRNN、そして将来の経路を計算するRNNで構成され、次の手順で動作する。
 
 1. 現在時刻で得られたLIDARの点群と道路をラスタライズしてテンソルを作り、CNNで処理して特徴マップ$$\Gamma$$を計算する
 
-2. 過去から現在までのすべてエージェントの位置をエージェントごとにRNN(GRU)を使って特徴量$$\alpha$$を計算する。
+2. 過去から現在までのすべてエージェントの位置をエージェントごとにRNN(GRU)を使って特徴量$$\alpha$$を計算する
 
 3. 時刻$$1:T$$までの以下のステップを繰り返す
 
@@ -80,14 +84,15 @@ $$q_{\theta}(\mathbf{X} \mid \mathbf{o}) = \mathcal{N}(f_{\theta}^{-1}(\mathbf{X
 
       $$\mathbf{s}_{t}^a = \mu_{\theta} + \sigma_{\theta} \cdot \mathbf{z}_t^a$$
 
+### ESPの学習
 
-またESPは訓練データ$$\mathcal{D}$$を使って対数尤度を最大化するように訓練される。
+ESPは訓練データ$$\mathcal{D}$$を使って対数尤度を最大化するように訓練される。
 
 $$\max_{\theta} \mathbb{E}_{(s, \phi) \sim \mathcal{D}} \log q(\mathbf{S} \mid \phi)$$
 
 ### PREdiction Conditioned On Goals (PRECOG)
 
-PRECOGのアルゴリズムは次の通りである。
+ESPを使った条件付き運動予測を行うPRECOGのアルゴリズムは次の通りである。
 
 1. Imitative planning([arxiv](https://arxiv.org/pdf/1810.06544.pdf), [summary](../DEEP IMITATIVE MODELS FOR FLEXIBLE INFERENCE, PLANNING, AND CONTROL/summary.md))により自動運転車両がゴールに止まるような潜在変数$$\mathbf{z}_{1:T}^0$$を求める
 
@@ -134,10 +139,10 @@ PRECOGのアルゴリズムは次の通りである。
 
 ### ESPの検証
 
-**Didactic Example**：シンプルなシミュレーターを作成し、そのシミュレーター上でモデルを訓練し、検証した。作成したシミュレーターはロボット（青）と人間（オレンジ）の2つの車両が互いに違う方向から同じ交差点へ向かう動作をシミュレートする。具体的には次の動作である。
+**Didactic Example**：シンプルなシミュレーターを作成し、そのシミュレーター上でモデルを訓練し、検証した。作成したシミュレーターはロボット（青）と人間（オレンジ）の2つの車両が互いに違う方向から同じ交差点へ向かう動作をシミュレートする。ロボットと人間はそれぞれ動作を行う。
 
-* 人間は常に4ステップ直進し、その後50％の確率で直進もしくは左折のどちらかの行動を行う。
 * ロボットは交差点を直進しようと試みるが人間が左折した場合には譲歩する。
+* 人間は常に4ステップ直進し、その後50％の確率で直進もしくは左折のどちらかの行動を行う。
 
 比較手法としてR2P2-MAを用いた。R2P2-MAは単一エージェントの経路を予測するR2P2([link](https://people.eecs.berkeley.edu/~nrhinehart/papers/r2p2_cvf.pdf), [summary](../R2P2: A reparameterized pushforward policy for diverse, precise generative path forecasting/summary.md))の予測ヘッドを複数にしたモデルである。R2P2-MAは相互作用を考慮しない。
 
@@ -147,9 +152,7 @@ PRECOGのアルゴリズムは次の通りである。
 
 表のPlanning crashesより、R2P2-MAは50％の確率で人間とロボットがぶつかる予測を行うが、ESPはぶつからない予測を行うことがわかる。この結果はESPは人間の決定に対して反応した経路を予測することを示している。
 
-**CARLAおよびnuScenes**：CALRAおよびnuScenesから10個のデータセットを作成し、モデルの予測性能を検証した。
-
-ベースラインとしてKDE、DESIRE、SocialGAN、R2P2-MAを用意した。また提案モデルESPのバリエーションとしてESP, no LIDAR、ESP, Road、ESP, flexを用意した。ESP, no LIDARは観測からLIDARを除いたESP、ESP, RoadはnuScenesの道路領域をバイナリマスクで表現した入力を追加したESP、ESP, flexは可変数のエージェントに対応するESPである。
+**CARLAおよびnuScenes**：CALRAおよびnuScenesから10個のデータセットを作成し、モデルの予測性能を検証した。ベースラインとしてKDE、DESIRE、SocialGAN、R2P2-MAを用意した。また提案モデルESPのバリエーションとしてESP, no LIDAR、ESP, Road、ESP, flexを用意した。ESP, no LIDARは観測からLIDARを除いたESP、ESP, RoadはnuScenesの道路領域をバイナリマスクで表現した入力を追加したESP、ESP, flexは可変数のエージェントに対応するESPである。
 
 次に示す表が検証結果である。表よりCALRAおよびnuScenesの両方のデータセットでESPの性能が比較手法の性能を上回っていることが確認できる。
 
@@ -188,7 +191,7 @@ ESPの検証と同様に、CALRAおよびnuScenes上でPRECOGの予測性能を�
 
 ### 可変数のエージェントに対応するESP
 
-エージェント数が時刻$$1:T$$の間で変わるようなデータに対して予め最大エージェント数$$A_{train}$$を決めた上でネットワークを設計する。そして予測経路を出力するRNNにマスク$$M \in \{ 0, 1 \} ^{A_{train}}$$を使うことで欠落しているエージェントを表現することで対応できる。
+エージェント数が時刻$$1:T$$の間で変わるようなデータに対して予め最大エージェント数$$A_{train}$$を決めた上でネットワークを設計する。そして予測経路を出力するRNNに欠落しているエージェントを表すマスク$$M \in \{ 0, 1 \} ^{A_{train}}$$を追加で入力する。
 
 ## 個人的メモ
 
