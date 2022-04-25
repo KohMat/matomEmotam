@@ -29,9 +29,10 @@ PRECOG (PREdition Conditioned On Goal)は自動運転車両の目的地を条件
 
 ### Estimating Social-forecast Probability (ESP)
 
-ESPはマルチエージェントの将来の経路の分布$q(\mathbf{S} \mid \phi; \mathcal{D})$$$を表す状態の遷移確率を正規分布と仮定した自己回帰型のフローベースの生成モデルである。
+ESPはマルチエージェントの将来の経路の分布$$q(\mathbf{S} \mid \phi; \mathcal{D})$$を表す状態の遷移確率を正規分布と仮定した自己回帰型のフローベースの生成モデルである。
 
-$$q(\mathbf{S}_t \mid \mathbf{S}_{1:t-1}, \phi) = \prod_{a=1}^A　\mathcal{N}(\mathbf{S}_t^a ; \mu_{\theta}^a, \sigma_{\theta}^a{\sigma_{\theta}^a}^{\top})$$
+$$q(\mathbf{S}_t \mid \mathbf{S}_{1:t-1}, \phi) =
+\overset{A}{\underset{a=1}{\prod}}\mathcal{N}(\mathbf{S}_t^a ; \mu_{\theta}^a, \sigma_{\theta}^a{\sigma_{\theta}^a}^{\top})$$
 
 パラメータ$$\mu_{\theta}^a(\cdot) \in \mathbb{R}^{D}$$および$$\sigma_{\theta}^a(\cdot)\in \mathbb{R}^{D \times D}$$は時刻$$t$$におけるエージェント$$a$$の状態$$\mathbf{S}_{t}^a$$の平均および標準偏差を出力するネットワーク関数である。これのアーキテクチャは次のセクションで説明する。
 
@@ -60,7 +61,7 @@ ESPのネットワークアーキテクチャを次の図に示す。
 
 <img src="./EmbeddedImage.png" alt="EmbeddedImage" style="zoom: 50%;" />
 
-図で示すようにESPは観測マップ$$\chi$$から特徴マップ$$\Gamma$$を計算するCNN、過去のエージェントの経路から特徴を個々に計算するRNN、そして将来の経路を計算するRNNで構成され、次の手順で動作する。
+図で示すようにESPは観測マップ$$\chi$$から特徴マップ$$\Gamma$$を計算するCNN、各エージェントの過去の経路の特徴を計算するRNN、そして将来の経路を計算するRNNで構成される。このネットワークは次の手順で動作する。
 
 1. 現在時刻で得られたLIDARの点群と道路をラスタライズしてテンソルを作り、CNNで処理して特徴マップ$$\Gamma$$を計算する
 
