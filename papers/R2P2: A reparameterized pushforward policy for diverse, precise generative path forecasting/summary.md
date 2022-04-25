@@ -11,7 +11,7 @@
 
 ## どんなもの？
 
-LIDARの点群や道路の情報が埋め込まれた俯瞰図から自動運転車両の将来の軌道を予測する方法R2P2 (ReRarameterized Pushforward Policy)を提案する。R2P2は予測の多様性と精度の両立を目的とし、対称クロスエントロピーによって訓練を行う。しかし、対称クロスエントロピーはそのままでは評価できないため、訓練データの分布の近似と基本分布の押し出し（pushforward)による将来軌道の分布のモデル化を行う。具体的にはある時刻における車両の状態への遷移確率を正規分布として仮定し、正規分布からサンプルされる潜在変数と前時刻までの状態から次の時刻の状態への変換を自己回帰型の微分可能かつ可逆なReparametrization Trickの形式で定義する。
+LIDARの点群や道路の情報が埋め込まれた俯瞰図から自動運転車両の将来の軌道を予測する方法R2P2 (ReRarameterized Pushforward Policy)を提案する。R2P2は予測の多様性と精度の両立を目的とし、生成モデルを対称クロスエントロピーによって訓練を行う。しかし、対称クロスエントロピーはそのままでは評価できないため、訓練データの分布の近似と基本分布の押し出し（pushforward)による将来軌道の分布のモデル化を行う。具体的にはある時刻における車両の状態への遷移確率を正規分布として仮定し、正規分布からサンプルされる潜在変数と前時刻までの状態から次の時刻の状態への変換を自己回帰型の微分可能かつ可逆なReparametrization Trickの形式で定義する。
 
 <img src="./qualitative_result.png" alt="qualitative_result" style="zoom: 50%;" />
 
@@ -25,7 +25,7 @@ $$H(p, q_{\pi})= \mathbb{E}_{x \sim p} - \log q_{\pi} (x \mid \phi)$$
 
 ![symmetrized_cross_entropy](./symmetrized_cross_entropy.png)
 
-この問題を解決する方法として、$$H(p, q_{\pi})$$と逆の性質を持つ訓練データ$$p$$のモデル$$q_{\pi}$$に対するクロスエントロピー$$H(q_{\pi}, p)$$を組み合わせた対称クロスエントロピーを学習に使う方法がある。しかし、$$H(q_{\pi}, p)$$は微分不可能であるため、そのまま評価することができないという別の問題がある。
+この問題を解決する方法として、$$H(p, q_{\pi})$$と逆の性質を持つ訓練データ$$p$$のモデル$$q_{\pi}$$に対するクロスエントロピー$$H(q_{\pi}, p)$$を組み合わせた対称クロスエントロピーを学習に使う方法がある。しかし、$$H(q_{\pi}, p)$$は微分不可能であるため、そのままでは評価することができないという別の問題がある。
 
 $$\displaystyle \underset{\pi}{\min}
 \underbrace{\mathbb{E}_{x \sim p} - \log q_{\pi} (x \mid \phi)}_{H(p, q_{\pi})} +
@@ -37,11 +37,7 @@ $$\displaystyle \underset{\pi}{\min}
 
 ### Pushforward distribution modeling
 
-R2P2は対称クロスエントロピーを評価できるようにするため、基本分布$$q_0 = \mathcal{N}(0, I)$$に従う潜在変数$$z \sim q_0$$から将来軌道の分布のサンプルに変換する微分可能かつ可逆なシミュレーター$$g_{\pi}(z; \phi) : \mathbb{R}^{T \times 2} \rightarrow \mathbb{R}^{T \times 2}$$を定義する。
-
-![simulator](./simulator.png)
-
-このシミュレーターは次のことが成り立つ。
+基本分布$$q_0 = \mathcal{N}(0, I)$$に従う潜在変数$$z \sim q_0$$から将来軌道の分布のサンプルに変換する微分可能かつ可逆なシミュレーター$$g_{\pi}(z; \phi) : \mathbb{R}^{T \times 2} \rightarrow \mathbb{R}^{T \times 2}$$を定義すると、基本分布$$q_0$$とシミュレータ$$g_{\pi}(z; \phi)$$、$$q_{\pi}(x \mid \phi)$$の間に次のことが成り立つ。
 
 $$q_{\pi}(x \mid \phi) = q_0(g_{\pi}^{-1}(z; \phi)) |\det J_{g_{\pi}}(g_{\pi}^{-1}(z; \phi))|^{-1} $$
 
@@ -57,6 +53,8 @@ H(p, q_{\pi}) + H(q_{\pi}, \tilde{p})
 
 ただし、$$\tilde{p}$$は訓練データ分布を近似したネットワークである。都合上、後のセクションで説明する。
 
+![simulator](./simulator.png)
+
 ### シミュレーターの設計
 
 本論文は初期時刻から前時刻$$t-1$$までの車両の位置$$x_{t-1}$$および観測$$\phi$$から次の時刻の車両の位置$$x_t$$への遷移確率を正規分布として仮定する。
@@ -65,7 +63,9 @@ $$q(x \mid \phi) = \prod_{i=1}^{N} q(x_t \mid \psi_t)$$
 
 $$q_{\pi}(x_t \mid \psi_t) = \mathcal{N}(x_t; \mu = \mu_t^{\pi}(\psi;\theta), \sigma = \sigma_t^{\pi}(\psi;\theta) )$$
 
-ただし$$\psi_t = [x_{1:t-1}, \phi]$$、$$\mu_t^{\pi}(\psi_t; \theta)$$および$$\sigma_t^{\pi}(\psi_t; \theta)$$は状態$$x_t$$の平均および標準偏差を出力する微分可能な方策(policy)、$$\theta$$は方策のパラメータである。この仮定より微分可能かつ$$\sigma_t^{\pi} = 0$$を除き可逆な自己回帰型シミュレーターが次式で定義できる。
+ただし$$\psi_t = [x_{1:t-1}, \phi]$$、$$\mu_t^{\pi}(\psi_t; \theta)$$および$$\sigma_t^{\pi}(\psi_t; \theta)$$は状態$$x_t$$の平均および標準偏差を出力する微分可能な方策(policy)、$$\theta$$は方策のパラメータである。
+
+この仮定を使うと、微分可能かつ$$\sigma_t^{\pi} = 0$$を除き可逆な自己回帰型シミュレーターが次式で定義できる。
 
 $$x_t \triangleq  \mu_t^{\pi}(\psi_t; \theta) + \sigma_t^{\pi}(\psi_t; \theta)z_t$$
 
@@ -109,11 +109,11 @@ R2P2 RNNはLinearとFieldを組み合わせた構造を持つ。センサー情�
 
 ### 訓練データの分布の近似
 
-訓練データに含まれる各時間における自車両の位置を図に示すようなL個のセルで構成される有限領域内で離散化することでデータ分布の近似を行う。
+各時間における自車両の位置を図に示すようなL個のセルで構成される有限領域内で離散化することで訓練データの分布の近似を行う。
 
 ![p_approximate](./p_approximate.png)
 
-この近似により訓練データ分布を次式で表すことができる。
+近似した訓練データの分布は次式で表すことができる。
 
 $$\tilde{p} = \prod_t \tilde{p}_c(x_t \mid \phi)$$
 
